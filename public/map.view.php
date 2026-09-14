@@ -52,6 +52,19 @@
   }
   #legal a { color: #31576D; margin-right: 10px; text-decoration: none; }
   #legal a:hover { text-decoration: underline; }
+
+  /* Amtliche Statistik-Ebene, wie eine Wetterkarten-Umschaltung — eigenständig
+     von den Bewertungs-Pins, per Checkbox an/aus, mit eigener Legende. */
+  .census-control {
+    background: rgba(255,255,255,0.92); padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; min-width: 190px;
+  }
+  .census-control label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; }
+  .census-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 4px; }
+  .census-legend { display: none; margin-top: 8px; }
+  .census-legend.visible { display: block; }
+  .census-legend .row { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; margin-top: 2px; }
+  .census-legend .swatch { width: 14px; height: 14px; border-radius: 3px; flex: none; }
 </style>
 </head>
 <body>
@@ -111,6 +124,74 @@
 
   map.on('moveend', loadPins);
   loadPins();
+
+  // Amtliche Statistik-Ebene: Zensus 2022, 100m-Gitter, Einwohnerzahl.
+  // Direkter Abruf beim ArcGIS-Dienst des Statistischen Bundesamts —
+  // öffentlicher, unauthentifizierter Geodatendienst ohne Nominatim-artige
+  // Ratenlimit-Problematik, daher (anders als die Adresssuche) ohne
+  // eigenen Server-Proxy. Nur ab einer gewissen Zoomstufe aktiv, weil der
+  // Dienst pro Abfrage maximal 2000 Zellen liefert — bei Landkarten-Zoom
+  // wäre das nur ein irreführender Bruchteil der Fläche.
+  const CENSUS_URL = 'https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Zensus2022_grid_final/FeatureServer/0/query';
+  const CENSUS_MIN_ZOOM = 15;
+  const censusBreaks = [
+    { max: 9, color: '#EFF3FF', label: '0–9' },
+    { max: 49, color: '#BDD7E7', label: '10–49' },
+    { max: 99, color: '#6BAED6', label: '50–99' },
+    { max: 199, color: '#2171B5', label: '100–199' },
+    { max: Infinity, color: '#08306B', label: '200+' }
+  ];
+  function censusColor(pop) {
+    return censusBreaks.find(b => pop <= b.max).color;
+  }
+
+  let censusLayer = null;
+  let censusEnabled = false;
+
+  async function loadCensusLayer() {
+    if (censusLayer) { map.removeLayer(censusLayer); censusLayer = null; }
+    if (!censusEnabled || map.getZoom() < CENSUS_MIN_ZOOM) return;
+
+    const b = map.getBounds();
+    const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
+    const url = CENSUS_URL + '?' + new URLSearchParams({
+      geometry: bbox, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
+      spatialRel: 'esriSpatialRelIntersects', outFields: 'Einwohner', returnGeometry: 'true', f: 'geojson'
+    });
+    const res = await fetch(url);
+    const geojson = await res.json();
+
+    censusLayer = L.geoJSON(geojson, {
+      style: f => ({
+        fillColor: censusColor(f.properties.Einwohner || 0), fillOpacity: 0.55,
+        color: 'rgba(27,36,32,0.2)', weight: 1
+      })
+    }).addTo(map);
+    censusLayer.bringToBack();
+  }
+
+  const CensusControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'census-control');
+      el.innerHTML =
+        '<label><input type="checkbox" id="census-toggle"> Einwohnerdichte (Zensus 2022)</label>' +
+        '<div class="hint" id="census-hint">Amtliche Statistik, 100m-Raster — ab Straßenblock-Zoom sichtbar</div>' +
+        '<div class="census-legend" id="census-legend">' +
+        censusBreaks.map(b => '<div class="row"><span class="swatch" style="background:' + b.color + '"></span>' + b.label + ' Einw.</div>').join('') +
+        '</div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new CensusControl());
+
+  document.getElementById('census-toggle').addEventListener('change', (e) => {
+    censusEnabled = e.target.checked;
+    document.getElementById('census-legend').classList.toggle('visible', censusEnabled);
+    loadCensusLayer();
+  });
+  map.on('moveend zoomend', loadCensusLayer);
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
