@@ -11,11 +11,12 @@
   .wl-popup h3 { margin: 0 0 4px; font-size: 1rem; }
   .wl-popup .score { font-weight: 600; }
 
-  #toolbar {
-    position: absolute; top: 10px; left: 50px; right: 10px; z-index: 1000;
-    display: flex; gap: 8px; align-items: flex-start; max-width: 460px;
+  /* Zwei bewusst getrennte Bereiche — Suche (links) und Bewerten-Einstieg
+     (rechts) haben nichts miteinander zu tun und sollen auch nicht wie
+     eine zusammengehörige Werkzeugleiste aussehen. */
+  #search-group {
+    position: absolute; top: 10px; left: 50px; z-index: 1000; width: 280px;
   }
-  #search-group { flex: 1; position: relative; }
   #search-label {
     display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
     color: #1B2420; background: rgba(255,255,255,0.9);
@@ -25,17 +26,24 @@
     display: block; width: 100%; box-sizing: border-box; padding: 0.6em 0.8em;
     border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.95rem; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
-  #rate-link {
-    padding: 0.6em 1em; background: #1B2420; color: white; text-decoration: none;
-    border-radius: 6px; font-size: 0.95rem; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-    margin-top: 22px;
-  }
   #suggestions {
     position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 1001; margin-top: 2px;
   }
   #suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
   #suggestions div:hover { background: #EBEEE5; }
+
+  #rate-cta {
+    position: absolute; top: 10px; right: 10px; z-index: 1000;
+    background: rgba(255,255,255,0.92); border-radius: 8px; padding: 10px 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  }
+  #rate-cta-heading { font-size: 0.85rem; font-weight: 600; color: #1B2420; white-space: nowrap; }
+  #rate-link {
+    padding: 0.55em 1em; background: #1B2420; color: white; text-decoration: none;
+    border-radius: 6px; font-size: 0.9rem; text-align: center; white-space: nowrap;
+  }
 
   #legal {
     position: absolute; bottom: 8px; left: 8px; z-index: 1000;
@@ -47,13 +55,15 @@
 </style>
 </head>
 <body>
-<div id="toolbar">
-  <div id="search-group">
-    <span id="search-label">Bereits bewertete Straßen</span>
-    <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
-    <div id="suggestions" hidden></div>
-  </div>
-  <a id="rate-link" href="/bewerten">+ Bewerten</a>
+<div id="search-group">
+  <span id="search-label">Bereits bewertete Straßen</span>
+  <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
+  <div id="suggestions" hidden></div>
+</div>
+
+<div id="rate-cta">
+  <span id="rate-cta-heading">Straße bewerten?</span>
+  <a id="rate-link" href="/bewerten">Bewertung abgeben</a>
 </div>
 <div id="map"></div>
 <div id="legal">
