@@ -10,6 +10,13 @@
   label { display: block; margin-top: 1.2em; font-weight: 600; }
   .hint { font-weight: 400; font-size: 0.85em; color: #4B564F; margin-top: 2px; }
   input[type=text] { width: 100%; padding: 0.5em; font-size: 1em; box-sizing: border-box; }
+  .address-wrap { position: relative; }
+  #address-suggestions {
+    position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 10; margin-top: 2px;
+  }
+  #address-suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
+  #address-suggestions div:hover { background: #EBEEE5; }
   .scale { display: flex; gap: 8px; margin-top: 6px; }
   .scale button {
     flex: 1; padding: 0.6em 0; border: 1px solid #CFD8C9; background: #FBFBF7;
@@ -33,9 +40,12 @@
 
 <form id="rating-form">
   <label for="address">Adresse
-    <div class="hint">z.B. „Musterstraße 12, 04109 Leipzig" — die genaue Hausnummer wird nach der Zuordnung nicht gespeichert.</div>
+    <div class="hint">Tippen und einen Vorschlag auswählen — vermeidet Tippfehler. Die genaue Hausnummer wird nach der Zuordnung nicht gespeichert.</div>
   </label>
-  <input type="text" id="address" name="address" required placeholder="Straße Hausnummer, PLZ Ort">
+  <div class="address-wrap">
+    <input type="text" id="address" name="address" required placeholder="Straße Hausnummer, PLZ Ort" autocomplete="off">
+    <div id="address-suggestions" hidden></div>
+  </div>
 
   <div class="criteria">
     <label>Ruhe <div class="hint">1 = sehr laut, 5 = sehr ruhig</div></label>
@@ -77,6 +87,44 @@
       });
       el.appendChild(btn);
     }
+  });
+
+  // Adress-Autovervollständigung — läuft über unseren eigenen Server-Proxy,
+  // nie direkt gegen Nominatim (siehe app/Http/AddressAutocompleteController.php)
+  const addressInput = document.getElementById('address');
+  const addressSuggestions = document.getElementById('address-suggestions');
+  let addressTimeout = null;
+
+  addressInput.addEventListener('input', () => {
+    clearTimeout(addressTimeout);
+    const q = addressInput.value.trim();
+    if (q.length < 4) {
+      addressSuggestions.hidden = true;
+      return;
+    }
+    addressTimeout = setTimeout(async () => {
+      const res = await fetch('/api/address-autocomplete?q=' + encodeURIComponent(q));
+      const data = await res.json();
+      addressSuggestions.innerHTML = '';
+      if (!data.results || data.results.length === 0) {
+        addressSuggestions.hidden = true;
+        return;
+      }
+      data.results.forEach(r => {
+        const item = document.createElement('div');
+        item.textContent = r.label;
+        item.addEventListener('click', () => {
+          addressInput.value = r.label;
+          addressSuggestions.hidden = true;
+        });
+        addressSuggestions.appendChild(item);
+      });
+      addressSuggestions.hidden = false;
+    }, 450); // deutlich träger als die Kartensuche — Nominatim braucht Abstand zwischen Anfragen
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== addressInput) addressSuggestions.hidden = true;
   });
 
   document.getElementById('rating-form').addEventListener('submit', async (e) => {

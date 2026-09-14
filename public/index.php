@@ -35,6 +35,11 @@ if ($uri === '/api/search' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/address-autocomplete' && $method === 'GET') {
+    (new App\Http\AddressAutocompleteController())->search();
+    return;
+}
+
 if ($uri === '/api/reports' && $method === 'POST') {
     (new App\Http\ReportController())->submit();
     return;
