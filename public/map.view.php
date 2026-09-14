@@ -46,12 +46,23 @@
   }
 
   #legal {
-    position: absolute; bottom: 34px; left: 8px; z-index: 1000;
+    position: absolute; bottom: 42px; left: 8px; z-index: 1000;
     background: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 6px;
     font-size: 0.78rem;
   }
   #legal a { color: #31576D; margin-right: 10px; text-decoration: none; }
   #legal a:hover { text-decoration: underline; }
+
+  /* Leaflets Standard-Maßstab ist winzig und kaum lesbar (11px, dünner
+     Rahmen, halbtransparent) — mehrere Ebenen (Breitband, Census-Raster)
+     hängen aber an genau diesem Wert ("ab 1 km sichtbar"), er muss also
+     leicht ablesbar sein statt eine Randnotiz zu sein. */
+  .leaflet-control-scale-line {
+    font-size: 0.85rem; font-weight: 600; color: #1B2420;
+    background: rgba(255,255,255,0.92); border: 2px solid #1B2420; border-top: none;
+    padding: 3px 8px 2px; border-radius: 0 0 5px 5px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
 
   /* Drei Bedienfelder stapeln sich unten rechts (Census, POI, Klima) und
      können zusammen höher werden als der sichtbare Kartenausschnitt —
@@ -69,7 +80,11 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
     max-height: 70vh; overflow-y: auto;
   }
-  .census-control .panel-title { font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; }
+  .census-control .panel-title {
+    display: block; margin: -10px -10px 10px -10px; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border-radius: 8px 8px 0 0;
+    font-size: 0.88rem; font-weight: 600; text-align: center;
+  }
   .census-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .census-metric-btn {
     box-sizing: border-box; padding: 0.5em 0.5em; background: #FBFBF7; color: #1B2420;
@@ -95,7 +110,11 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
     max-height: 70vh; overflow-y: auto;
   }
-  .poi-control .panel-title { font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; }
+  .poi-control .panel-title {
+    display: block; margin: -10px -10px 10px -10px; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border-radius: 8px 8px 0 0;
+    font-size: 0.88rem; font-weight: 600; text-align: center;
+  }
   .poi-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .poi-metric-btn {
     box-sizing: border-box; padding: 0.5em 0.5em; background: #FBFBF7; color: #1B2420;
@@ -636,7 +655,7 @@
       const el = L.DomUtil.create('div', 'broadband-control');
       el.innerHTML =
         '<button type="button" id="broadband-btn">Breitband anzeigen</button>' +
-        '<div class="hint">Festnetz-Verfügbarkeit &ge; 50 Mbit/s, alle Anbieter (100m-Raster). Nur ab mittlerer Zoomstufe sichtbar. &copy; BNetzA, Datenstand 12.2025.</div>';
+        '<div class="hint">Festnetz-Verfügbarkeit &ge; 50 Mbit/s, alle Anbieter (100m-Raster). Sichtbar, sobald der Maßstab unten links „1 km" oder genauer anzeigt. &copy; BNetzA, Datenstand 12.2025.</div>';
       L.DomEvent.disableClickPropagation(el);
       return el;
     }
