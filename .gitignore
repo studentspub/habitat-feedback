@@ -1,0 +1,12 @@
+# Secrets — niemals committen
+/config/config.php
+
+# Abhängigkeiten (werden lokal/in CI installiert, nicht committet)
+/vendor/
+/node_modules/
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
