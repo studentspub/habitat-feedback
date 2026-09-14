@@ -127,6 +127,22 @@
   .climate-card .row .k { color: #4B564F; }
   .climate-card .row .v { font-weight: 600; text-align: right; }
   .climate-card .src { font-size: 0.68rem; color: #7C877E; margin-top: 6px; }
+
+  /* Breitband — anders als Zensus/POI ein WMS-Dienst: die Bundesnetzagentur
+     liefert fertig eingefärbte Kachelbilder, keine Rohdaten. Wir können also
+     keine eigene Farbskala/Legende zeichnen (siehe Insight im Gespräch) —
+     nur an/ausschalten, daher ein einzelner Knopf wie bei Klima & Luft. */
+  .broadband-control {
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
+  }
+  #broadband-btn {
+    display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  #broadband-btn.active { background: #31576D; }
+  .broadband-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
 </style>
 </head>
 <body>
@@ -572,6 +588,47 @@
     loadClimateCard();
   });
   map.on('moveend', debounce(loadClimateCard, 350));
+
+  // Breitband — WMS-Kachel-Layer der Bundesnetzagentur (Breitbandatlas),
+  // öffentlich ohne Nutzungsbeschränkung/Vereinbarung (siehe GetCapabilities-
+  // Dokumentation). "≥ 50 Mbit/s, alle Unternehmen" als bewusst einfache
+  // Schwelle für "brauchbare Grundversorgung" — kein amtlich vorgegebener
+  // Wert, sondern unsere eigene Wahl für eine erste, verständliche Ebene.
+  // Anders als Zensus (ArcGIS-Rohdaten) liefert WMS fertige Bildkacheln:
+  // keine eigene Farbskala möglich, nur an/aus, daher ohne Legende.
+  const broadbandLayer = L.tileLayer.wms('https://breitbandatlas-wms.gigabit-grundbuch.online/WMS/Breitbandatlas?', {
+    layers: 'Breitband_Festnetz__100m_Gitter__Alle_Unternehmen_≥_50_Mbit/s55313',
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    opacity: 0.6,
+    attribution: '© BNetzA. Datenstand: 12.2025.'
+  });
+  let broadbandEnabled = false;
+
+  const BroadbandControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'broadband-control');
+      el.innerHTML =
+        '<button type="button" id="broadband-btn">Breitband anzeigen</button>' +
+        '<div class="hint">Festnetz-Verfügbarkeit &ge; 50 Mbit/s, alle Anbieter (100m-Raster). Nur ab mittlerer Zoomstufe sichtbar. &copy; BNetzA, Datenstand 12.2025.</div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new BroadbandControl());
+
+  document.getElementById('broadband-btn').addEventListener('click', (e) => {
+    broadbandEnabled = !broadbandEnabled;
+    e.target.textContent = broadbandEnabled ? 'Breitband ausblenden' : 'Breitband anzeigen';
+    e.target.classList.toggle('active', broadbandEnabled);
+    if (broadbandEnabled) {
+      broadbandLayer.addTo(map);
+    } else {
+      map.removeLayer(broadbandLayer);
+    }
+  });
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
