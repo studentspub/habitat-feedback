@@ -15,3 +15,6 @@ worker/.venv/
 Thumbs.db
 .vscode/
 *.log
+
+# Lokale Notizen/Downloads für Claude (z.B. Doku-PDFs), keine Projektdateien
+/.claude/

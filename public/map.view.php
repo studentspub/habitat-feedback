@@ -673,12 +673,12 @@
     }
   });
 
-  // Wirtschaft — Arbeitslosenquote des Kreises der Kartenmitte. Anders als
-  // Klima/Luft (nächste Station, reine DB-Abfrage) steckt hinter /api/economy
-  // serverseitig ein zweistufiger Nachschlag (erst Kreis per Reverse-Geocoding
-  // bestimmen, dann Quote aus der eigenen DB lesen) — für die Karte selbst
-  // macht das keinen Unterschied, genau dasselbe Kärtchen-Muster wie beim
-  // Klima-Kontrollfeld.
+  // Wirtschaft — Arbeitslosenquote und Kriminalitätsrate des Kreises der
+  // Kartenmitte. Anders als Klima/Luft (nächste Station, reine DB-Abfrage)
+  // steckt hinter /api/economy serverseitig ein zweistufiger Nachschlag
+  // (erst Kreis per Reverse-Geocoding bestimmen, dann beide Kennzahlen aus
+  // der eigenen DB lesen) — für die Karte selbst macht das keinen
+  // Unterschied, genau dasselbe Kärtchen-Muster wie beim Klima-Kontrollfeld.
   let economyEnabled = false;
   let economyRequestId = 0;
 
@@ -696,15 +696,25 @@
 
     if (myRequestId !== economyRequestId || !economyEnabled) return;
 
-    hint.textContent = 'Wert für die Kartenmitte — beim Verschieben der Karte aktualisiert sich die Anzeige.';
+    hint.textContent = 'Werte für die Kartenmitte (' + (data.kreis || '–') + ') — beim Verschieben der Karte aktualisiert sich die Anzeige.';
 
-    if (data.quote !== null && data.quote !== undefined) {
-      card.innerHTML =
-        '<div class="row"><span class="k">Arbeitslosenquote (' + data.kreis + ')</span><span class="v">' + data.quote.toFixed(1).replace('.', ',') + ' %</span></div>'
-        + '<div class="src">Statistik der Bundesagentur für Arbeit, Stand ' + data.monat + '</div>';
+    const rows = [];
+    const sources = [];
+    if (data.arbeitslosenquote) {
+      rows.push(['Arbeitslosenquote', data.arbeitslosenquote.quote.toFixed(1).replace('.', ',') + ' %']);
+      sources.push('Arbeitslosenquote: Statistik der Bundesagentur für Arbeit, Stand ' + data.arbeitslosenquote.monat);
     } else {
-      card.innerHTML = '<div class="row"><span class="k">Arbeitslosenquote</span><span class="v">Keine Daten verfügbar</span></div>';
+      rows.push(['Arbeitslosenquote', 'Keine Daten verfügbar']);
     }
+    if (data.kriminalitaet) {
+      rows.push(['Straftaten je 100.000 Einw.', data.kriminalitaet.haeufigkeitszahl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')]);
+      sources.push('Kriminalitätsrate: Polizeiliche Kriminalstatistik (BKA), Berichtsjahr ' + data.kriminalitaet.jahr);
+    } else {
+      rows.push(['Straftaten je 100.000 Einw.', 'Keine Daten verfügbar']);
+    }
+
+    card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
+      + '<div class="src">' + sources.join(' · ') + '</div>';
     card.classList.add('visible');
   }
 

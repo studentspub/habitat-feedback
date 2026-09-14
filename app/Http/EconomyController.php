@@ -10,13 +10,15 @@ final class EconomyController
     private const NOMINATIM_MIN_INTERVAL_SECONDS = 1.1;
 
     /**
-     * GET /api/economy?lat=&lon= — Arbeitslosenquote des Kreises, in dem die
-     * Kartenmitte liegt. Zweistufig: erst herausfinden, welcher Kreis das
-     * überhaupt ist (Reverse-Geocoding bei Nominatim, gecacht — siehe
-     * kreis_lookup_cache), dann die Quote aus der eigenen, einmalig
-     * importierten unemployment_rates-Tabelle lesen (bin/import_unemployment.php).
-     * Anders als bei Klima/Luft gibt es keinen fertigen Datensatz "nächste
-     * Station" — die Kreis-Zugehörigkeit selbst muss erst ermittelt werden.
+     * GET /api/economy?lat=&lon= — Arbeitslosenquote und Kriminalitätsrate
+     * des Kreises, in dem die Kartenmitte liegt. Zweistufig: erst
+     * herausfinden, welcher Kreis das überhaupt ist (Reverse-Geocoding bei
+     * Nominatim, gecacht — siehe kreis_lookup_cache), dann beide Kennzahlen
+     * aus den eigenen, einmalig importierten Tabellen lesen
+     * (bin/import_unemployment.php, bin/import_crime_rates.php). Beide
+     * Kennzahlen teilen sich dieselbe Kreis-Zuordnung, deshalb ein
+     * gemeinsamer Endpunkt statt zwei getrennter — ein zweiter Reverse-
+     * Geocoding-Aufruf für dieselbe Kartenmitte wäre reine Verschwendung.
      */
     public function forLocation(): void
     {
@@ -30,26 +32,29 @@ final class EconomyController
 
         $kreisName = $this->resolveKreis($lat, $lon);
         if ($kreisName === null) {
-            $this->json(['quote' => null]);
+            $this->json(['arbeitslosenquote' => null, 'kriminalitaet' => null]);
             return;
         }
 
-        $stmt = Db::get()->prepare(
-            'SELECT quote, reporting_month FROM unemployment_rates WHERE kreis_name = :kreis'
-        );
-        $stmt->execute(['kreis' => $kreisName]);
-        $row = $stmt->fetch();
-        if ($row === false) {
-            // Kreis erkannt, aber noch nicht (oder nicht mehr) importiert —
-            // z.B. während der Import noch läuft.
-            $this->json(['quote' => null, 'kreis' => $kreisName]);
-            return;
-        }
+        $db = Db::get();
+        $unemployment = $db->prepare('SELECT quote, reporting_month FROM unemployment_rates WHERE kreis_name = :kreis');
+        $unemployment->execute(['kreis' => $kreisName]);
+        $unemploymentRow = $unemployment->fetch();
+
+        $crime = $db->prepare('SELECT haeufigkeitszahl, reporting_year FROM crime_rates WHERE kreis_name = :kreis');
+        $crime->execute(['kreis' => $kreisName]);
+        $crimeRow = $crime->fetch();
 
         $this->json([
             'kreis' => $kreisName,
-            'quote' => (float) $row['quote'],
-            'monat' => $row['reporting_month'],
+            'arbeitslosenquote' => $unemploymentRow !== false ? [
+                'quote' => (float) $unemploymentRow['quote'],
+                'monat' => $unemploymentRow['reporting_month'],
+            ] : null,
+            'kriminalitaet' => $crimeRow !== false ? [
+                'haeufigkeitszahl' => (float) $crimeRow['haeufigkeitszahl'],
+                'jahr' => (int) $crimeRow['reporting_year'],
+            ] : null,
         ]);
     }
 

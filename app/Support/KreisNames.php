@@ -478,6 +478,17 @@ final class KreisNames
         return null;
     }
 
+    /**
+     * Regionale Gebietskörperschaften, die eine Kreisstadt komplett ersetzt
+     * haben und dabei einen eigenen vorangestellten Namen bekamen (z.B. die
+     * "Städteregion Aachen" seit der Kommunalreform 2009, die den früheren
+     * "Kreis Aachen" ersetzt). Andere Datenquellen als die Arbeitsagentur
+     * kennen diese Präfixe nicht immer und melden schlicht "Aachen" — ohne
+     * diesen Fallback bliebe das ein Nicht-Treffer, obwohl die Zuordnung
+     * eindeutig ist (in unserer Liste gibt es kein zweites "Aachen").
+     */
+    private const REGIONAL_AUTHORITY_PREFIXES = ['Städteregion', 'Region', 'Regionalverband'];
+
     /** @return array<int, string> */
     private static function candidatesFor(string $needle): array
     {
@@ -485,6 +496,23 @@ final class KreisNames
         $matches = [];
         foreach (self::NAMES as $name) {
             if (self::normalize($name) === $needle) {
+                $matches[] = $name;
+            }
+        }
+        if ($matches === []) {
+            foreach (self::REGIONAL_AUTHORITY_PREFIXES as $prefix) {
+                $matches = array_merge($matches, self::candidatesForExact($prefix . ' ' . $needle));
+            }
+        }
+        return $matches;
+    }
+
+    /** @return array<int, string> */
+    private static function candidatesForExact(string $normalizedTarget): array
+    {
+        $matches = [];
+        foreach (self::NAMES as $name) {
+            if (self::normalize($name) === $normalizedTarget) {
                 $matches[] = $name;
             }
         }
