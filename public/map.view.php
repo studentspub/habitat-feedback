@@ -155,6 +155,24 @@
 
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
+  // Vier verschiedene Ebenen (Bewertungen, Zensus, OSM-Kategorien, Klima)
+  // hängen jeweils eigenständig an moveend/zoomend. Ohne Debounce feuert
+  // jede einzeln bei jedem Zwischenschritt einer Kartenbewegung — bei
+  // mehreren aktiven Ebenen gleichzeitig stapeln sich so schnell viele
+  // Anfragen, die unser einfacher Dev-Server (`php -S`, bewusst schlicht,
+  // bearbeitet Anfragen nacheinander statt parallel) erst nach und nach
+  // abarbeitet. Ergebnis: die Karte zeigt eine Weile noch den alten
+  // Ausschnitt, obwohl man längst weitergezoomt hat. debounce() sorgt
+  // dafür, dass erst 350ms nach der letzten Bewegung überhaupt eine neue
+  // Anfragenrunde losgeht, statt bei jedem Zwischenschritt.
+  function debounce(fn, delayMs) {
+    let timeout = null;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn(...args), delayMs);
+    };
+  }
+
   function colorForScore(score) {
     if (score >= 4) return '#3B7A52';
     if (score >= 3) return '#D9971E';
@@ -186,7 +204,7 @@
     });
   }
 
-  map.on('moveend', loadPins);
+  map.on('moveend', debounce(loadPins, 350));
   loadPins();
 
   // Amtliche Statistik-Ebenen: Zensus 2022. Direkter Abruf beim
@@ -392,7 +410,7 @@
       loadCensusMetric(metric);
     });
   });
-  map.on('moveend zoomend', () => CENSUS_METRICS.forEach(loadCensusMetric));
+  map.on('moveend zoomend', debounce(() => CENSUS_METRICS.forEach(loadCensusMetric), 350));
 
   // Freizeit & Infrastruktur aus OpenStreetMap. Läuft über /api/poi (unseren
   // eigenen Server-Proxy mit Cache) statt direkt gegen Overpass — siehe
@@ -481,7 +499,7 @@
       loadPoiCategory(cat);
     });
   });
-  map.on('moveend zoomend', () => POI_CATEGORIES.forEach(loadPoiCategory));
+  map.on('moveend zoomend', debounce(() => POI_CATEGORIES.forEach(loadPoiCategory), 350));
 
   // Klima & Luft — Kontext-Kärtchen für die Kartenmitte statt Kachel-Layer
   // (siehe CSS-Kommentar oben). Zwei eigenständige, aber inhaltlich
@@ -551,7 +569,7 @@
     e.target.classList.toggle('active', climateEnabled);
     loadClimateCard();
   });
-  map.on('moveend', loadClimateCard);
+  map.on('moveend', debounce(loadClimateCard, 350));
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
