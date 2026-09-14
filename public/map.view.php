@@ -13,19 +13,26 @@
 
   #toolbar {
     position: absolute; top: 10px; left: 50px; right: 10px; z-index: 1000;
-    display: flex; gap: 8px; max-width: 420px;
+    display: flex; gap: 8px; align-items: flex-start; max-width: 460px;
+  }
+  #search-group { flex: 1; position: relative; }
+  #search-label {
+    display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+    color: #1B2420; background: rgba(255,255,255,0.9);
+    padding: 2px 8px; border-radius: 4px 4px 0 0; margin-bottom: -1px;
   }
   #search {
-    flex: 1; padding: 0.6em 0.8em; border: 1px solid #CFD8C9; border-radius: 6px;
-    font-size: 0.95rem; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    display: block; width: 100%; box-sizing: border-box; padding: 0.6em 0.8em;
+    border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.95rem; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
   #rate-link {
     padding: 0.6em 1em; background: #1B2420; color: white; text-decoration: none;
     border-radius: 6px; font-size: 0.95rem; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    margin-top: 22px;
   }
   #suggestions {
-    position: absolute; top: 46px; left: 0; right: 0; background: white; border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 1001;
+    position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 1001; margin-top: 2px;
   }
   #suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
   #suggestions div:hover { background: #EBEEE5; }
@@ -41,8 +48,9 @@
 </head>
 <body>
 <div id="toolbar">
-  <div style="position: relative; flex: 1;">
-    <input type="text" id="search" placeholder="Straße oder Ort suchen…" autocomplete="off">
+  <div id="search-group">
+    <span id="search-label">Bereits bewertete Straßen</span>
+    <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
     <div id="suggestions" hidden></div>
   </div>
   <a id="rate-link" href="/bewerten">+ Bewerten</a>
