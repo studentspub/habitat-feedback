@@ -35,6 +35,11 @@ if ($uri === '/api/search' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/reports' && $method === 'POST') {
+    (new App\Http\ReportController())->submit();
+    return;
+}
+
 if ($uri === '/api/pi/queue' && $method === 'GET') {
     (new App\Http\PiController())->queue();
     return;
@@ -52,6 +57,21 @@ if ($uri === '/' || $uri === '/index.php') {
 
 if ($uri === '/bewerten') {
     require __DIR__ . '/bewerten.view.php';
+    return;
+}
+
+if ($uri === '/melden') {
+    require __DIR__ . '/melden.view.php';
+    return;
+}
+
+if ($uri === '/impressum') {
+    require __DIR__ . '/impressum.view.php';
+    return;
+}
+
+if ($uri === '/datenschutz') {
+    require __DIR__ . '/datenschutz.view.php';
     return;
 }
 

@@ -29,6 +29,14 @@
   }
   #suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
   #suggestions div:hover { background: #EBEEE5; }
+
+  #legal {
+    position: absolute; bottom: 8px; left: 8px; z-index: 1000;
+    background: rgba(255,255,255,0.85); padding: 4px 10px; border-radius: 6px;
+    font-size: 0.78rem;
+  }
+  #legal a { color: #31576D; margin-right: 10px; text-decoration: none; }
+  #legal a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -40,6 +48,9 @@
   <a id="rate-link" href="/bewerten">+ Bewerten</a>
 </div>
 <div id="map"></div>
+<div id="legal">
+  <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
   const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Übersicht
@@ -74,7 +85,8 @@
         '<div class="wl-popup"><h3>' + seg.street_name + ' (Abschnitt ' + seg.segment_index + ')</h3>' +
         '<p>' + seg.postal_code + ' ' + seg.city + '</p>' +
         '<p class="score">Gesamt: ' + parseFloat(seg.avg_overall).toFixed(1) + ' / 5</p>' +
-        '<p>' + seg.rating_count + ' Bewertungen &middot; ' + seg.address_count + ' Adressen im Abschnitt</p></div>'
+        '<p>' + seg.rating_count + ' Bewertungen &middot; ' + seg.address_count + ' Adressen im Abschnitt</p>' +
+        '<p><a href="/melden?segment=' + seg.id + '">Bewertungen melden</a></p></div>'
       );
     });
   }

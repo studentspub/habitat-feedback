@@ -22,6 +22,8 @@
   #result.ok { background: #DEEDE1; }
   #result.error { background: #F3DDD1; }
   a.back { display: inline-block; margin-bottom: 1em; }
+  footer { margin-top: 3em; font-size: 0.8em; }
+  footer a { color: #31576D; margin-right: 12px; }
 </style>
 </head>
 <body>
@@ -55,6 +57,8 @@
   <button type="submit" id="submit">Bewertung absenden</button>
 </form>
 <div id="result" hidden></div>
+
+<footer><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
 <script>
   const criteria = ['ruhe', 'instandhaltung', 'umgangston', 'infrastruktur', 'sicherheit'];

@@ -52,13 +52,18 @@ CREATE TABLE IF NOT EXISTS geocode_queue (
   processed_at       DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Meldungen beziehen sich auf den Abschnitt als Ganzes, nicht auf eine
+-- einzelne Bewertung — Nutzer sehen nie einzelne Bewertungen, nur das
+-- Abschnitts-Aggregat (Konzeptpapier Abschnitt 02), können sich also auch
+-- nur darauf beziehen ("die Bewertungen für diesen Abschnitt wirken
+-- unplausibel/falsch").
 CREATE TABLE IF NOT EXISTS reports (
   id                 BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  rating_id          BIGINT UNSIGNED NOT NULL,
-  reason             VARCHAR(255) NOT NULL,
+  segment_id         BIGINT UNSIGNED NOT NULL,
+  reason             VARCHAR(1000) NOT NULL,
   status             ENUM('open','reviewed','dismissed') NOT NULL DEFAULT 'open',
   created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_reports_rating FOREIGN KEY (rating_id) REFERENCES ratings(id)
+  CONSTRAINT fk_reports_segment FOREIGN KEY (segment_id) REFERENCES segments(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Vorberechnete Aggregate, damit die Karte nicht bei jedem Aufruf
