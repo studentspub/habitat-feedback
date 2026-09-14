@@ -712,6 +712,18 @@
     } else {
       rows.push(['Straftaten je 100.000 Einw.', 'Keine Daten verfügbar']);
     }
+    if (data.grundsicherungImAlter) {
+      rows.push(['Empfänger Grundsicherung im Alter', data.grundsicherungImAlter.anzahl.toLocaleString('de-DE') + ' (±2, gerundet)']);
+      sources.push('Grundsicherung im Alter: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.grundsicherungImAlter.jahr);
+    } else {
+      rows.push(['Empfänger Grundsicherung im Alter', 'Keine Daten verfügbar']);
+    }
+    if (data.elterngeld) {
+      rows.push(['Elterngeld-Bezieher (4 Quartale)', data.elterngeld.anzahl.toLocaleString('de-DE')]);
+      sources.push('Elterngeld: Regionaldatenbank Deutschland (Destatis), bis Berichtsjahr ' + data.elterngeld.jahr);
+    } else {
+      rows.push(['Elterngeld-Bezieher (4 Quartale)', 'Keine Daten verfügbar']);
+    }
 
     card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
       + '<div class="src">' + sources.join(' · ') + '</div>';

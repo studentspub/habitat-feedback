@@ -12,6 +12,11 @@ return [
     ],
     'pi_api_token' => 'changeme',
 
+    // Persönlicher API-Token der Regionaldatenbank Deutschland (GENESIS),
+    // sichtbar nach Login auf regionalstatistik.de im Modal
+    // "Webservice-Schnittstelle (API)". Ersetzt Nutzername+Passwort.
+    'genesis_api_token' => 'changeme',
+
     // Zufälliger, geheimer String — geht in den Fingerprint-Hash ein
     // (siehe Konzeptpapier Abschnitt 02, Abwehr von Mehrfachbewertungen).
     'fingerprint_salt' => 'changeme',

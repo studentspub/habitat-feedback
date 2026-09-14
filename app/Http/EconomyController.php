@@ -10,15 +10,17 @@ final class EconomyController
     private const NOMINATIM_MIN_INTERVAL_SECONDS = 1.1;
 
     /**
-     * GET /api/economy?lat=&lon= — Arbeitslosenquote und Kriminalitätsrate
-     * des Kreises, in dem die Kartenmitte liegt. Zweistufig: erst
-     * herausfinden, welcher Kreis das überhaupt ist (Reverse-Geocoding bei
-     * Nominatim, gecacht — siehe kreis_lookup_cache), dann beide Kennzahlen
-     * aus den eigenen, einmalig importierten Tabellen lesen
-     * (bin/import_unemployment.php, bin/import_crime_rates.php). Beide
-     * Kennzahlen teilen sich dieselbe Kreis-Zuordnung, deshalb ein
-     * gemeinsamer Endpunkt statt zwei getrennter — ein zweiter Reverse-
-     * Geocoding-Aufruf für dieselbe Kartenmitte wäre reine Verschwendung.
+     * GET /api/economy?lat=&lon= — vier Kennzahlen des Kreises, in dem die
+     * Kartenmitte liegt: Arbeitslosenquote, Kriminalitätsrate, Empfänger
+     * von Grundsicherung im Alter und Elterngeld-Bezieher. Zweistufig:
+     * erst herausfinden, welcher Kreis das überhaupt ist (Reverse-Geocoding
+     * bei Nominatim, gecacht — siehe kreis_lookup_cache), dann alle
+     * Kennzahlen aus den eigenen, einmalig importierten Tabellen lesen
+     * (bin/import_unemployment.php, bin/import_crime_rates.php,
+     * bin/import_grundsicherung.php, bin/import_elterngeld.php). Alle
+     * teilen sich dieselbe Kreis-Zuordnung, deshalb ein gemeinsamer
+     * Endpunkt statt vier getrennter — jeder weitere Reverse-Geocoding-
+     * Aufruf für dieselbe Kartenmitte wäre reine Verschwendung.
      */
     public function forLocation(): void
     {
@@ -45,6 +47,14 @@ final class EconomyController
         $crime->execute(['kreis' => $kreisName]);
         $crimeRow = $crime->fetch();
 
+        $grundsicherung = $db->prepare('SELECT empfaenger_altersgrenze, reporting_year FROM grundsicherung_alter WHERE kreis_name = :kreis');
+        $grundsicherung->execute(['kreis' => $kreisName]);
+        $grundsicherungRow = $grundsicherung->fetch();
+
+        $elterngeld = $db->prepare('SELECT bezieher_anzahl, reporting_year FROM elterngeld_bezieher WHERE kreis_name = :kreis');
+        $elterngeld->execute(['kreis' => $kreisName]);
+        $elterngeldRow = $elterngeld->fetch();
+
         $this->json([
             'kreis' => $kreisName,
             'arbeitslosenquote' => $unemploymentRow !== false ? [
@@ -54,6 +64,14 @@ final class EconomyController
             'kriminalitaet' => $crimeRow !== false ? [
                 'haeufigkeitszahl' => (float) $crimeRow['haeufigkeitszahl'],
                 'jahr' => (int) $crimeRow['reporting_year'],
+            ] : null,
+            'grundsicherungImAlter' => $grundsicherungRow !== false ? [
+                'anzahl' => (int) $grundsicherungRow['empfaenger_altersgrenze'],
+                'jahr' => (int) $grundsicherungRow['reporting_year'],
+            ] : null,
+            'elterngeld' => $elterngeldRow !== false ? [
+                'anzahl' => (int) $elterngeldRow['bezieher_anzahl'],
+                'jahr' => (int) $elterngeldRow['reporting_year'],
             ] : null,
         ]);
     }

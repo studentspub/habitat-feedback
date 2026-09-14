@@ -479,6 +479,30 @@ final class KreisNames
     }
 
     /**
+     * Ordnet einen von der GENESIS-Regionaldatenbank gelieferten Kreisnamen
+     * (z.B. "München, kreisfreie Stadt" oder "München, Landkreis") unserem
+     * amtlichen Namen zu. Anders als bei Nominatim (siehe match()) steckt
+     * die Landkreis/kreisfreie-Stadt-Unterscheidung hier direkt im
+     * gelieferten Namen selbst, nicht in getrennten county/city-Feldern.
+     */
+    public static function matchByGenesisName(string $name): ?string
+    {
+        $name = trim($name);
+        $candidates = self::candidatesFor($name);
+        if ($candidates === []) {
+            return null;
+        }
+
+        $isLandkreis = str_contains($name, ', Landkreis');
+        if ($isLandkreis) {
+            usort($candidates, static fn (string $a, string $b): int => (int) str_contains($a, ',') <=> (int) str_contains($b, ','));
+        } else {
+            usort($candidates, static fn (string $a, string $b): int => (int) str_contains($b, ',') <=> (int) str_contains($a, ','));
+        }
+        return $candidates[0];
+    }
+
+    /**
      * Regionale Gebietskörperschaften, die eine Kreisstadt komplett ersetzt
      * haben und dabei einen eigenen vorangestellten Namen bekamen (z.B. die
      * "Städteregion Aachen" seit der Kommunalreform 2009, die den früheren
