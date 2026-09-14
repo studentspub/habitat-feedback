@@ -1,25 +1,32 @@
 <?php
-// Smoke-test: bestätigt, dass PHP in der habitat-feedback-dev WSL-Distro
-// dieselben Dateien liest, die unter D:\git\habitat-feedback liegen.
-$config = require __DIR__ . '/../config/config.php';
 
-$pdo = null;
-$dbStatus = 'nicht verbunden';
-try {
-    $db = $config['db'];
-    $dsn = "mysql:host={$db['host']};dbname={$db['dbname']};charset={$db['charset']}";
-    $pdo = new PDO($dsn, $db['user'], $db['pass']);
-    $dbStatus = 'verbunden (' . $pdo->query('SELECT VERSION()')->fetchColumn() . ')';
-} catch (PDOException $e) {
-    $dbStatus = 'Fehler: ' . $e->getMessage();
+spl_autoload_register(function (string $class): void {
+    if (!str_starts_with($class, 'App\\')) {
+        return;
+    }
+    $relative = substr($class, strlen('App\\'));
+    $path = __DIR__ . '/../app/' . str_replace('\\', '/', $relative) . '.php';
+    if (is_file($path)) {
+        require $path;
+    }
+});
+
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+if ($uri === '/api/map') {
+    (new App\Http\MapApiController())->pins();
+    return;
 }
-?>
-<!doctype html>
-<meta charset="utf-8">
-<title>Habitat Feedback Dev-Umgebung</title>
-<body style="font-family: sans-serif; max-width: 40em; margin: 3em auto;">
-<h1>Habitat Feedback Dev-Umgebung läuft</h1>
-<p>PHP-Version: <?= phpversion() ?></p>
-<p>Datei gelesen von: <?= __FILE__ ?></p>
-<p>MariaDB: <?= htmlspecialchars($dbStatus) ?></p>
-</body>
+
+if (preg_match('#^/api/segments/(\d+)$#', $uri, $m)) {
+    (new App\Http\MapApiController())->detail((int) $m[1]);
+    return;
+}
+
+if ($uri === '/' || $uri === '/index.php') {
+    require __DIR__ . '/map.view.php';
+    return;
+}
+
+http_response_code(404);
+echo 'Nicht gefunden.';

@@ -11,4 +11,10 @@ return [
         'charset' => 'utf8mb4',
     ],
     'pi_api_token' => 'changeme',
+
+    // Sichtbarkeitsschwellen — siehe Konzeptpapier Abschnitt 02.
+    'visibility' => [
+        'min_address_count' => 6,
+        'min_rating_count'  => 3,
+    ],
 ];
