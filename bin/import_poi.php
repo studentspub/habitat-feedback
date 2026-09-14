@@ -26,6 +26,34 @@ const GERMANY_BBOX = '47.27,5.87,55.06,15.04'; // minLat,minLon,maxLat,maxLon
 const MAX_ATTEMPTS = 4;
 
 /**
+ * Fallback-Ebene für Tags, die selbst einzeln (siehe fetchTagFromOverpass)
+ * bundesweit noch zu teuer für Overpass sind — bislang nur bei
+ * highway=bus_stop beobachtet (mit Abstand die häufigste ÖPNV-
+ * Haltestellenart in OSM). Grenzen einmalig über Nominatim ermittelt
+ * (minLat,minLon,maxLat,maxLon, wie GERMANY_BBOX); Überlappungen an
+ * Landesgrenzen sind unschädlich, poi_locations verhindert Duplikate über
+ * den UNIQUE-Key (category, osm_type, osm_id).
+ */
+const BUNDESLAND_BBOXES = [
+    'Baden-Württemberg' => '47.5324012,7.5117461,49.7912941,10.4956269',
+    'Bayern' => '47.2701114,8.9763654,50.5647142,13.8396495',
+    'Berlin' => '52.3382448,13.0883450,52.6755087,13.7611609',
+    'Brandenburg' => '51.3590081,11.2657725,53.5590617,14.7658159',
+    'Bremen' => '53.0111644,8.4815929,53.5984187,8.9908300',
+    'Hamburg' => '53.3951118,8.1044993,54.0276500,10.3252805',
+    'Hessen' => '49.3952716,7.7724673,51.6577889,10.2364142',
+    'Mecklenburg-Vorpommern' => '53.1103525,10.5936136,54.8849662,14.4122208',
+    'Niedersachsen' => '51.2950693,6.3459138,54.1378463,11.5981180',
+    'Nordrhein-Westfalen' => '50.3226897,5.8663153,52.5314935,9.4617417',
+    'Rheinland-Pfalz' => '48.9664472,6.1122591,50.9423049,8.5083135',
+    'Saarland' => '49.1119512,6.3557914,49.6394270,7.4048307',
+    'Sachsen' => '50.1713271,11.8714837,51.6849651,15.0419309',
+    'Sachsen-Anhalt' => '50.9378455,10.5608411,53.0417792,13.1867940',
+    'Schleswig-Holstein' => '53.3598160,7.5211615,55.0991610,11.6723860',
+    'Thüringen' => '50.2043467,9.8769608,51.6492842,12.6539178',
+];
+
+/**
  * Fragt EINEN Tag-Filter für ganz Deutschland bei Overpass ab, mit
  * Wiederholungsversuchen bei vorübergehenden Fehlern.
  *
@@ -49,9 +77,9 @@ const MAX_ATTEMPTS = 4;
  * mehr Anfragen insgesamt, aber jede einzelne mit realistischer Chance,
  * überhaupt durchzulaufen.
  */
-function fetchTagFromOverpass(string $tagFilter): ?array
+function fetchTagFromOverpass(string $tagFilter, string $bbox = GERMANY_BBOX): ?array
 {
-    $query = '[out:json][timeout:180];(node[' . $tagFilter . '](' . GERMANY_BBOX . ');way[' . $tagFilter . '](' . GERMANY_BBOX . '););out center;';
+    $query = '[out:json][timeout:180];(node[' . $tagFilter . '](' . $bbox . ');way[' . $tagFilter . '](' . $bbox . '););out center;';
 
     for ($attempt = 1; $attempt <= MAX_ATTEMPTS; $attempt++) {
         $ch = curl_init('https://overpass-api.de/api/interpreter');
@@ -89,6 +117,33 @@ function fetchTagFromOverpass(string $tagFilter): ?array
     }
 
     return null;
+}
+
+/**
+ * Fallback für Tags, die selbst als Einzelabfrage bundesweit in Overpass'
+ * eigenen Timeout laufen: dieselbe Abfrage einmal je Bundesland statt
+ * einmal für ganz Deutschland. Gibt null zurück, wenn auch nur ein
+ * Bundesland komplett fehlschlägt — lieber einen erneuten Gesamtlauf
+ * anstoßen als eine Kategorie leise unvollständig in der DB stehen lassen.
+ *
+ * @return array<int, mixed>|null
+ */
+function fetchTagByBundesland(string $tagFilter): ?array
+{
+    $allElements = [];
+    foreach (BUNDESLAND_BBOXES as $name => $bbox) {
+        echo "\n    $name ... ";
+        $elements = fetchTagFromOverpass($tagFilter, $bbox);
+        if ($elements === null) {
+            echo "fehlgeschlagen.";
+            return null;
+        }
+        echo count($elements) . ' Treffer.';
+        $allElements = array_merge($allElements, $elements);
+        sleep(2);
+    }
+    echo "\n  ";
+    return $allElements;
 }
 
 /**
@@ -161,6 +216,10 @@ foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
     foreach ($tagFilters as $tagFilter) {
         echo "  Tag '$tagFilter' ... ";
         $elements = fetchTagFromOverpass($tagFilter);
+        if ($elements === null) {
+            echo "bundesweit fehlgeschlagen, versuche je Bundesland...";
+            $elements = fetchTagByBundesland($tagFilter);
+        }
         if ($elements === null) {
             echo "fehlgeschlagen, übersprungen.\n";
             $anyTagFailed = true;
