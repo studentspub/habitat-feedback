@@ -28,3 +28,8 @@ Der Raspberry Pi des Nutzers ist bereits mit anderen Diensten belastet (Genealog
 - Kleine, saubere Commits nach jedem sinnvollen Arbeitsschritt — automatisch, ohne vorher nachzufragen.
 - Ein Push auf `main` löst **keinen** automatischen Live-Deploy aus — der Strato-Deploy-Workflow ist bewusst auf manuellen `workflow_dispatch`-Trigger gestellt (siehe Bauplan-Dokument, Abschnitt „Livegang"). Pushen auf `main` ist daher risikofrei.
 - `config/config.php` niemals committen (per `.gitignore` ausgeschlossen).
+
+## Weitere Dokumente
+
+- [`BETRIEB.md`](BETRIEB.md) — gesynct. Gängige manuelle Befehle (WSL starten/stoppen, Dev-Server, MariaDB, Troubleshooting).
+- `_INFRASTRUKTUR.local.txt` — **NICHT gesynct** (per `.gitignore`). Enthält alle Zugangsdaten/Infrastruktur-Details im Klartext, rein für den Nutzer. Bei jeder neuen Zugangsdaten-relevanten Änderung (neue DB, neuer Service, neuer Token) dort mitpflegen — niemals in eine gesyncte Datei oder in Code schreiben.

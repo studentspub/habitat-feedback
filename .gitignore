@@ -1,5 +1,6 @@
 # Secrets — niemals committen
 /config/config.php
+/_INFRASTRUKTUR.local.txt
 
 # Abhängigkeiten (werden lokal/in CI installiert, nicht committet)
 /vendor/
