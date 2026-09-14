@@ -26,7 +26,7 @@ const GERMANY_BBOX = '47.27,5.87,55.06,15.04'; // minLat,minLon,maxLat,maxLon
 const MAX_ATTEMPTS = 4;
 
 /**
- * Fragt eine Kategorie für ganz Deutschland bei Overpass ab, mit
+ * Fragt EINEN Tag-Filter für ganz Deutschland bei Overpass ab, mit
  * Wiederholungsversuchen bei vorübergehenden Fehlern.
  *
  * Ursprünglich mit area["ISO3166-1"="DE"] geplant (exakte Staatsgrenze statt
@@ -36,14 +36,22 @@ const MAX_ATTEMPTS = 4;
  * für Overpass drastisch billiger; die Ungenauigkeit (ein schmaler Streifen
  * jenseits der Grenze zu Nachbarländern wird mit erfasst) ist für eine
  * "was gibt's in der Nähe"-Funktion vernachlässigbar.
+ *
+ * Zweite Lektion aus der Praxis: ursprünglich lief hier EINE Abfrage pro
+ * Kategorie, mit allen ihren Tags (z.B. bei 'food_drink' fünf: bar, pub,
+ * cafe, restaurant, biergarten) per ODER verknüpft. Für Kategorien mit
+ * vielen und/oder bundesweit sehr häufigen Tags lief das zuverlässig in
+ * Overpass' eigenen 180s-Query-Timeout ("Query timed out ... after 181
+ * seconds", nicht bloß ein überlasteter Server, 4/4 Versuche hintereinander
+ * identisch) — die kombinierte Selektivität mehrerer ODER-Zweige über ganz
+ * Deutschland ist schlicht zu teuer, egal wie oft man es wiederholt. Eine
+ * Abfrage pro einzelnem Tag ist jeweils deutlich billiger und zuverlässiger;
+ * mehr Anfragen insgesamt, aber jede einzelne mit realistischer Chance,
+ * überhaupt durchzulaufen.
  */
-function fetchCategoryFromOverpass(array $tagFilters): ?array
+function fetchTagFromOverpass(string $tagFilter): ?array
 {
-    $clauses = implode('', array_map(
-        fn (string $t) => 'node[' . $t . '](' . GERMANY_BBOX . ');way[' . $t . '](' . GERMANY_BBOX . ');',
-        $tagFilters
-    ));
-    $query = '[out:json][timeout:180];(' . $clauses . ');out center;';
+    $query = '[out:json][timeout:180];(node[' . $tagFilter . '](' . GERMANY_BBOX . ');way[' . $tagFilter . '](' . GERMANY_BBOX . '););out center;';
 
     for ($attempt = 1; $attempt <= MAX_ATTEMPTS; $attempt++) {
         $ch = curl_init('https://overpass-api.de/api/interpreter');
@@ -147,26 +155,37 @@ foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
         continue;
     }
     echo "Lade Kategorie '$category' für ganz Deutschland...\n";
-    $elements = fetchCategoryFromOverpass($tagFilters);
-    if ($elements === null) {
-        fwrite(STDERR, "  Fehlgeschlagen, überspringe '$category'.\n");
-        continue;
+
+    $categoryTotal = 0;
+    $anyTagFailed = false;
+    foreach ($tagFilters as $tagFilter) {
+        echo "  Tag '$tagFilter' ... ";
+        $elements = fetchTagFromOverpass($tagFilter);
+        if ($elements === null) {
+            echo "fehlgeschlagen, übersprungen.\n";
+            $anyTagFailed = true;
+            sleep(2);
+            continue;
+        }
+
+        $rows = mapElementsToRows($elements);
+        foreach ($rows as $row) {
+            $upsert->execute([
+                'category' => $category,
+                'osm_id' => $row['osm_id'],
+                'osm_type' => $row['osm_type'],
+                'lat' => $row['lat'],
+                'lon' => $row['lon'],
+                'name' => $row['name'],
+            ]);
+        }
+        $categoryTotal += count($rows);
+        echo count($rows) . " Treffer.\n";
+
+        sleep(2); // kurze Pause zwischen den Tags, aus Rücksicht auf Overpass
     }
 
-    $rows = mapElementsToRows($elements);
-    foreach ($rows as $row) {
-        $upsert->execute([
-            'category' => $category,
-            'osm_id' => $row['osm_id'],
-            'osm_type' => $row['osm_type'],
-            'lat' => $row['lat'],
-            'lon' => $row['lon'],
-            'name' => $row['name'],
-        ]);
-    }
-    echo '  ' . count($rows) . " Standorte importiert.\n";
-
-    sleep(2); // kurze Pause zwischen den Kategorien, aus Rücksicht auf Overpass
+    echo '  Kategorie ' . ($anyTagFailed ? 'teilweise' : 'vollständig') . ": $categoryTotal Standorte importiert.\n";
 }
 
 echo "Fertig.\n";
