@@ -54,13 +54,19 @@
   #legal a:hover { text-decoration: underline; }
 
   /* Amtliche Statistik-Ebene, wie eine Wetterkarten-Umschaltung — eigenständig
-     von den Bewertungs-Pins, per Checkbox an/aus, mit eigener Legende. */
+     von den Bewertungs-Pins, per echtem Button an/aus, mit Legende, die sich
+     der aktuell aktiven Rasterauflösung anpasst. */
   .census-control {
-    background: rgba(255,255,255,0.92); padding: 8px 10px; border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; min-width: 190px;
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 210px;
   }
-  .census-control label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; }
-  .census-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 4px; }
+  #census-btn {
+    display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  #census-btn.active { background: #31576D; }
+  .census-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
   .census-legend { display: none; margin-top: 8px; }
   .census-legend.visible { display: block; }
   .census-legend .row { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; margin-top: 2px; }
@@ -125,46 +131,115 @@
   map.on('moveend', loadPins);
   loadPins();
 
-  // Amtliche Statistik-Ebene: Zensus 2022, 100m-Gitter, Einwohnerzahl.
-  // Direkter Abruf beim ArcGIS-Dienst des Statistischen Bundesamts —
-  // öffentlicher, unauthentifizierter Geodatendienst ohne Nominatim-artige
+  // Amtliche Statistik-Ebene: Zensus 2022, Einwohnerzahl. Direkter Abruf
+  // beim ArcGIS-Dienst des Statistischen Bundesamts — öffentlicher,
+  // unauthentifizierter Geodatendienst ohne Nominatim-artige
   // Ratenlimit-Problematik, daher (anders als die Adresssuche) ohne
-  // eigenen Server-Proxy. Nur ab einer gewissen Zoomstufe aktiv, weil der
-  // Dienst pro Abfrage maximal 2000 Zellen liefert — bei Landkarten-Zoom
-  // wäre das nur ein irreführender Bruchteil der Fläche.
-  const CENSUS_URL = 'https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Zensus2022_grid_final/FeatureServer/0/query';
-  const CENSUS_MIN_ZOOM = 15;
-  const censusBreaks = [
-    { max: 9, color: '#EFF3FF', label: '0–9' },
-    { max: 49, color: '#BDD7E7', label: '10–49' },
-    { max: 99, color: '#6BAED6', label: '50–99' },
-    { max: 199, color: '#2171B5', label: '100–199' },
-    { max: Infinity, color: '#08306B', label: '200+' }
+  // eigenen Server-Proxy.
+  //
+  // Der Dienst liefert bereits fertige amtliche Aggregate auf drei
+  // Rasterstufen (100m/1km/10km) im selben Layer-Schema — eigenes
+  // Aufsummieren der 100m-Zellen im Browser wäre nicht nur unnötig,
+  // sondern bei größeren Kartenausschnitten (z.B. "ganz Hessen") auch gar
+  // nicht möglich: der Dienst liefert pro Abfrage maximal 2000 Zellen, und
+  // Hessen allein hätte ca. 44.500 100m-Zellen. Stattdessen wird die
+  // Rasterstufe anhand der tatsächlichen Fläche des Kartenausschnitts
+  // gewählt — automatisch gröber beim Rauszoomen, automatisch feiner beim
+  // Reinzoomen, wie bei einer Wetterkarte.
+  const CENSUS_TIERS = [
+    {
+      layer: 0, maxAreaKm2: 20, label: '100m-Raster (Straßenblock)',
+      breaks: [
+        { max: 9, color: '#EFF3FF', label: '0–9' },
+        { max: 49, color: '#BDD7E7', label: '10–49' },
+        { max: 99, color: '#6BAED6', label: '50–99' },
+        { max: 199, color: '#2171B5', label: '100–199' },
+        { max: Infinity, color: '#08306B', label: '200+' }
+      ]
+    },
+    {
+      layer: 1, maxAreaKm2: 1500, label: '1km-Raster (Stadt/Region)',
+      breaks: [
+        { max: 499, color: '#EFF3FF', label: '0–499' },
+        { max: 1999, color: '#BDD7E7', label: '500–1.999' },
+        { max: 4999, color: '#6BAED6', label: '2.000–4.999' },
+        { max: 9999, color: '#2171B5', label: '5.000–9.999' },
+        { max: Infinity, color: '#08306B', label: '10.000+' }
+      ]
+    },
+    {
+      layer: 2, maxAreaKm2: 150000, label: '10km-Raster (Bundesland-Maßstab)',
+      breaks: [
+        { max: 4999, color: '#EFF3FF', label: '0–4.999' },
+        { max: 24999, color: '#BDD7E7', label: '5.000–24.999' },
+        { max: 74999, color: '#6BAED6', label: '25.000–74.999' },
+        { max: 199999, color: '#2171B5', label: '75.000–199.999' },
+        { max: Infinity, color: '#08306B', label: '200.000+' }
+      ]
+    }
   ];
-  function censusColor(pop) {
-    return censusBreaks.find(b => pop <= b.max).color;
+  const CENSUS_URL_BASE = 'https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Zensus2022_grid_final/FeatureServer/';
+
+  function viewportAreaKm2() {
+    const b = map.getBounds();
+    const midLatRad = (b.getNorth() + b.getSouth()) / 2 * Math.PI / 180;
+    const heightKm = (b.getNorth() - b.getSouth()) * 111;
+    const widthKm = (b.getEast() - b.getWest()) * 111 * Math.cos(midLatRad);
+    return Math.max(heightKm, 0) * Math.max(widthKm, 0);
+  }
+
+  function pickCensusTier() {
+    const area = viewportAreaKm2();
+    return CENSUS_TIERS.find(t => area <= t.maxAreaKm2) || null;
   }
 
   let censusLayer = null;
   let censusEnabled = false;
+  let censusRequestId = 0; // verhindert, dass eine späte Antwort eine bereits
+                            // ausgeschaltete/überholte Anzeige wieder aufleben lässt
+
+  function renderCensusLegend(tier) {
+    const hint = document.getElementById('census-hint');
+    const legend = document.getElementById('census-legend');
+    if (!tier) {
+      hint.textContent = 'Weiter reinzoomen, um Einwohnerzahlen zu sehen (z.B. auf Bundesland-Ebene beginnen).';
+      legend.classList.remove('visible');
+      return;
+    }
+    hint.textContent = 'Amtliche Zensus-2022-Daten, ' + tier.label + '. Weiter reinzoomen für feinere Auflösung.';
+    legend.innerHTML = tier.breaks.map(b =>
+      '<div class="row"><span class="swatch" style="background:' + b.color + '"></span>' + b.label + ' Einw.</div>'
+    ).join('');
+    legend.classList.add('visible');
+  }
 
   async function loadCensusLayer() {
+    const myRequestId = ++censusRequestId;
+
     if (censusLayer) { map.removeLayer(censusLayer); censusLayer = null; }
-    if (!censusEnabled || map.getZoom() < CENSUS_MIN_ZOOM) return;
+    if (!censusEnabled) return;
+
+    const tier = pickCensusTier();
+    renderCensusLegend(tier);
+    if (!tier) return;
 
     const b = map.getBounds();
     const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-    const url = CENSUS_URL + '?' + new URLSearchParams({
+    const url = CENSUS_URL_BASE + tier.layer + '/query?' + new URLSearchParams({
       geometry: bbox, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
       spatialRel: 'esriSpatialRelIntersects', outFields: 'Einwohner', returnGeometry: 'true', f: 'geojson'
     });
     const res = await fetch(url);
     const geojson = await res.json();
 
+    // Zwischenzeitlich wieder ausgeschaltet oder von einer neueren Anfrage
+    // überholt? Dann dieses (jetzt veraltete) Ergebnis verwerfen.
+    if (myRequestId !== censusRequestId || !censusEnabled) return;
+
     censusLayer = L.geoJSON(geojson, {
       style: f => ({
-        fillColor: censusColor(f.properties.Einwohner || 0), fillOpacity: 0.55,
-        color: 'rgba(27,36,32,0.2)', weight: 1
+        fillColor: (tier.breaks.find(br => (f.properties.Einwohner || 0) <= br.max) || tier.breaks[tier.breaks.length - 1]).color,
+        fillOpacity: 0.55, color: 'rgba(27,36,32,0.2)', weight: 1
       })
     }).addTo(map);
     censusLayer.bringToBack();
@@ -175,20 +250,23 @@
     onAdd: function () {
       const el = L.DomUtil.create('div', 'census-control');
       el.innerHTML =
-        '<label><input type="checkbox" id="census-toggle"> Einwohnerdichte (Zensus 2022)</label>' +
-        '<div class="hint" id="census-hint">Amtliche Statistik, 100m-Raster — ab Straßenblock-Zoom sichtbar</div>' +
-        '<div class="census-legend" id="census-legend">' +
-        censusBreaks.map(b => '<div class="row"><span class="swatch" style="background:' + b.color + '"></span>' + b.label + ' Einw.</div>').join('') +
-        '</div>';
+        '<button type="button" id="census-btn">Einwohnerzahlen anzeigen</button>' +
+        '<div class="hint" id="census-hint"></div>' +
+        '<div class="census-legend" id="census-legend"></div>';
       L.DomEvent.disableClickPropagation(el);
       return el;
     }
   });
   map.addControl(new CensusControl());
 
-  document.getElementById('census-toggle').addEventListener('change', (e) => {
-    censusEnabled = e.target.checked;
-    document.getElementById('census-legend').classList.toggle('visible', censusEnabled);
+  document.getElementById('census-btn').addEventListener('click', (e) => {
+    censusEnabled = !censusEnabled;
+    e.target.textContent = censusEnabled ? 'Einwohnerzahlen ausblenden' : 'Einwohnerzahlen anzeigen';
+    e.target.classList.toggle('active', censusEnabled);
+    if (!censusEnabled) {
+      document.getElementById('census-hint').textContent = '';
+      document.getElementById('census-legend').classList.remove('visible');
+    }
     loadCensusLayer();
   });
   map.on('moveend zoomend', loadCensusLayer);
