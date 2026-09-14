@@ -143,6 +143,30 @@
   }
   #broadband-btn.active { background: #31576D; }
   .broadband-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+
+  /* Wirtschaft — bislang nur die Arbeitslosenquote des Kreises der
+     Kartenmitte, daher dieselbe Kärtchen-Bauweise wie Klima & Luft statt
+     einer Flächen-/Punkt-Ebene. Eigenes Bedienfeld statt Erweiterung des
+     Klima-Kärtchens, weil es inhaltlich eine andere Kategorie ist
+     (Wirtschaft vs. Umwelt) — so bleiben die Recherche-Kategorien aus dem
+     Gespräch auch in der UI als eigenständige Bausteine erkennbar. */
+  .economy-control {
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
+  }
+  #economy-btn {
+    display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  #economy-btn.active { background: #31576D; }
+  .economy-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+  .economy-card { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EBEEE5; }
+  .economy-card.visible { display: block; }
+  .economy-card .row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.78rem; margin-top: 4px; }
+  .economy-card .row .k { color: #4B564F; }
+  .economy-card .row .v { font-weight: 600; text-align: right; }
+  .economy-card .src { font-size: 0.68rem; color: #7C877E; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -629,6 +653,63 @@
       map.removeLayer(broadbandLayer);
     }
   });
+
+  // Wirtschaft — Arbeitslosenquote des Kreises der Kartenmitte. Anders als
+  // Klima/Luft (nächste Station, reine DB-Abfrage) steckt hinter /api/economy
+  // serverseitig ein zweistufiger Nachschlag (erst Kreis per Reverse-Geocoding
+  // bestimmen, dann Quote aus der eigenen DB lesen) — für die Karte selbst
+  // macht das keinen Unterschied, genau dasselbe Kärtchen-Muster wie beim
+  // Klima-Kontrollfeld.
+  let economyEnabled = false;
+  let economyRequestId = 0;
+
+  async function loadEconomyCard() {
+    const myRequestId = ++economyRequestId;
+    const card = document.getElementById('economy-card');
+    const hint = document.getElementById('economy-hint');
+
+    if (!economyEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
+
+    hint.textContent = 'Lädt…';
+    const center = map.getCenter();
+    const res = await fetch('/api/economy?' + new URLSearchParams({ lat: center.lat, lon: center.lng }));
+    const data = await res.json();
+
+    if (myRequestId !== economyRequestId || !economyEnabled) return;
+
+    hint.textContent = 'Wert für die Kartenmitte — beim Verschieben der Karte aktualisiert sich die Anzeige.';
+
+    if (data.quote !== null && data.quote !== undefined) {
+      card.innerHTML =
+        '<div class="row"><span class="k">Arbeitslosenquote (' + data.kreis + ')</span><span class="v">' + data.quote.toFixed(1).replace('.', ',') + ' %</span></div>'
+        + '<div class="src">Statistik der Bundesagentur für Arbeit, Stand ' + data.monat + '</div>';
+    } else {
+      card.innerHTML = '<div class="row"><span class="k">Arbeitslosenquote</span><span class="v">Keine Daten verfügbar</span></div>';
+    }
+    card.classList.add('visible');
+  }
+
+  const EconomyControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'economy-control');
+      el.innerHTML =
+        '<button type="button" id="economy-btn">Wirtschaft anzeigen</button>' +
+        '<div class="hint" id="economy-hint"></div>' +
+        '<div class="economy-card" id="economy-card"></div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new EconomyControl());
+
+  document.getElementById('economy-btn').addEventListener('click', (e) => {
+    economyEnabled = !economyEnabled;
+    e.target.textContent = economyEnabled ? 'Wirtschaft ausblenden' : 'Wirtschaft anzeigen';
+    e.target.classList.toggle('active', economyEnabled);
+    loadEconomyCard();
+  });
+  map.on('moveend', debounce(loadEconomyCard, 350));
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');

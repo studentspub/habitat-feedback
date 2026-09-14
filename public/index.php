@@ -55,6 +55,11 @@ if ($uri === '/api/air-quality' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/economy' && $method === 'GET') {
+    (new App\Http\EconomyController())->forLocation();
+    return;
+}
+
 if ($uri === '/api/reports' && $method === 'POST') {
     (new App\Http\ReportController())->submit();
     return;
