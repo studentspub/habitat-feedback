@@ -3,12 +3,19 @@
 namespace App\Http;
 
 use App\Support\Db;
+use App\Support\RateLimit;
 
 final class ReportController
 {
     /** POST /api/reports — meldet die Bewertungen eines Abschnitts als fragwürdig. */
     public function submit(): void
     {
+        if (RateLimit::tooMany('reports')) {
+            http_response_code(429);
+            $this->json(['error' => 'Zu viele Meldungen in kurzer Zeit. Bitte später erneut versuchen.']);
+            return;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $segmentId = (int) ($input['segment_id'] ?? 0);

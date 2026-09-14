@@ -75,5 +75,10 @@ if ($uri === '/datenschutz') {
     return;
 }
 
+if ($uri === '/ueber') {
+    require __DIR__ . '/ueber.view.php';
+    return;
+}
+
 http_response_code(404);
 echo 'Nicht gefunden.';

@@ -49,7 +49,7 @@
 </div>
 <div id="map"></div>
 <div id="legal">
-  <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+  <a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>

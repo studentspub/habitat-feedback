@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Support\Db;
 use App\Support\Fingerprint;
+use App\Support\RateLimit;
 
 final class RatingController
 {
@@ -12,6 +13,12 @@ final class RatingController
     /** POST /api/ratings — nimmt Rohadresse + 5 Scores entgegen, stellt in die Geocode-Warteschlange. */
     public function submit(): void
     {
+        if (RateLimit::tooMany('ratings')) {
+            http_response_code(429);
+            $this->json(['error' => 'Zu viele Bewertungen in kurzer Zeit. Bitte später erneut versuchen.']);
+            return;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $rawAddress = trim((string) ($input['address'] ?? ''));

@@ -58,7 +58,7 @@
 </form>
 <div id="result" hidden></div>
 
-<footer><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
 <script>
   const criteria = ['ruhe', 'instandhaltung', 'umgangston', 'infrastruktur', 'sicherheit'];

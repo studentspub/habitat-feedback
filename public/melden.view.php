@@ -38,7 +38,7 @@ $segmentId = (int) ($_GET['segment'] ?? 0);
   <div id="result" hidden></div>
 <?php endif; ?>
 
-<footer><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
 <script>
   const form = document.getElementById('report-form');

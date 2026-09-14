@@ -21,4 +21,11 @@ return [
         'min_address_count' => 6,
         'min_rating_count'  => 3,
     ],
+
+    // Rate-Limiting pro IP-Präfix auf öffentlichen Schreib-Endpunkten
+    // (Bauplan, Sicherheits-Checkliste).
+    'rate_limits' => [
+        'ratings' => ['limit' => 5, 'window_seconds' => 3600],
+        'reports' => ['limit' => 10, 'window_seconds' => 3600],
+    ],
 ];
