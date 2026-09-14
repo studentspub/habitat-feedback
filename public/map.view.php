@@ -53,6 +53,13 @@
   #legal a { color: #31576D; margin-right: 10px; text-decoration: none; }
   #legal a:hover { text-decoration: underline; }
 
+  /* Drei Bedienfelder stapeln sich unten rechts (Census, POI, Klima) und
+     können zusammen höher werden als der sichtbare Kartenausschnitt —
+     ohne Deckel würden sie irgendwann mit "Straße bewerten?" oben rechts
+     kollidieren. Deckel auf den gesamten Eckbereich statt auf jedes Feld
+     einzeln, damit es unabhängig davon greift, wie viele Felder aktiv sind. */
+  .leaflet-bottom.leaflet-right { max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 2px; }
+
   /* Amtliche Statistik-Ebenen, wie eine Wetterkarten-Umschaltung — eigenständig
      von den Bewertungs-Pins. Mehrere Kennzahlen gleichzeitig aktivierbar
      (überlappende Darstellung), jede mit eigener Farbskala und niedriger
@@ -98,6 +105,28 @@
   .poi-metric-btn.active { color: white; border-color: transparent; }
   .poi-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
   .poi-marker { border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 0 1px rgba(27,36,32,0.3); }
+
+  /* Klima & Luft — kein Kachel-/Punkt-Layer, sondern ein Kontext-Kärtchen
+     für die aktuelle Kartenmitte: beide Kennzahlen sind stationsbasiert
+     und variieren kaum innerhalb einer Stadt, ein Raster wäre hier
+     irreführend genau. Aktualisiert sich beim Verschieben der Karte. */
+  .climate-control {
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
+  }
+  #climate-btn {
+    display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  #climate-btn.active { background: #31576D; }
+  .climate-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+  .climate-card { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EBEEE5; }
+  .climate-card.visible { display: block; }
+  .climate-card .row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.78rem; margin-top: 4px; }
+  .climate-card .row .k { color: #4B564F; }
+  .climate-card .row .v { font-weight: 600; text-align: right; }
+  .climate-card .src { font-size: 0.68rem; color: #7C877E; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -453,6 +482,76 @@
     });
   });
   map.on('moveend zoomend', () => POI_CATEGORIES.forEach(loadPoiCategory));
+
+  // Klima & Luft — Kontext-Kärtchen für die Kartenmitte statt Kachel-Layer
+  // (siehe CSS-Kommentar oben). Zwei eigenständige, aber inhaltlich
+  // zusammengehörige Datenquellen: Klimanormalwerte kommen aus unserer
+  // eigenen DB (einmalig importiert), Luftqualität live von der UBA.
+  let climateEnabled = false;
+  let climateRequestId = 0;
+
+  function monthLabel(key) {
+    return { jan: 'Jan', feb: 'Feb', mar: 'Mär', apr: 'Apr', mai: 'Mai', jun: 'Jun', jul: 'Jul', aug: 'Aug', sep: 'Sep', okt: 'Okt', nov: 'Nov', dez: 'Dez' }[key];
+  }
+
+  async function loadClimateCard() {
+    const myRequestId = ++climateRequestId;
+    const card = document.getElementById('climate-card');
+    const hint = document.getElementById('climate-hint');
+
+    if (!climateEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
+
+    hint.textContent = 'Lädt…';
+    const center = map.getCenter();
+    const [climateRes, airRes] = await Promise.all([
+      fetch('/api/climate?' + new URLSearchParams({ lat: center.lat, lon: center.lng })),
+      fetch('/api/air-quality?' + new URLSearchParams({ lat: center.lat, lon: center.lng }))
+    ]);
+    const climate = await climateRes.json();
+    const air = await airRes.json();
+
+    if (myRequestId !== climateRequestId || !climateEnabled) return;
+
+    hint.textContent = 'Werte für die Kartenmitte — beim Verschieben der Karte aktualisiert sich die Anzeige.';
+
+    const rows = [];
+    if (climate.temperatur) {
+      rows.push(['Ø Jahrestemperatur', climate.temperatur.jahreswert + ' °C']);
+      rows.push(['↳ wärmster/kältester Monat', monthLabel('jul') + ' ' + climate.temperatur.monate.jul + ' °C / ' + monthLabel('jan') + ' ' + climate.temperatur.monate.jan + ' °C']);
+    }
+    if (climate.niederschlag) {
+      rows.push(['Ø Jahresniederschlag', climate.niederschlag.jahreswert + ' mm']);
+    }
+    if (air.index_label) {
+      rows.push(['Luftqualität (' + air.station + ')', air.index_label + ' · PM10 ' + (air.werte.PM10 ?? '–') + ' · NO2 ' + (air.werte.NO2 ?? '–') + ' µg/m³']);
+    }
+
+    card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
+      + '<div class="src">Klima: DWD, 1991–2020 · Luft: Umweltbundesamt' + (air.gemessen_bis ? ', Stand ' + air.gemessen_bis.slice(0, 10) : '') + '</div>';
+    card.classList.add('visible');
+  }
+
+  const ClimateControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'climate-control');
+      el.innerHTML =
+        '<button type="button" id="climate-btn">Klima &amp; Luft anzeigen</button>' +
+        '<div class="hint" id="climate-hint"></div>' +
+        '<div class="climate-card" id="climate-card"></div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new ClimateControl());
+
+  document.getElementById('climate-btn').addEventListener('click', (e) => {
+    climateEnabled = !climateEnabled;
+    e.target.textContent = climateEnabled ? 'Klima & Luft ausblenden' : 'Klima & Luft anzeigen';
+    e.target.classList.toggle('active', climateEnabled);
+    loadClimateCard();
+  });
+  map.on('moveend', loadClimateCard);
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');

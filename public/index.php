@@ -45,6 +45,16 @@ if ($uri === '/api/poi' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/climate' && $method === 'GET') {
+    (new App\Http\ClimateController())->nearest();
+    return;
+}
+
+if ($uri === '/api/air-quality' && $method === 'GET') {
+    (new App\Http\AirQualityController())->nearest();
+    return;
+}
+
 if ($uri === '/api/reports' && $method === 'POST') {
     (new App\Http\ReportController())->submit();
     return;
