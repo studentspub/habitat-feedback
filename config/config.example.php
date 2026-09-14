@@ -12,6 +12,10 @@ return [
     ],
     'pi_api_token' => 'changeme',
 
+    // Zufälliger, geheimer String — geht in den Fingerprint-Hash ein
+    // (siehe Konzeptpapier Abschnitt 02, Abwehr von Mehrfachbewertungen).
+    'fingerprint_salt' => 'changeme',
+
     // Sichtbarkeitsschwellen — siehe Konzeptpapier Abschnitt 02.
     'visibility' => [
         'min_address_count' => 6,

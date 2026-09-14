@@ -1,10 +1,14 @@
 # Secrets — niemals committen
 /config/config.php
+/worker/config.py
 /_INFRASTRUKTUR.local.txt
 
 # Abhängigkeiten (werden lokal/in CI installiert, nicht committet)
 /vendor/
 /node_modules/
+__pycache__/
+*.pyc
+worker/.venv/
 
 # OS/Editor
 .DS_Store

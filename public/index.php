@@ -13,13 +13,30 @@ spl_autoload_register(function (string $class): void {
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-if ($uri === '/api/map') {
+$method = $_SERVER['REQUEST_METHOD'];
+
+if ($uri === '/api/map' && $method === 'GET') {
     (new App\Http\MapApiController())->pins();
     return;
 }
 
-if (preg_match('#^/api/segments/(\d+)$#', $uri, $m)) {
+if (preg_match('#^/api/segments/(\d+)$#', $uri, $m) && $method === 'GET') {
     (new App\Http\MapApiController())->detail((int) $m[1]);
+    return;
+}
+
+if ($uri === '/api/ratings' && $method === 'POST') {
+    (new App\Http\RatingController())->submit();
+    return;
+}
+
+if ($uri === '/api/pi/queue' && $method === 'GET') {
+    (new App\Http\PiController())->queue();
+    return;
+}
+
+if ($uri === '/api/pi/resolve' && $method === 'POST') {
+    (new App\Http\PiController())->resolve();
     return;
 }
 
