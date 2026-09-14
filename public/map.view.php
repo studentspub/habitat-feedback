@@ -76,6 +76,28 @@
   .census-legend-group .metric-name { font-size: 0.72rem; font-weight: 600; margin-top: 4px; }
   .census-legend-group .row { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; margin-top: 2px; }
   .census-legend-group .swatch { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+
+  /* Freizeit/Infrastruktur aus OpenStreetMap — eigenes Bedienfeld, eigene
+     Marker statt Flächen, weil das hier Punktdaten sind (siehe Datenquellen-
+     Recherche). Läuft technisch über /api/poi (eigener Server-Proxy mit
+     Cache), nicht direkt gegen Overpass — anders als der Zensus-ArcGIS-
+     Dienst hat Overpass eine Nutzungsrichtlinie, die von häufigen
+     interaktiven Anfragen ohne eigenes Caching abrät. */
+  .poi-control {
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
+    max-height: 70vh; overflow-y: auto;
+  }
+  .poi-control .panel-title { font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; }
+  .poi-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .poi-metric-btn {
+    box-sizing: border-box; padding: 0.5em 0.5em; background: #FBFBF7; color: #1B2420;
+    border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.76rem; font-weight: 600;
+    cursor: pointer; text-align: center; line-height: 1.25;
+  }
+  .poi-metric-btn.active { color: white; border-color: transparent; }
+  .poi-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+  .poi-marker { border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 0 1px rgba(27,36,32,0.3); }
 </style>
 </head>
 <body>
@@ -342,6 +364,95 @@
     });
   });
   map.on('moveend zoomend', () => CENSUS_METRICS.forEach(loadCensusMetric));
+
+  // Freizeit & Infrastruktur aus OpenStreetMap. Läuft über /api/poi (unseren
+  // eigenen Server-Proxy mit Cache) statt direkt gegen Overpass — siehe
+  // Kommentar bei den CSS-Regeln oben. Punktdaten statt Flächenraster, daher
+  // Marker statt Choropleth, und ein fester Mindest-Zoom (dichte Städte
+  // hätten sonst tausende Treffer in einem Rutsch).
+  const POI_CATEGORIES = [
+    { key: 'playground', label: 'Spielplätze', color: '#3B7A52' },
+    { key: 'food_drink', label: 'Kneipen & Cafés', color: '#A63603' },
+    { key: 'leisure', label: 'Freizeit', color: '#31576D' },
+    { key: 'university', label: 'Unis', color: '#54278F' },
+    { key: 'school', label: 'Kitas & Schulen', color: '#2171B5' },
+    { key: 'doctor', label: 'Ärzte & Apotheken', color: '#DE2D26' },
+    { key: 'supermarket', label: 'Supermärkte', color: '#D9971E' },
+    { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#1B2420' }
+  ];
+  const POI_MIN_ZOOM = 14;
+
+  const poiState = {};
+  POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false, requestId: 0 }; });
+
+  function updatePoiHint() {
+    const hint = document.getElementById('poi-hint');
+    const anyEnabled = POI_CATEGORIES.some(c => poiState[c.key].enabled);
+    if (!anyEnabled) { hint.textContent = ''; return; }
+    if (map.getZoom() < POI_MIN_ZOOM) {
+      hint.textContent = 'Weiter reinzoomen, um Standorte zu sehen (ab Stadtteil-Ebene).';
+    } else {
+      hint.textContent = 'Daten von OpenStreetMap-Mitwirkenden.';
+    }
+  }
+
+  async function loadPoiCategory(cat) {
+    const state = poiState[cat.key];
+    const myRequestId = ++state.requestId;
+
+    if (state.layer) { map.removeLayer(state.layer); state.layer = null; }
+    if (!state.enabled) { updatePoiHint(); return; }
+
+    updatePoiHint();
+    if (map.getZoom() < POI_MIN_ZOOM) return;
+
+    const b = map.getBounds();
+    const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
+    const res = await fetch('/api/poi?' + new URLSearchParams({ category: cat.key, bbox }));
+    const data = await res.json();
+
+    if (myRequestId !== state.requestId || !state.enabled) return;
+
+    if (data.hinweis) {
+      document.getElementById('poi-hint').textContent = data.hinweis;
+    }
+
+    state.layer = L.layerGroup(
+      (data.points || []).map(p => L.circleMarker([p.lat, p.lon], {
+        radius: 5, className: 'poi-marker', color: cat.color, weight: 1,
+        fillColor: cat.color, fillOpacity: 0.9
+      }).bindTooltip(p.name || cat.label))
+    ).addTo(map);
+  }
+
+  const PoiControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'poi-control');
+      el.innerHTML =
+        '<div class="panel-title">Freizeit &amp; Infrastruktur (OSM)</div>' +
+        '<div class="poi-metric-grid">' +
+        POI_CATEGORIES.map(c => '<button type="button" class="poi-metric-btn" data-key="' + c.key + '">' + c.label + '</button>').join('') +
+        '</div>' +
+        '<div class="hint" id="poi-hint"></div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new PoiControl());
+
+  const poiByKey = Object.fromEntries(POI_CATEGORIES.map(c => [c.key, c]));
+  document.querySelectorAll('.poi-metric-btn').forEach(btn => {
+    const cat = poiByKey[btn.dataset.key];
+    btn.addEventListener('click', () => {
+      const state = poiState[cat.key];
+      state.enabled = !state.enabled;
+      btn.classList.toggle('active', state.enabled);
+      btn.style.background = state.enabled ? cat.color : '';
+      loadPoiCategory(cat);
+    });
+  });
+  map.on('moveend zoomend', () => POI_CATEGORIES.forEach(loadPoiCategory));
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');

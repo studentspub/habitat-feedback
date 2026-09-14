@@ -40,6 +40,11 @@ if ($uri === '/api/address-autocomplete' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/poi' && $method === 'GET') {
+    (new App\Http\PoiController())->search();
+    return;
+}
+
 if ($uri === '/api/reports' && $method === 'POST') {
     (new App\Http\ReportController())->submit();
     return;
