@@ -64,12 +64,25 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
 
-  /* Drei Bedienfelder stapeln sich unten rechts (Census, POI, Klima) und
-     können zusammen höher werden als der sichtbare Kartenausschnitt —
-     ohne Deckel würden sie irgendwann mit "Straße bewerten?" oben rechts
-     kollidieren. Deckel auf den gesamten Eckbereich statt auf jedes Feld
-     einzeln, damit es unabhängig davon greift, wie viele Felder aktiv sind. */
-  .leaflet-bottom.leaflet-right { max-height: calc(100vh - 110px); overflow-y: auto; padding-right: 2px; }
+  /* Die Bedienfelder unten rechts (Census, POI, Klima, Breitband,
+     Wirtschaft, ...) wachsen mit jeder neuen Kennzahl weiter — als reine
+     Ein-Spalten-Liste würden sie irgendwann höher als der sichtbare
+     Kartenausschnitt und mit "Straße bewerten?" oben rechts kollidieren.
+     Statt Scrollen: eine zweite (dritte, ...) Spalte per flex-wrap, sobald
+     die Höhe ausgeschöpft ist. direction:rtl auf dem Container lässt neue
+     Spalten nach LINKS wachsen (vom rechten Kartenrand weg) statt über den
+     Kartenrand hinaus nach rechts — direction:ltr auf den Feldern selbst
+     macht das für ihren eigenen Inhalt wieder rückgängig. */
+  .leaflet-bottom.leaflet-right {
+    display: flex; flex-flow: column wrap; align-content: flex-start;
+    direction: rtl; max-height: calc(100vh - 110px); gap: 8px; padding-right: 2px;
+  }
+  .leaflet-bottom.leaflet-right > * { direction: ltr; }
+  /* Leaflets eigenes CSS gibt jedem Control float:left/clear:both plus
+     margin-right/-bottom (für die normale Block-Stapelung gedacht) — im
+     Flex-Container oben wird das float ignoriert, die Margins blieben aber
+     bestehen und würden sich mit dem eigenen "gap" doppelt addieren. */
+  .leaflet-bottom.leaflet-right .leaflet-control { margin: 0; }
 
   /* Amtliche Statistik-Ebenen, wie eine Wetterkarten-Umschaltung — eigenständig
      von den Bewertungs-Pins. Mehrere Kennzahlen gleichzeitig aktivierbar
@@ -186,6 +199,25 @@
   .economy-card .row .k { color: #4B564F; }
   .economy-card .row .v { font-weight: 600; text-align: right; }
   .economy-card .src { font-size: 0.68rem; color: #7C877E; margin-top: 6px; }
+
+  /* Info-Buttons neben Kennzahlen-Labels — erklären auf Klick, warum die
+     Zahl für eine Wohnlagen-Einschätzung überhaupt von Belang ist (nicht
+     jede Statistik erklärt sich von selbst). Bewusst Klick statt Hover:
+     funktioniert auch mit dem nativen title-Tooltip nicht gut lesbar wegen
+     der Kärtchen-Breite von nur 230px, ein eigenes Popover kann umbrechen. */
+  .info-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; margin-left: 3px; padding: 0; border: none;
+    border-radius: 50%; background: #CFD8C9; color: #1B2420;
+    font-size: 0.62rem; font-weight: 700; line-height: 1; cursor: pointer;
+    vertical-align: middle;
+  }
+  .info-btn:hover, .info-btn:focus-visible { background: #31576D; color: white; }
+  .info-popover {
+    position: absolute; z-index: 1200; max-width: 220px; background: #1B2420; color: white;
+    font-size: 0.72rem; font-weight: 400; line-height: 1.4; padding: 8px 10px;
+    border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); margin-top: 4px;
+  }
 </style>
 </head>
 <body>
@@ -673,6 +705,28 @@
     }
   });
 
+  // Info-Buttons (kleines "i" neben einem Kennzahlen-Label) — Klick statt
+  // Hover, weil die Panels mit 230px zu schmal für ein lesbares
+  // title-Tooltip sind. containerEl ist ein Leaflet-Control-Element mit
+  // disableClickPropagation — ein globaler document-Klick-Handler würde
+  // Klicks darin nie sehen, deshalb pro Control ein eigener Listener.
+  function attachInfoPopovers(containerEl) {
+    containerEl.addEventListener('click', (e) => {
+      containerEl.querySelectorAll('.info-popover').forEach((p) => p.remove());
+      const btn = e.target.closest('.info-btn');
+      if (!btn || btn.dataset.open === '1') {
+        if (btn) btn.dataset.open = '';
+        return;
+      }
+      containerEl.querySelectorAll('.info-btn').forEach((b) => { b.dataset.open = ''; });
+      const pop = document.createElement('div');
+      pop.className = 'info-popover';
+      pop.textContent = btn.dataset.info;
+      btn.insertAdjacentElement('afterend', pop);
+      btn.dataset.open = '1';
+    });
+  }
+
   // Wirtschaft — Arbeitslosenquote und Kriminalitätsrate des Kreises der
   // Kartenmitte. Anders als Klima/Luft (nächste Station, reine DB-Abfrage)
   // steckt hinter /api/economy serverseitig ein zweistufiger Nachschlag
@@ -700,32 +754,92 @@
 
     const rows = [];
     const sources = [];
+    const number = (n) => n.toLocaleString('de-DE');
+
     if (data.arbeitslosenquote) {
-      rows.push(['Arbeitslosenquote', data.arbeitslosenquote.quote.toFixed(1).replace('.', ',') + ' %']);
+      rows.push(['Arbeitslosenquote', data.arbeitslosenquote.quote.toFixed(1).replace('.', ',') + ' %',
+        'Anteil der Arbeitslosen an allen Erwerbspersonen im Kreis — klassischer Indikator für die wirtschaftliche Lage vor Ort.']);
       sources.push('Arbeitslosenquote: Statistik der Bundesagentur für Arbeit, Stand ' + data.arbeitslosenquote.monat);
     } else {
       rows.push(['Arbeitslosenquote', 'Keine Daten verfügbar']);
     }
     if (data.kriminalitaet) {
-      rows.push(['Straftaten je 100.000 Einw.', data.kriminalitaet.haeufigkeitszahl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.')]);
+      rows.push(['Straftaten je 100.000 Einw.', number(Math.round(data.kriminalitaet.haeufigkeitszahl)),
+        'Häufigkeitszahl der Polizeilichen Kriminalstatistik — alle erfassten Straftaten, normiert auf 100.000 Einwohner, damit Kreise unterschiedlicher Größe vergleichbar sind.']);
       sources.push('Kriminalitätsrate: Polizeiliche Kriminalstatistik (BKA), Berichtsjahr ' + data.kriminalitaet.jahr);
     } else {
       rows.push(['Straftaten je 100.000 Einw.', 'Keine Daten verfügbar']);
     }
     if (data.grundsicherungImAlter) {
-      rows.push(['Empfänger Grundsicherung im Alter', data.grundsicherungImAlter.anzahl.toLocaleString('de-DE') + ' (±2, gerundet)']);
+      rows.push(['Empfänger Grundsicherung im Alter', number(data.grundsicherungImAlter.anzahl) + ' (±2, gerundet)',
+        'Anzahl der Rentner/-innen im Kreis, die ergänzende Grundsicherung beziehen — ein Signal für Altersarmut in der Region.']);
       sources.push('Grundsicherung im Alter: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.grundsicherungImAlter.jahr);
     } else {
       rows.push(['Empfänger Grundsicherung im Alter', 'Keine Daten verfügbar']);
     }
     if (data.elterngeld) {
-      rows.push(['Elterngeld-Bezieher (4 Quartale)', data.elterngeld.anzahl.toLocaleString('de-DE')]);
+      rows.push(['Elterngeld-Bezieher (4 Quartale)', number(data.elterngeld.anzahl),
+        'Anzahl der Elterngeld-Leistungsbezüge im Kreis über die letzten vier Quartale — grober Anhaltspunkt für junge Familien in der Region.']);
       sources.push('Elterngeld: Regionaldatenbank Deutschland (Destatis), bis Berichtsjahr ' + data.elterngeld.jahr);
     } else {
       rows.push(['Elterngeld-Bezieher (4 Quartale)', 'Keine Daten verfügbar']);
     }
+    if (data.wohnungsbestand) {
+      rows.push(['Wohnungsbestand', number(data.wohnungsbestand.anzahl),
+        'Anzahl der Wohnungen im Kreis zum Stichtag 31.12. — direktester Indikator für das Wohnungsangebot vor Ort; die Wachstumsrate über mehrere Jahre zeigt, ob eine Region mit dem Bedarf mithält.']);
+      sources.push('Wohnungsbestand: Regionaldatenbank Deutschland (Destatis), Stand 31.12.' + data.wohnungsbestand.jahr);
+    } else {
+      rows.push(['Wohnungsbestand', 'Keine Daten verfügbar']);
+    }
+    if (data.einkommen) {
+      rows.push(['Verfügbares Einkommen je Einw.', number(Math.round(data.einkommen.jeEinwohner)) + ' €',
+        'Verfügbares Einkommen der privaten Haushalte je Einwohner und Jahr — gängiger Kaufkraft-/Wohlstandsindikator zum Vergleich von Regionen.']);
+      sources.push('Verfügbares Einkommen: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.einkommen.jahr);
+    } else {
+      rows.push(['Verfügbares Einkommen je Einw.', 'Keine Daten verfügbar']);
+    }
+    if (data.wanderungssaldo) {
+      const saldo = data.wanderungssaldo.saldo;
+      rows.push(['Wanderungssaldo', (saldo > 0 ? '+' : '') + number(saldo),
+        'Zuzüge minus Fortzüge über Gemeindegrenzen im Kreis binnen eines Jahres. Positiv = die Region zieht mehr Menschen an, als sie verliert — ein Signal für Nachfragedruck auf den Wohnungsmarkt.']);
+      sources.push('Wanderungssaldo: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.wanderungssaldo.jahr);
+    } else {
+      rows.push(['Wanderungssaldo', 'Keine Daten verfügbar']);
+    }
+    if (data.baugenehmigungen) {
+      rows.push(['Baugenehmigungen (Wohnungen)', number(data.baugenehmigungen.anzahl),
+        'Neu genehmigte Wohnungen im Kreis binnen eines Jahres — Frühindikator: zeigt, was in den nächsten 1–2 Jahren an zusätzlichem Angebot voraussichtlich nachkommt.']);
+      sources.push('Baugenehmigungen: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.baugenehmigungen.jahr);
+    } else {
+      rows.push(['Baugenehmigungen (Wohnungen)', 'Keine Daten verfügbar']);
+    }
+    if (data.baufertigstellungen) {
+      rows.push(['Baufertigstellungen (Wohnungen)', number(data.baufertigstellungen.anzahl),
+        'Tatsächlich fertiggestellte Wohnungen im Kreis binnen eines Jahres. Deutlich weniger Fertigstellungen als Genehmigungen deutet auf Bau-Rückstand oder -Verzögerungen in der Region hin.']);
+      sources.push('Baufertigstellungen: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.baufertigstellungen.jahr);
+    } else {
+      rows.push(['Baufertigstellungen (Wohnungen)', 'Keine Daten verfügbar']);
+    }
+    if (data.gewerbeanzeigen) {
+      const saldo = data.gewerbeanzeigen.anmeldungen - data.gewerbeanzeigen.abmeldungen;
+      rows.push(['Gewerbe-Saldo (An–Abmeldungen)', (saldo > 0 ? '+' : '') + number(saldo),
+        'Neu angemeldete minus abgemeldete Gewerbe im Kreis binnen eines Jahres — Signal für wirtschaftliche Dynamik bzw. Gründungsklima vor Ort.']);
+      sources.push('Gewerbeanzeigen: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.gewerbeanzeigen.jahr);
+    } else {
+      rows.push(['Gewerbe-Saldo (An–Abmeldungen)', 'Keine Daten verfügbar']);
+    }
+    if (data.insolvenzen) {
+      rows.push(['Insolvenzen (gesamt)', number(data.insolvenzen.anzahl),
+        'Beantragte Insolvenzverfahren im Kreis binnen eines Jahres (Unternehmen und Privatpersonen zusammen) — Signal für wirtschaftliche Stabilität der Region.']);
+      sources.push('Insolvenzen: Regionaldatenbank Deutschland (Destatis), Berichtsjahr ' + data.insolvenzen.jahr);
+    } else {
+      rows.push(['Insolvenzen (gesamt)', 'Keine Daten verfügbar']);
+    }
 
-    card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
+    card.innerHTML = rows.map(([k, v, info]) => {
+      const infoBtn = info ? '<button type="button" class="info-btn" data-info="' + info.replace(/"/g, '&quot;') + '">i</button>' : '';
+      return '<div class="row"><span class="k">' + k + infoBtn + '</span><span class="v">' + v + '</span></div>';
+    }).join('')
       + '<div class="src">' + sources.join(' · ') + '</div>';
     card.classList.add('visible');
   }
@@ -739,6 +853,7 @@
         '<div class="hint" id="economy-hint"></div>' +
         '<div class="economy-card" id="economy-card"></div>';
       L.DomEvent.disableClickPropagation(el);
+      attachInfoPopovers(el);
       return el;
     }
   });

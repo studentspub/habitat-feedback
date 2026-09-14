@@ -77,9 +77,11 @@ final class GenesisClient
                 break; // Ende der Datenzeilen, danach folgen nur noch Fußnoten
             }
             $cols = str_getcsv($line, ';');
-            // Datenzeilen beginnen mit einer 4-stelligen Jahreszahl, alle
-            // Kopfzeilen (Titel, Merkmalsbeschriftungen) nicht.
-            if (!preg_match('/^\d{4}$/', $cols[0] ?? '')) {
+            // Datenzeilen beginnen entweder mit einer 4-stelligen Jahreszahl
+            // ("2024") oder, bei Stichtags-Statistiken wie Wohnungsbestand,
+            // einem vollen Datum ("31.12.2024") — Kopfzeilen (Titel,
+            // Merkmalsbeschriftungen) haben keins von beidem.
+            if (!preg_match('/^(\d{4}|\d{2}\.\d{2}\.\d{4})$/', $cols[0] ?? '')) {
                 continue;
             }
             $rows[] = array_map(static fn (?string $v): string => trim((string) $v), $cols);
