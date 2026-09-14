@@ -542,6 +542,8 @@
     }
     if (air.index_label) {
       rows.push(['Luftqualität (' + air.station + ')', air.index_label + ' · PM10 ' + (air.werte.PM10 ?? '–') + ' · NO2 ' + (air.werte.NO2 ?? '–') + ' µg/m³']);
+    } else {
+      rows.push(['Luftqualität', 'Keine Daten in der Nähe verfügbar']);
     }
 
     card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
