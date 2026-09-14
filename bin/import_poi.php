@@ -9,7 +9,11 @@
  * kein Live-Request: für ganz Deutschland kann eine Kategorie durchaus
  * mehrere Minuten dauern.
  *
- * Aufruf: php bin/import_poi.php
+ * Aufruf: php bin/import_poi.php [kategorie ...]
+ *   Ohne Argumente werden alle Kategorien geladen. Mit Argumenten nur die
+ *   genannten — nützlich, weil Overpass immer wieder einzelne Kategorien
+ *   mit 504 wegwirft: dann muss nicht der gesamte Lauf (mehrere Minuten je
+ *   Kategorie) wiederholt werden, sondern nur die fehlgeschlagenen.
  */
 
 require __DIR__ . '/../app/Support/Db.php';
@@ -100,12 +104,23 @@ function mapElementsToRows(array $elements): array
             continue;
         }
 
+        // OSM-Namen sind ungeprüften Freitext ohne Längenbegrenzung — einzelne
+        // Einträge (offizielle Firmierungen, mehrsprachige Namen) überschreiten
+        // die 200 Zeichen der Spalte. Ohne Kappung bricht INSERT mit "Data too
+        // long" ab und reißt den kompletten Kategorie-Import mit sich (genau so
+        // beobachtet: der Lauf starb mitten in 'doctor', 'supermarket' und
+        // 'transit' wurden nie erreicht).
+        $name = $el['tags']['name'] ?? null;
+        if ($name !== null && mb_strlen($name) > 200) {
+            $name = mb_substr($name, 0, 200);
+        }
+
         $rows[] = [
             'osm_id' => (int) $el['id'],
             'osm_type' => $el['type'],
             'lat' => (float) $lat,
             'lon' => (float) $lon,
-            'name' => $el['tags']['name'] ?? null,
+            'name' => $name,
         ];
     }
     return $rows;
@@ -118,7 +133,19 @@ $upsert = $db->prepare(
      ON DUPLICATE KEY UPDATE lat = VALUES(lat), lon = VALUES(lon), name = VALUES(name), imported_at = NOW()'
 );
 
+$requestedCategories = array_slice($argv, 1);
+if ($requestedCategories !== []) {
+    $unknown = array_diff($requestedCategories, array_keys(PoiCategories::CATEGORIES));
+    if ($unknown !== []) {
+        fwrite(STDERR, 'Unbekannte Kategorie(n): ' . implode(', ', $unknown) . "\n");
+        exit(1);
+    }
+}
+
 foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
+    if ($requestedCategories !== [] && !in_array($category, $requestedCategories, true)) {
+        continue;
+    }
     echo "Lade Kategorie '$category' für ganz Deutschland...\n";
     $elements = fetchCategoryFromOverpass($tagFilters);
     if ($elements === null) {
