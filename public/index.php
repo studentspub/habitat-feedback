@@ -30,6 +30,11 @@ if ($uri === '/api/ratings' && $method === 'POST') {
     return;
 }
 
+if ($uri === '/api/search' && $method === 'GET') {
+    (new App\Http\SearchController())->search();
+    return;
+}
+
 if ($uri === '/api/pi/queue' && $method === 'GET') {
     (new App\Http\PiController())->queue();
     return;
@@ -42,6 +47,11 @@ if ($uri === '/api/pi/resolve' && $method === 'POST') {
 
 if ($uri === '/' || $uri === '/index.php') {
     require __DIR__ . '/map.view.php';
+    return;
+}
+
+if ($uri === '/bewerten') {
+    require __DIR__ . '/bewerten.view.php';
     return;
 }
 
