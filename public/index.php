@@ -105,5 +105,10 @@ if ($uri === '/ueber') {
     return;
 }
 
+if ($uri === '/vision') {
+    require __DIR__ . '/vision.view.php';
+    return;
+}
+
 http_response_code(404);
 echo 'Nicht gefunden.';

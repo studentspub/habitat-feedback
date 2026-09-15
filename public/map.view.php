@@ -226,12 +226,17 @@
      an diesem Spotlight-Element. #tour-clickguard fängt währenddessen Klicks
      auf der restlichen Seite ab, damit die Tour nicht durch versehentliches
      Umschalten eines Panels durcheinanderkommt. */
-  #tutorial-btn {
+  #discover-group {
     position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
-    background: #D9971E; color: #1B2420; border: none; border-radius: 20px;
-    padding: 0.5em 1.2em; font-weight: 700; font-size: 0.85rem; cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    display: flex; gap: 8px;
   }
+  #tutorial-btn, #vision-link {
+    border: none; border-radius: 20px; padding: 0.5em 1.2em; font-weight: 700;
+    font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    text-decoration: none; white-space: nowrap;
+  }
+  #tutorial-btn { background: #D9971E; color: #1B2420; }
+  #vision-link { background: #31576D; color: white; }
   #tour-clickguard { position: fixed; inset: 0; z-index: 2999; background: transparent; }
   #tour-spotlight {
     position: fixed; z-index: 3000; border-radius: 8px; pointer-events: none;
@@ -259,7 +264,10 @@
 </style>
 </head>
 <body>
-<button type="button" id="tutorial-btn">🧭 Tutorial starten</button>
+<div id="discover-group">
+  <button type="button" id="tutorial-btn">🧭 Tutorial starten</button>
+  <a id="vision-link" href="/vision">🔮 Vision entdecken</a>
+</div>
 <div id="search-group">
   <span id="search-label">Bereits bewertete Straßen</span>
   <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
@@ -970,6 +978,7 @@
     { selector: '.climate-control', title: 'Klima & Luft', text: 'Temperatur, Niederschlag und Luftqualität für die aktuelle Kartenmitte.' },
     { selector: '.broadband-control', title: 'Breitband', text: 'Verfügbarkeit von schnellem Festnetz-Internet (≥ 50 Mbit/s).' },
     { selector: '.economy-control', title: 'Wirtschaft', text: 'Arbeitslosenquote, Kriminalitätsrate und weitere Kennzahlen des Kreises.' },
+    { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
   ];
 
