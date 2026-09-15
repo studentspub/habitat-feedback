@@ -136,7 +136,39 @@
   }
   .poi-metric-btn.active { color: white; border-color: transparent; }
   .poi-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
-  .poi-marker { border-radius: 50%; border: 1.5px solid white; box-shadow: 0 0 0 1px rgba(27,36,32,0.3); }
+  /* Dreiecke statt Kreise, bewusst anders als die runden Bewertungs-Pins —
+     sobald beide Ebenen gleichzeitig an sind, muss auf einen Blick erkennbar
+     sein, was eine Bewertung und was ein OSM-Infrastrukturpunkt ist.
+     Leaflets divIcon setzt standardmäßig einen weißen Kasten-Hintergrund
+     samt Rahmen (für Icon-Bilder gedacht) — hier per !important entfernt,
+     damit nur das SVG-Dreieck selbst sichtbar bleibt. */
+  .poi-triangle-icon { background: none !important; border: none !important; }
+
+  /* Bewertungs-Pins — eigene Ebene mit An/Aus-Schalter (wie Klima/Breitband/
+     Wirtschaft), damit man bei Bedarf nur die Statistik-Ebenen sehen kann,
+     ohne dass die Bewertungspunkte den Blick verstellen. */
+  .ratings-control {
+    background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
+  }
+  #ratings-btn {
+    display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  #ratings-btn.active { background: #31576D; }
+  .ratings-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+
+  /* Farblegende für die Bewertungs-Pins, oben links unter dem Zoom-Regler —
+     als eigener topleft-Leaflet-Control stapelt Leaflet sie dort automatisch
+     darunter, kein manuelles Positionieren nötig. */
+  .ratings-legend {
+    background: rgba(255,255,255,0.92); padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.72rem; color: #1B2420;
+  }
+  .ratings-legend .legend-title { font-weight: 700; margin-bottom: 4px; }
+  .ratings-legend .row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .ratings-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1px solid rgba(27,36,32,0.4); }
 
   /* Klima & Luft — kein Kachel-/Punkt-Layer, sondern ein Kontext-Kärtchen
      für die aktuelle Kartenmitte: beide Kennzahlen sind stationsbasiert
@@ -251,7 +283,19 @@
   }
   #tour-tooltip .tour-progress { font-size: 0.68rem; color: #CFD8C9; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
   #tour-tooltip .tour-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-  #tour-tooltip .tour-text { line-height: 1.4; color: #EBEEE5; }
+  #tour-tooltip .tour-text {
+    line-height: 1.4; color: #EBEEE5; max-height: 220px; overflow-y: auto;
+  }
+  /* Einige Tour-Schritte (Zensus, OSM) listen mehrere Kennzahlen/Kategorien
+     statt eines einzelnen Fließtexts auf — dieselbe Farbpunkt-Optik wie in
+     den echten Panel-Legenden, damit die Erklärung im Tutorial zu dem passt,
+     was man auf der Karte tatsächlich sieht. */
+  #tour-tooltip .tour-list { list-style: none; margin: 6px 0 0; padding: 0; }
+  #tour-tooltip .tour-list li { display: flex; align-items: flex-start; gap: 6px; margin-top: 5px; }
+  #tour-tooltip .tour-swatch {
+    width: 10px; height: 10px; border-radius: 50%; flex: none; display: inline-block; margin-top: 3px;
+  }
+  #tour-tooltip .tour-swatch.triangle { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
   #tour-tooltip .tour-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 8px; }
   #tour-tooltip .tour-skip { background: none; border: none; color: #CFD8C9; font-size: 0.75rem; cursor: pointer; padding: 0.3em 0; text-decoration: underline; }
   #tour-tooltip .tour-nav { display: flex; gap: 6px; }
@@ -343,6 +387,24 @@
 
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
+  // Farblegende für die Bewertungs-Pins — eigener topleft-Control, damit
+  // Leaflet ihn automatisch unter dem Zoom-Regler einreiht statt ihn manuell
+  // positionieren zu müssen.
+  const RatingsLegendControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'ratings-legend');
+      el.innerHTML =
+        '<div class="legend-title">Bewertungen</div>' +
+        '<div class="row"><span class="dot" style="background:#3B7A52"></span>ab 4,0 — gut</div>' +
+        '<div class="row"><span class="dot" style="background:#D9971E"></span>3,0–3,9 — mittel</div>' +
+        '<div class="row"><span class="dot" style="background:#AA4A25"></span>unter 3,0 — eher schlecht</div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new RatingsLegendControl());
+
   // Vier verschiedene Ebenen (Bewertungen, Zensus, OSM-Kategorien, Klima)
   // hängen jeweils eigenständig an moveend/zoomend. Ohne Debounce feuert
   // jede einzeln bei jedem Zwischenschritt einer Kartenbewegung — bei
@@ -367,11 +429,22 @@
     return '#AA4A25';
   }
 
+  // Bewertungs-Pins leben in einer eigenen LayerGroup statt direkt auf der
+  // Karte — dadurch lässt sich die gesamte Ebene mit einem Handgriff aus-
+  // blenden (Toggle weiter unten) und bei jedem Kartenzug leeren wir sie
+  // zuerst per clearLayers(), statt Marker aus vorherigen Ausschnitten
+  // stillschweigend liegen zu lassen.
+  const ratingsLayer = L.layerGroup().addTo(map);
+  let ratingsEnabled = true;
+
   async function loadPins() {
     const b = map.getBounds();
     const bbox = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].join(',');
     const res = await fetch('/api/map?bbox=' + encodeURIComponent(bbox));
     const data = await res.json();
+
+    ratingsLayer.clearLayers();
+    if (!ratingsEnabled) return;
 
     (data.segments || []).forEach(seg => {
       const marker = L.circleMarker([seg.centroid_lat, seg.centroid_lon], {
@@ -380,7 +453,7 @@
         weight: 1,
         fillColor: colorForScore(parseFloat(seg.avg_overall)),
         fillOpacity: 0.85
-      }).addTo(map);
+      }).addTo(ratingsLayer);
 
       marker.bindPopup(
         '<div class="wl-popup"><h3>' + seg.street_name + ' (Abschnitt ' + seg.segment_index + ')</h3>' +
@@ -394,6 +467,26 @@
 
   map.on('moveend', debounce(loadPins, 350));
   loadPins();
+
+  const RatingsControl = L.Control.extend({
+    options: { position: 'bottomright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'ratings-control');
+      el.innerHTML =
+        '<button type="button" id="ratings-btn" class="active">Bewertungen ausblenden</button>' +
+        '<div class="hint">Blendet die Bewertungs-Punkte aus, z.B. um nur die Statistik-Ebenen zu sehen.</div>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new RatingsControl());
+
+  document.getElementById('ratings-btn').addEventListener('click', (e) => {
+    ratingsEnabled = !ratingsEnabled;
+    e.target.textContent = ratingsEnabled ? 'Bewertungen ausblenden' : 'Bewertungen anzeigen';
+    e.target.classList.toggle('active', ratingsEnabled);
+    if (ratingsEnabled) { loadPins(); } else { ratingsLayer.clearLayers(); }
+  });
 
   // Amtliche Statistik-Ebenen: Zensus 2022. Direkter Abruf beim
   // ArcGIS-Dienst des Statistischen Bundesamts — öffentlicher,
@@ -617,6 +710,16 @@
   ];
   const POI_MIN_ZOOM = 14;
 
+  // Kleines Dreieck als Inline-SVG statt divIcon-Text — SVG erlaubt einen
+  // echten weißen Rand (stroke) um die Farbfläche, der reine CSS-Border-Trick
+  // für Dreiecke (Border-Winkel) kann das nicht sauber, siehe CSS-Kommentar
+  // bei .poi-triangle-icon.
+  function poiTriangleIcon(color) {
+    const svg = '<svg width="16" height="16" viewBox="0 0 16 16">' +
+      '<polygon points="8,1.5 15,14.5 1,14.5" fill="' + color + '" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [16, 16], iconAnchor: [8, 8] });
+  }
+
   const poiState = {};
   POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false, requestId: 0 }; });
 
@@ -653,9 +756,8 @@
     }
 
     state.layer = L.layerGroup(
-      (data.points || []).map(p => L.circleMarker([p.lat, p.lon], {
-        radius: 5, className: 'poi-marker', color: cat.color, weight: 1,
-        fillColor: cat.color, fillOpacity: 0.9
+      (data.points || []).map(p => L.marker([p.lat, p.lon], {
+        icon: poiTriangleIcon(cat.color)
       }).bindTooltip(p.name || cat.label))
     ).addTo(map);
   }
@@ -1005,14 +1107,63 @@
   // Tutorial — geführte Tour durch die Bedienelemente. Selektoren zeigen auf
   // bereits vorhandene Panels/Controls; fehlt eines (z.B. künftig entfernt),
   // wird der Schritt beim Durchlaufen übersprungen statt die Tour abzubrechen.
+  // Census/POI beschreiben ihre Kennzahlen/Kategorien als Liste statt eines
+  // einzelnen Sammelsatzes (html statt text) — beide Panels fassen sonst zu
+  // viele unterschiedliche Dinge hinter einem Button zusammen, um sie in
+  // einem Satz verständlich zu erklären.
+  const CENSUS_METRIC_DESC = {
+    population: 'Einwohner je Rasterzelle',
+    age: 'Durchschnittsalter der Bevölkerung',
+    rent: 'Ø Nettokaltmiete pro Quadratmeter',
+    ownership: 'Anteil selbstgenutzten Eigentums',
+    vacancy: 'Anteil leerstehender Wohnungen'
+  };
+
+  function censusTourHtml() {
+    return 'Fünf Kennzahlen aus dem Zensus 2022, einzeln oder kombiniert als Kartenraster einblendbar:' +
+      '<ul class="tour-list">' +
+      CENSUS_METRICS.map(m => '<li><span class="tour-swatch" style="background:' + (m.breaks ? m.breaks[m.breaks.length - 1].color : m.breaksByLayer[0][4].color) + '"></span><span><strong>' + m.label + ':</strong> ' + CENSUS_METRIC_DESC[m.key] + '</span></li>').join('') +
+      '</ul>';
+  }
+
+  function poiTourHtml() {
+    return 'Acht Kategorien aus OpenStreetMap, jede als eigenfarbiges Dreieck auf der Karte:' +
+      '<ul class="tour-list">' +
+      POI_CATEGORIES.map(c => '<li><span class="tour-swatch triangle" style="background:' + c.color + '"></span><span>' + c.label + '</span></li>').join('') +
+      '</ul>';
+  }
+
+  // Wirtschaft ist das dichteste Panel (zwölf Kennzahlen) — die Tour springt
+  // hier bewusst zu einem Beispielort (Frankfurt am Main), an dem zuverlässig
+  // für alle Kennzahlen Daten vorliegen, und schaltet das Panel automatisch
+  // scharf, statt nur auf den Button zu zeigen. So sieht man beim ersten
+  // Kontakt eine echte Aufschlüsselung statt eines leeren Panels.
+  const TOUR_EXAMPLE_LOCATION = [50.1109, 8.6821];
+
+  function economyTourEnter() {
+    map.setView(TOUR_EXAMPLE_LOCATION, 11);
+    if (!economyEnabled) {
+      economyEnabled = true;
+      const btn = document.getElementById('economy-btn');
+      btn.textContent = 'Wirtschaft ausblenden';
+      btn.classList.add('active');
+    }
+    loadEconomyCard();
+  }
+
   const TOUR_STEPS = [
     { selector: '#search-group', title: 'Straßen finden', text: 'Hier findest du bereits bewertete Straßen über die Suche.' },
     { selector: '#rate-cta', title: 'Straße bewerten', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab.' },
-    { selector: '.census-control', title: 'Amtliche Statistik', text: 'Zensus-2022-Daten wie Miete, Durchschnittsalter und Eigentümerquote — als Kartenebene einblendbar.' },
-    { selector: '.poi-control', title: 'Freizeit & Infrastruktur', text: 'Spielplätze, Ärzte, Supermärkte und mehr aus OpenStreetMap in der Nähe.' },
+    { selector: '.ratings-control', title: 'Bewertungen ein-/ausblenden', text: 'Blendet die farbigen Bewertungs-Punkte aus — praktisch, wenn du nur die Statistik-Ebenen sehen willst. Was Grün, Orange und Rotbraun bedeuten, erklärt die kleine Legende oben links unter dem Zoom-Regler.' },
+    { selector: '.census-control', title: 'Amtliche Statistik', html: censusTourHtml },
+    { selector: '.poi-control', title: 'Freizeit & Infrastruktur', html: poiTourHtml },
     { selector: '.climate-control', title: 'Klima & Luft', text: 'Temperatur, Niederschlag und Luftqualität für die aktuelle Kartenmitte.' },
     { selector: '.broadband-control', title: 'Breitband', text: 'Verfügbarkeit von schnellem Festnetz-Internet (≥ 50 Mbit/s).' },
-    { selector: '.economy-control', title: 'Wirtschaft', text: 'Arbeitslosenquote, Kriminalitätsrate und weitere Kennzahlen des Kreises.' },
+    {
+      selector: '.economy-control', title: 'Wirtschaft',
+      text: 'Arbeitslosenquote, Kriminalität, Einkommen, Wanderungssaldo u.v.m. für den Kreis der Kartenmitte — hier am Beispiel Frankfurt am Main. Die kleinen (i)-Symbole neben den Zeilen erklären, warum die jeweilige Zahl für die Wohnlage relevant ist.',
+      onEnter: economyTourEnter
+    },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
   ];
@@ -1032,16 +1183,24 @@
       width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px'
     });
 
-    const tw = 300;
+    const tw = 320;
     let left = r.left + r.width / 2 - tw / 2;
     left = Math.max(10, Math.min(left, window.innerWidth - tw - 10));
+    // Reichhaltigere Schritte (Listen mit bis zu 8 Einträgen) sind deutlich
+    // höher als ein einzelner Satz — 300px statt 150px als Platzreserve,
+    // bevor die Tooltip-Box oberhalb statt unterhalb des Ziels landet.
     let top = r.bottom + pad + 14;
-    if (top + 150 > window.innerHeight) top = Math.max(10, r.top - pad - 14 - 150);
+    if (top + 300 > window.innerHeight) top = Math.max(10, r.top - pad - 14 - 300);
     Object.assign(tourTooltip.style, { left: left + 'px', top: top + 'px', width: tw + 'px' });
 
     tourTooltip.querySelector('.tour-progress').textContent = (tourStep + 1) + ' / ' + TOUR_STEPS.length;
     tourTooltip.querySelector('.tour-title').textContent = step.title;
-    tourTooltip.querySelector('.tour-text').textContent = step.text;
+    const textEl = tourTooltip.querySelector('.tour-text');
+    if (step.html) {
+      textEl.innerHTML = typeof step.html === 'function' ? step.html() : step.html;
+    } else {
+      textEl.textContent = step.text;
+    }
     const backBtn = tourTooltip.querySelector('.tour-back');
     backBtn.disabled = tourStep === 0;
     tourTooltip.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Fertig' : 'Weiter';
@@ -1049,11 +1208,24 @@
   }
 
   function tourShowFrom(index, direction) {
+    const prevStep = (tourStep >= 0 && tourStep < TOUR_STEPS.length) ? TOUR_STEPS[tourStep] : null;
     tourStep = index;
-    while (tourStep >= 0 && tourStep < TOUR_STEPS.length && !tourPosition(TOUR_STEPS[tourStep])) {
+    while (tourStep >= 0 && tourStep < TOUR_STEPS.length && !document.querySelector(TOUR_STEPS[tourStep].selector)) {
       tourStep += direction;
     }
-    if (tourStep < 0 || tourStep >= TOUR_STEPS.length) { tourEnd(); }
+    if (tourStep < 0 || tourStep >= TOUR_STEPS.length) { tourEnd(); return; }
+
+    const step = TOUR_STEPS[tourStep];
+    if (prevStep && prevStep !== step && prevStep.onLeave) prevStep.onLeave();
+    if (step.onEnter) step.onEnter();
+    tourPosition(step);
+    // onEnter kann Panels asynchron nachladen (z.B. Wirtschaft) — die
+    // Zielgröße ändert sich dadurch erst nach der Antwort, daher eine kurze
+    // Nachkorrektur der Position, falls der Nutzer inzwischen nicht schon
+    // weitergeklickt hat.
+    if (step.onEnter) {
+      setTimeout(() => { if (tourStep >= 0 && TOUR_STEPS[tourStep] === step) tourPosition(step); }, 400);
+    }
   }
 
   function tourStart() {

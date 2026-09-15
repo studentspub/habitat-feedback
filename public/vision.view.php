@@ -14,6 +14,31 @@
     display: inline-block; margin-top: 6px; padding: 2px 6px; background: #D9971E; color: #1B2420;
     border-radius: 4px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
   }
+  /* Aufschlüsselung nach den fünf echten Bewertungskriterien (siehe
+     bewerten.view.php) statt nur des Gesamtwerts — sonst suggeriert die
+     Vision-Seite eine Detailtiefe, die das echte Bewertungsformular gar
+     nicht abbildet. */
+  .wl-popup .breakdown { margin-top: 6px; padding-top: 6px; border-top: 1px solid #EBEEE5; }
+  .wl-popup .breakdown .row { display: flex; justify-content: space-between; gap: 8px; font-size: 0.78rem; margin-top: 3px; }
+  .wl-popup .breakdown .k { color: #4B564F; }
+  .wl-popup .breakdown .v { font-weight: 600; }
+
+  /* Legende + Sichtbarkeits-Schalter für die Bewertungspunkte, oben links
+     unter dem Zoom-Regler — als topleft-Leaflet-Control stapelt Leaflet das
+     automatisch darunter. */
+  .ratings-legend {
+    background: rgba(255,255,255,0.92); padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.72rem; color: #1B2420;
+  }
+  .ratings-legend .legend-title { font-weight: 700; margin-bottom: 4px; }
+  .ratings-legend .row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+  .ratings-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1px solid rgba(27,36,32,0.4); }
+  .ratings-legend #ratings-toggle {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 8px; padding: 0.4em 0.6em;
+    background: #1B2420; color: white; border: none; border-radius: 6px;
+    font-size: 0.74rem; font-weight: 600; cursor: pointer;
+  }
+  .ratings-legend #ratings-toggle.active { background: #31576D; }
 
   /* Banner bleibt dauerhaft sichtbar (nicht wegklickbar) — anders als das
      Willkommens-Overlay auf der echten Karte muss hier jederzeit klar sein,
@@ -51,6 +76,39 @@
     if (score >= 3) return '#D9971E';
     return '#AA4A25';
   }
+
+  const RatingsControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'ratings-legend');
+      el.innerHTML =
+        '<div class="legend-title">Bewertungen</div>' +
+        '<div class="row"><span class="dot" style="background:#3B7A52"></span>ab 4,0 — gut</div>' +
+        '<div class="row"><span class="dot" style="background:#D9971E"></span>3,0–3,9 — mittel</div>' +
+        '<div class="row"><span class="dot" style="background:#AA4A25"></span>unter 3,0 — eher schlecht</div>' +
+        '<button type="button" id="ratings-toggle" class="active">Bewertungen ausblenden</button>';
+      L.DomEvent.disableClickPropagation(el);
+      return el;
+    }
+  });
+  map.addControl(new RatingsControl());
+
+  // Marker in einer eigenen LayerGroup statt direkt auf der Karte, damit
+  // sich die gesamte Ebene über den Schalter oben links mit einem
+  // map.removeLayer()/addLayer() ein- und ausblenden lässt.
+  const ratingsLayer = L.layerGroup().addTo(map);
+
+  document.getElementById('ratings-toggle').addEventListener('click', (e) => {
+    if (map.hasLayer(ratingsLayer)) {
+      map.removeLayer(ratingsLayer);
+      e.target.textContent = 'Bewertungen anzeigen';
+      e.target.classList.remove('active');
+    } else {
+      map.addLayer(ratingsLayer);
+      e.target.textContent = 'Bewertungen ausblenden';
+      e.target.classList.add('active');
+    }
+  });
 
   // Deterministischer Pseudozufall (mulberry32) statt Math.random(): die
   // Beispieldaten sollen bei jedem Aufruf gleich aussehen, statt bei jedem
@@ -90,22 +148,31 @@
     'Ringstraße', 'Mühlenweg', 'Am Stadtpark', 'Kastanienallee', 'Uferstraße'
   ];
 
+  // Dieselben fünf Kriterien wie im echten Bewertungsformular (siehe
+  // bewerten.view.php) — der Gesamtwert ist ihr Durchschnitt, genau wie
+  // SegmentRepository::recomputeStats() ihn aus echten Bewertungen berechnet.
+  const CRITERIA = ['Ruhe', 'Instandhaltung', 'Umgangston im Viertel', 'Infrastruktur', 'Sicherheitsgefühl'];
+
   CITIES.forEach(([city, lat, lon]) => {
     const segments = 3 + Math.floor(rand() * 5); // 3–7 Beispiel-Abschnitte je Stadt
     for (let i = 0; i < segments; i++) {
       const segLat = lat + (rand() - 0.5) * 0.06;
       const segLon = lon + (rand() - 0.5) * 0.09;
-      const score = Math.round((2 + rand() * 3) * 10) / 10; // 2.0–5.0
+      const subScores = CRITERIA.map(() => Math.round((1 + rand() * 4) * 10) / 10); // je 1,0–5,0
+      const score = Math.round((subScores.reduce((sum, s) => sum + s, 0) / subScores.length) * 10) / 10;
       const street = pick(STREET_STEMS);
       const ratingCount = 3 + Math.floor(rand() * 40);
 
       L.circleMarker([segLat, segLon], {
         radius: 9, color: '#1B2420', weight: 1,
         fillColor: colorForScore(score), fillOpacity: 0.85
-      }).addTo(map).bindPopup(
+      }).addTo(ratingsLayer).bindPopup(
         '<div class="wl-popup"><h3>' + street + ' (Abschnitt ' + (i + 1) + ')</h3>' +
         '<p>' + city + '</p>' +
         '<p class="score">Gesamt: ' + score.toFixed(1) + ' / 5</p>' +
+        '<div class="breakdown">' +
+        CRITERIA.map((label, ci) => '<div class="row"><span class="k">' + label + '</span><span class="v">' + subScores[ci].toFixed(1) + '</span></div>').join('') +
+        '</div>' +
         '<p>' + ratingCount + ' Bewertungen</p>' +
         '<span class="fake-tag">Beispieldaten</span></div>'
       );
