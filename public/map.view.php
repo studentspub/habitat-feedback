@@ -269,6 +269,7 @@
   }
   #tutorial-btn { background: #D9971E; color: #1B2420; }
   #vision-link { background: #31576D; color: white; }
+  #examples-btn { background: #3B7A52; color: white; }
   #tour-clickguard { position: fixed; inset: 0; z-index: 2999; background: transparent; }
   #tour-spotlight {
     position: fixed; z-index: 3000; border-radius: 8px; pointer-events: none;
@@ -330,12 +331,53 @@
     text-decoration: none; font-size: 0.8rem; font-weight: 600;
   }
   #welcome-overlay .welcome-dismiss { font-size: 0.76rem; color: #31576D; text-decoration: none; cursor: pointer; }
+
+  /* Praxisbeispiele — eigenes Modal statt eines weiteren 230px-Bedienfelds:
+     fünf ausformulierte Personas samt Rückschlüssen sind zu lang für die
+     schmalen Panels der anderen Ebenen. Jede Persona ist einzeln auf-/
+     zuklappbar (Akkordeon), alle standardmäßig zu, damit das Modal beim
+     Öffnen nicht als Textwand erschlägt. */
+  #examples-backdrop { position: fixed; inset: 0; z-index: 3500; background: rgba(9, 12, 10, 0.55); }
+  #examples-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3501;
+    background: #F2F4EF; color: #1B2420; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    width: min(640px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 32px));
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  /* Das [hidden]-Attribut hat im Browser nur eine ID-schwache
+     UA-Stylesheet-Regel (display:none) hinterlegt — die eigene
+     "display: flex"-Regel oben hat als ID-Selektor höhere Spezifität und
+     würde sie sonst überstimmen, sodass das Modal trotz hidden sichtbar
+     bliebe. Dieser Selektor gewinnt gezielt dagegen. */
+  #examples-modal[hidden] { display: none; }
+  .examples-header { background: #1B2420; color: white; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+  .examples-header h2 { margin: 0; font-size: 1.05rem; }
+  .examples-header button { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; padding: 4px; line-height: 1; }
+  .examples-intro { padding: 12px 18px 0; font-size: 0.82rem; color: #4B564F; line-height: 1.4; }
+  .examples-list { padding: 12px 18px 18px; overflow-y: auto; }
+  .example-item { border: 1px solid #CFD8C9; border-radius: 8px; margin-top: 10px; overflow: hidden; }
+  .example-item:first-child { margin-top: 0; }
+  .example-toggle {
+    display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+    background: white; border: none; padding: 10px 14px; text-align: left; cursor: pointer; color: #1B2420;
+  }
+  .example-toggle .name { display: block; font-size: 0.88rem; font-weight: 700; }
+  .example-toggle .teaser { display: block; font-size: 0.76rem; font-weight: 400; color: #4B564F; margin-top: 2px; }
+  .example-toggle .chevron { flex: none; transition: transform 0.2s ease; color: #4B564F; }
+  .example-item.open .example-toggle .chevron { transform: rotate(180deg); }
+  .example-body { display: none; padding: 0 14px 14px; background: #FBFBF7; }
+  .example-item.open .example-body { display: block; }
+  .example-body .story { font-size: 0.84rem; line-height: 1.5; margin: 10px 0; }
+  .example-body .insights-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #31576D; margin-top: 4px; }
+  .example-body ol { margin: 6px 0 0; padding-left: 18px; font-size: 0.82rem; line-height: 1.5; }
+  .example-body li { margin-top: 4px; }
 </style>
 </head>
 <body>
 <div id="discover-group">
   <button type="button" id="tutorial-btn">🧭 Tutorial starten</button>
   <a id="vision-link" href="/vision">🔮 Vision entdecken</a>
+  <button type="button" id="examples-btn">💡 Praxisbeispiele</button>
 </div>
 <div id="search-group">
   <span id="search-label">Bereits bewertete Straßen</span>
@@ -360,6 +402,16 @@
     <a class="welcome-cta" href="/bewerten">Straße bewerten</a>
     <a class="welcome-dismiss">Vielleicht später</a>
   </div>
+</div>
+
+<div id="examples-backdrop" hidden></div>
+<div id="examples-modal" hidden>
+  <div class="examples-header">
+    <h2>💡 Für wen lohnt sich Habitat Feedback?</h2>
+    <button type="button" id="examples-close" aria-label="Schließen">✕</button>
+  </div>
+  <div class="examples-intro">Fünf fiktive Beispiele, wie sich die Kennzahlen auf der Karte in der Praxis lesen lassen.</div>
+  <div class="examples-list" id="examples-list"></div>
 </div>
 
 <div id="tour-clickguard" hidden></div>
@@ -1165,6 +1217,7 @@
       onEnter: economyTourEnter
     },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
+    { selector: '#examples-btn', title: 'Praxisbeispiele', text: 'Fünf fiktive Personen — Rentnerin, Student, Pendlerin, Kapitalanleger, Familie — und je drei Rückschlüsse, wie sie die Kennzahlen auf dieser Karte für ihre eigene Entscheidung nutzen könnten.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
   ];
 
@@ -1280,6 +1333,95 @@
     overlay.querySelector('.welcome-cta').addEventListener('click', dismissWelcome);
     setTimeout(() => overlay.classList.add('visible'), 1200);
   })();
+
+  // Praxisbeispiele — fünf fiktive Personas, die zeigen, wie sich die
+  // vorhandenen Kennzahlen (Bewertungskriterien, Zensus, Wirtschaft,
+  // OSM-Kategorien, Breitband) tatsächlich für eine Entscheidung nutzen
+  // lassen. Bewusst nur 3 Rückschlüsse pro Person statt einer erschöpfenden
+  // Liste — die Idee ist ein Denkanstoß, keine vollständige Anleitung.
+  const EXAMPLES = [
+    {
+      name: 'Helga, 71 — auf der Suche nach einem ruhigen Alterssitz',
+      teaser: 'Rentnerin, zieht näher zur Familie',
+      story: 'Helga Brenner, 71, verwitwet, wohnt seit 40 Jahren in einer Kölner Altbauwohnung im 4. Stock ohne Aufzug — die Treppen werden ihr zu anstrengend. Sie möchte näher zu ihrer Tochter nach Bonn ziehen, aber nicht direkt bei ihr wohnen. Mit dabei: ihr Mischlingshund „Keks". Sie gärtnert leidenschaftlich gern und hat ihren Führerschein vor zwei Jahren abgegeben — wichtig sind ihr kurze Wege zu Fuß und ein vertrautes, ruhiges Viertel.',
+      insights: [
+        '<strong>Ruhe</strong>- und <strong>Sicherheitsgefühl</strong>-Bewertungen zusammen vergleichen: Beide Kriterien zeigen, welche Abschnitte sich für abendliche Spaziergänge mit Keks eignen.',
+        'POI-Kategorien <strong>Ärzte und Apotheken</strong> und <strong>ÖPNV-Haltestellen</strong> gleichzeitig einblenden — ohne Auto zählt jeder Schritt bis zur nächsten Haltestelle oder zum Hausarzt.',
+        'Zensus-Kennzahl <strong>Ø Alter</strong>: ein hoher Wert deutet oft auf eine etablierte, seit Jahrzehnten gewachsene Nachbarschaft hin, in der Helga sich eher wiederfindet als in einem jungen Neubauviertel.'
+      ]
+    },
+    {
+      name: 'Kevin, 22 — WG-Zimmer für das 5. Semester',
+      teaser: 'Student, knappes Budget',
+      story: 'Kevin Ostrowski, 22, 5. Semester Wirtschaftsinformatik an der Frankfurt University of Applied Sciences. Zieht aus dem Wohnheim aus, weil er dort keinen Platz mehr bekommt, sucht WG-Zimmer oder kleine Wohnung. Studentenjob im Café, knappes Budget von rund 500 € warm, spielt abends gern Volleyball und geht gern mit Freunden aus. Braucht kurze Wege zur Uni und mag urbanes Flair.',
+      insights: [
+        'Zensus-Kennzahl <strong>Ø Miete/m²</strong> als erster Budget-Check — bevor Kevin sich einzelne Abschnitte genauer ansieht, filtert die Kennzahl grob, welche Viertel finanziell überhaupt realistisch sind.',
+        'POI-Kategorien <strong>Unis</strong> und <strong>ÖPNV-Haltestellen</strong> gleichzeitig einblenden — zeigt auf einen Blick, wie weit ein Abschnitt vom Campus entfernt liegt und ob eine gute Anbindung in der Nähe ist.',
+        'POI-Kategorie <strong>Kneipen und Cafés</strong> als informelles Signal für studentisches Leben im Viertel — viele Treffpunkte in Laufnähe sprechen für die Art Nachbarschaft, in der Kevin sich wohlfühlen würde.'
+      ]
+    },
+    {
+      name: 'Julia, 34 — Eigentumswohnung im Rhein-Main-Gebiet',
+      teaser: 'Angestellte, pendelt nach Frankfurt',
+      story: 'Julia Vogt, 34, Teamleiterin im Risikomanagement einer Frankfurter Bank. Sucht eine Eigentumswohnung im Rhein-Main-Gebiet, will aber nicht direkt im teuren Frankfurter Zentrum kaufen. Arbeitet zwei Tage die Woche im Homeoffice, pendelt die restlichen drei Tage mit der S-Bahn. Legt Wert auf ein gutes Fitnessstudio und Restaurants in der Nähe und denkt langfristig auch über Familienplanung nach.',
+      insights: [
+        'Wirtschafts-Kennzahlen <strong>Arbeitslosenquote</strong> und <strong>Wanderungssaldo</strong> des Kreises zusammen betrachten — niedrige Arbeitslosigkeit plus positiver Wanderungssaldo deuten auf eine wirtschaftlich stabile Region mit Zuzugsdruck hin.',
+        '<strong>Breitband</strong>-Ebene einblenden, bevor die engere Auswahl beginnt — bei zwei Homeoffice-Tagen pro Woche ist eine verlässliche Internetverbindung Grundvoraussetzung, nicht nur Komfort.',
+        'Zensus-Kennzahl <strong>Ø Miete/m²</strong> zwischen Frankfurter Stadtteilen und dem Umland gegenüberstellen, um die eigentliche Abwägung zu treffen: günstigerer Kaufpreis im Umland gegen längere Pendelzeit.'
+      ]
+    },
+    {
+      name: 'Markus, 52 — eine Wohnung als Kapitalanlage',
+      teaser: 'Investor, denkt langfristig',
+      story: 'Markus Thalberg, 52, Ingenieur, hat vor Kurzem eine kleine Erbschaft erhalten und überlegt, statt eines Aktiensparplans eine Wohnung als Kapitalanlage zu kaufen und zu vermieten. Kein Interesse an Sanierungsobjekten — die Wohnung soll unkompliziert vermietbar sein. Er denkt in Zeiträumen von 15 bis 20 Jahren und will vor allem eine Region mit stabiler oder steigender Nachfrage finden.',
+      insights: [
+        'Wirtschafts-Kennzahl <strong>Wanderungssaldo</strong> als Nachfrage-Indikator — ein dauerhaft positiver Saldo (mehr Zuzüge als Fortzüge) spricht für Wohnungsknappheit und tendenziell stabile bis steigende Mieten.',
+        '<strong>Baugenehmigungen</strong> und <strong>Baufertigstellungen</strong> gegenüberstellen — klafft hier über mehrere Jahre eine große Lücke, deutet das auf einen Bau-Rückstand hin: das Angebot hält nicht mit der Nachfrage Schritt.',
+        'Zensus-Kennzahl <strong>Leerstandsquote</strong> — ein niedriger Wert zeigt, dass Wohnraum in der Region knapp und stark ausgelastet ist, was das Vermietungsrisiko senkt.'
+      ]
+    },
+    {
+      name: 'Melanie & Tobias, Anfang 40 — mehr Platz für die Familie',
+      teaser: 'Eltern zweier Kinder (8 und 5)',
+      story: 'Melanie und Tobias Hartwig, beide Anfang 40, zwei Kinder — Emma (8) und Paul (5). Sie wohnen zur Miete in einer 3-Zimmer-Wohnung, die für vier Personen zu eng geworden ist, und suchen ein Reihenhaus oder eine große Wohnung mit Garten oder zumindest Balkon. Emma kommt bald in die weiterführende Schule, Paul wird im nächsten Jahr eingeschult. Ein Auto ist vorhanden, aber die Kinder sollen perspektivisch allein zur Schule laufen können.',
+      insights: [
+        'POI-Kategorien <strong>Kitas und Schulen</strong> und <strong>Spielplätze</strong> gemeinsam einblenden — zeigt sofort, ob genug Einrichtungen in fußläufiger Entfernung liegen, damit Emma und Paul irgendwann eigenständig unterwegs sein können.',
+        '<strong>Sicherheitsgefühl</strong>-Bewertung zusammen mit der Wirtschafts-Kennzahl <strong>Straftaten je 100.000 Einwohner</strong> betrachten — die eine ist die Wahrnehmung der Nachbarschaft, die andere die amtliche Statistik des ganzen Kreises.',
+        'Zensus-Kennzahl <strong>Eigentümerquote</strong> — ein hoher Wert deutet oft auf eine Siedlung mit vielen Eigenheimen und wenig Fluktuation hin, häufig ein Zeichen für gewachsene, familienfreundliche Nachbarschaften.'
+      ]
+    }
+  ];
+
+  function renderExamples() {
+    const list = document.getElementById('examples-list');
+    list.innerHTML = EXAMPLES.map((ex, i) =>
+      '<div class="example-item" data-index="' + i + '">' +
+        '<button type="button" class="example-toggle">' +
+          '<span><span class="name">' + ex.name + '</span><span class="teaser">' + ex.teaser + '</span></span>' +
+          '<span class="chevron">▾</span>' +
+        '</button>' +
+        '<div class="example-body">' +
+          '<p class="story">' + ex.story + '</p>' +
+          '<div class="insights-title">Was die Zahlen zeigen</div>' +
+          '<ol>' + ex.insights.map(t => '<li>' + t + '</li>').join('') + '</ol>' +
+        '</div>' +
+      '</div>'
+    ).join('');
+    list.querySelectorAll('.example-toggle').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.example-item').classList.toggle('open'));
+    });
+  }
+  renderExamples();
+
+  const examplesBackdrop = document.getElementById('examples-backdrop');
+  const examplesModal = document.getElementById('examples-modal');
+  function examplesOpen() { examplesBackdrop.hidden = false; examplesModal.hidden = false; }
+  function examplesClose() { examplesBackdrop.hidden = true; examplesModal.hidden = true; }
+
+  document.getElementById('examples-btn').addEventListener('click', examplesOpen);
+  document.getElementById('examples-close').addEventListener('click', examplesClose);
+  examplesBackdrop.addEventListener('click', examplesClose);
+  window.addEventListener('keydown', (e) => { if (!examplesModal.hidden && e.key === 'Escape') examplesClose(); });
 </script>
 </body>
 </html>
