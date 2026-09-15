@@ -153,12 +153,35 @@
   // SegmentRepository::recomputeStats() ihn aus echten Bewertungen berechnet.
   const CRITERIA = ['Ruhe', 'Instandhaltung', 'Umgangston im Viertel', 'Infrastruktur', 'Sicherheitsgefühl'];
 
+  // Fünf unabhängig gewürfelte Kriterien pro Abschnitt (je 1,0–5,0) mitteln
+  // sich laut zentralem Grenzwertsatz fast immer Richtung 3,0 — "gut"
+  // (≥4,0) wäre dadurch kaum je zu sehen. Stattdessen erst eine "Stimmung"
+  // je Abschnitt würfeln (deutlich häufiger gut als mittel oder schlecht)
+  // und die Kriterien nur innerhalb einer engen Spanne um diesen Zielwert
+  // streuen — so bleibt die Aufschlüsselung uneinheitlich, aber der
+  // Gesamteindruck der Karte kippt klar Richtung Grün.
+  const MOOD_TIERS = [
+    { weight: 0.55, min: 4.3, max: 4.9 },  // gut
+    { weight: 0.25, min: 3.2, max: 3.8 },  // mittel
+    { weight: 0.20, min: 1.8, max: 2.8 }   // eher schlecht
+  ];
+
+  function pickMoodTarget() {
+    let r = rand();
+    for (const tier of MOOD_TIERS) {
+      if (r < tier.weight) return tier.min + rand() * (tier.max - tier.min);
+      r -= tier.weight;
+    }
+    return MOOD_TIERS[0].min; // Rundungsrest, praktisch nie erreicht
+  }
+
   CITIES.forEach(([city, lat, lon]) => {
     const segments = 3 + Math.floor(rand() * 5); // 3–7 Beispiel-Abschnitte je Stadt
     for (let i = 0; i < segments; i++) {
       const segLat = lat + (rand() - 0.5) * 0.06;
       const segLon = lon + (rand() - 0.5) * 0.09;
-      const subScores = CRITERIA.map(() => Math.round((1 + rand() * 4) * 10) / 10); // je 1,0–5,0
+      const moodTarget = pickMoodTarget();
+      const subScores = CRITERIA.map(() => Math.round(Math.min(5, Math.max(1, moodTarget + (rand() - 0.5) * 1.4)) * 10) / 10);
       const score = Math.round((subScores.reduce((sum, s) => sum + s, 0) / subScores.length) * 10) / 10;
       const street = pick(STREET_STEMS);
       const ratingCount = 3 + Math.floor(rand() * 40);
