@@ -261,6 +261,31 @@
   #tour-tooltip .tour-back { background: #31576D; color: white; }
   #tour-tooltip .tour-back:disabled { opacity: 0.4; cursor: default; }
   #tour-tooltip .tour-next { background: #D9971E; color: #1B2420; }
+
+  /* Willkommens-Overlay — erscheint einmalig, dezent verzögert statt sofort
+     beim Laden, und merkt sich per localStorage, dass es (egal über welchen
+     Weg) schon gesehen wurde. Bewusst kein Modal: pointer-events bleiben
+     überall sonst auf der Karte aktiv, das Overlay blockiert nichts. */
+  #welcome-overlay {
+    position: absolute; bottom: 16px; left: 50%; z-index: 1000;
+    transform: translateX(-50%) translateY(16px); opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    background: rgba(255,255,255,0.97); border-radius: 10px; padding: 14px 34px 14px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2); max-width: 320px; width: calc(100% - 32px);
+  }
+  #welcome-overlay.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  #welcome-overlay .welcome-close {
+    position: absolute; top: 6px; right: 8px; background: none; border: none; font-size: 1rem;
+    color: #7C877E; cursor: pointer; line-height: 1; padding: 4px;
+  }
+  #welcome-overlay h3 { margin: 0 0 4px; font-size: 0.92rem; color: #1B2420; }
+  #welcome-overlay p { margin: 0 0 10px; font-size: 0.8rem; color: #4B564F; line-height: 1.4; }
+  #welcome-overlay .welcome-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #welcome-overlay .welcome-cta {
+    padding: 0.5em 1em; background: #1B2420; color: white; border-radius: 6px;
+    text-decoration: none; font-size: 0.8rem; font-weight: 600;
+  }
+  #welcome-overlay .welcome-dismiss { font-size: 0.76rem; color: #31576D; text-decoration: none; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -281,6 +306,16 @@
 <div id="map"></div>
 <div id="legal">
   <a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+</div>
+
+<div id="welcome-overlay">
+  <button type="button" class="welcome-close" aria-label="Schließen">✕</button>
+  <h3>👋 Willkommen bei Habitat Feedback</h3>
+  <p>Entdecke, wie sich Straßen wirklich anfühlen — oder gib in wenigen Minuten deine eigene, anonyme Einschätzung ab.</p>
+  <div class="welcome-actions">
+    <a class="welcome-cta" href="/bewerten">Straße bewerten</a>
+    <a class="welcome-dismiss">Vielleicht später</a>
+  </div>
 </div>
 
 <div id="tour-clickguard" hidden></div>
@@ -1051,6 +1086,28 @@
   tourTooltip.querySelector('.tour-skip').addEventListener('click', tourEnd);
   window.addEventListener('keydown', (e) => { if (tourStep >= 0 && e.key === 'Escape') tourEnd(); });
   window.addEventListener('resize', () => { if (tourStep >= 0) tourPosition(TOUR_STEPS[tourStep]); });
+
+  // Willkommens-Overlay — nur beim allerersten Besuch, dezent verzögert statt
+  // sofort beim Laden, und danach dauerhaft weg (localStorage), egal auf
+  // welchem der drei Wege (Schließen, "Vielleicht später" oder tatsächlich
+  // bewerten) es verlassen wurde. Kein Timer zum automatischen Ausblenden —
+  // wer die Karte gerade erst entdeckt, soll in Ruhe lesen können.
+  (function () {
+    const STORAGE_KEY = 'wl_welcome_dismissed';
+    let alreadySeen = false;
+    try { alreadySeen = !!localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    if (alreadySeen) return;
+
+    const overlay = document.getElementById('welcome-overlay');
+    function dismissWelcome() {
+      overlay.classList.remove('visible');
+      try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+    }
+    overlay.querySelector('.welcome-close').addEventListener('click', dismissWelcome);
+    overlay.querySelector('.welcome-dismiss').addEventListener('click', dismissWelcome);
+    overlay.querySelector('.welcome-cta').addEventListener('click', dismissWelcome);
+    setTimeout(() => overlay.classList.add('visible'), 1200);
+  })();
 </script>
 </body>
 </html>
