@@ -218,9 +218,48 @@
     font-size: 0.72rem; font-weight: 400; line-height: 1.4; padding: 8px 10px;
     border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); margin-top: 4px;
   }
+
+  /* Tutorial — geführte Tour durch die Bedienelemente. #tour-spotlight nutzt
+     einen riesigen box-shadow statt clip-path: bei jedem Schritt ändert sich
+     nur Position/Größe eines einzigen Elements statt eines Pfads. Der
+     "Rahmen" um den jeweiligen Zielbutton ist ein zusätzlicher Outline direkt
+     an diesem Spotlight-Element. #tour-clickguard fängt währenddessen Klicks
+     auf der restlichen Seite ab, damit die Tour nicht durch versehentliches
+     Umschalten eines Panels durcheinanderkommt. */
+  #tutorial-btn {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
+    background: #D9971E; color: #1B2420; border: none; border-radius: 20px;
+    padding: 0.5em 1.2em; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  }
+  #tour-clickguard { position: fixed; inset: 0; z-index: 2999; background: transparent; }
+  #tour-spotlight {
+    position: fixed; z-index: 3000; border-radius: 8px; pointer-events: none;
+    box-shadow: 0 0 0 9999px rgba(9, 12, 10, 0.6);
+    outline: 3px solid #D9971E; outline-offset: 3px;
+    transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease;
+  }
+  #tour-tooltip {
+    position: fixed; z-index: 3001; background: #1B2420; color: white; border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.35); font-size: 0.85rem;
+    transition: left 0.25s ease, top 0.25s ease;
+  }
+  #tour-tooltip .tour-progress { font-size: 0.68rem; color: #CFD8C9; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+  #tour-tooltip .tour-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  #tour-tooltip .tour-text { line-height: 1.4; color: #EBEEE5; }
+  #tour-tooltip .tour-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; gap: 8px; }
+  #tour-tooltip .tour-skip { background: none; border: none; color: #CFD8C9; font-size: 0.75rem; cursor: pointer; padding: 0.3em 0; text-decoration: underline; }
+  #tour-tooltip .tour-nav { display: flex; gap: 6px; }
+  #tour-tooltip .tour-back, #tour-tooltip .tour-next {
+    border: none; border-radius: 6px; padding: 0.4em 0.9em; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  }
+  #tour-tooltip .tour-back { background: #31576D; color: white; }
+  #tour-tooltip .tour-back:disabled { opacity: 0.4; cursor: default; }
+  #tour-tooltip .tour-next { background: #D9971E; color: #1B2420; }
 </style>
 </head>
 <body>
+<button type="button" id="tutorial-btn">🧭 Tutorial starten</button>
 <div id="search-group">
   <span id="search-label">Bereits bewertete Straßen</span>
   <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
@@ -234,6 +273,21 @@
 <div id="map"></div>
 <div id="legal">
   <a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+</div>
+
+<div id="tour-clickguard" hidden></div>
+<div id="tour-spotlight" hidden></div>
+<div id="tour-tooltip" hidden>
+  <div class="tour-progress"></div>
+  <div class="tour-title"></div>
+  <div class="tour-text"></div>
+  <div class="tour-actions">
+    <button type="button" class="tour-skip">Tour beenden</button>
+    <div class="tour-nav">
+      <button type="button" class="tour-back">Zurück</button>
+      <button type="button" class="tour-next">Weiter</button>
+    </div>
+  </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
@@ -904,6 +958,90 @@
   document.addEventListener('click', (e) => {
     if (e.target !== searchInput) suggestions.hidden = true;
   });
+
+  // Tutorial — geführte Tour durch die Bedienelemente. Selektoren zeigen auf
+  // bereits vorhandene Panels/Controls; fehlt eines (z.B. künftig entfernt),
+  // wird der Schritt beim Durchlaufen übersprungen statt die Tour abzubrechen.
+  const TOUR_STEPS = [
+    { selector: '#search-group', title: 'Straßen finden', text: 'Hier findest du bereits bewertete Straßen über die Suche.' },
+    { selector: '#rate-cta', title: 'Straße bewerten', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab.' },
+    { selector: '.census-control', title: 'Amtliche Statistik', text: 'Zensus-2022-Daten wie Miete, Durchschnittsalter und Eigentümerquote — als Kartenebene einblendbar.' },
+    { selector: '.poi-control', title: 'Freizeit & Infrastruktur', text: 'Spielplätze, Ärzte, Supermärkte und mehr aus OpenStreetMap in der Nähe.' },
+    { selector: '.climate-control', title: 'Klima & Luft', text: 'Temperatur, Niederschlag und Luftqualität für die aktuelle Kartenmitte.' },
+    { selector: '.broadband-control', title: 'Breitband', text: 'Verfügbarkeit von schnellem Festnetz-Internet (≥ 50 Mbit/s).' },
+    { selector: '.economy-control', title: 'Wirtschaft', text: 'Arbeitslosenquote, Kriminalitätsrate und weitere Kennzahlen des Kreises.' },
+    { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
+  ];
+
+  const tourClickguard = document.getElementById('tour-clickguard');
+  const tourSpotlight = document.getElementById('tour-spotlight');
+  const tourTooltip = document.getElementById('tour-tooltip');
+  let tourStep = -1;
+
+  function tourPosition(step) {
+    const target = document.querySelector(step.selector);
+    if (!target) return false;
+    const r = target.getBoundingClientRect();
+    const pad = 6;
+    Object.assign(tourSpotlight.style, {
+      left: (r.left - pad) + 'px', top: (r.top - pad) + 'px',
+      width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px'
+    });
+
+    const tw = 300;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(10, Math.min(left, window.innerWidth - tw - 10));
+    let top = r.bottom + pad + 14;
+    if (top + 150 > window.innerHeight) top = Math.max(10, r.top - pad - 14 - 150);
+    Object.assign(tourTooltip.style, { left: left + 'px', top: top + 'px', width: tw + 'px' });
+
+    tourTooltip.querySelector('.tour-progress').textContent = (tourStep + 1) + ' / ' + TOUR_STEPS.length;
+    tourTooltip.querySelector('.tour-title').textContent = step.title;
+    tourTooltip.querySelector('.tour-text').textContent = step.text;
+    const backBtn = tourTooltip.querySelector('.tour-back');
+    backBtn.disabled = tourStep === 0;
+    tourTooltip.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? 'Fertig' : 'Weiter';
+    return true;
+  }
+
+  function tourShowFrom(index, direction) {
+    tourStep = index;
+    while (tourStep >= 0 && tourStep < TOUR_STEPS.length && !tourPosition(TOUR_STEPS[tourStep])) {
+      tourStep += direction;
+    }
+    if (tourStep < 0 || tourStep >= TOUR_STEPS.length) { tourEnd(); }
+  }
+
+  function tourStart() {
+    tourClickguard.hidden = false;
+    tourSpotlight.hidden = false;
+    tourTooltip.hidden = false;
+    tourShowFrom(0, 1);
+  }
+
+  function tourEnd() {
+    tourStep = -1;
+    tourClickguard.hidden = true;
+    tourSpotlight.hidden = true;
+    tourTooltip.hidden = true;
+  }
+
+  function tourNext() {
+    if (tourStep >= TOUR_STEPS.length - 1) { tourEnd(); return; }
+    tourShowFrom(tourStep + 1, 1);
+  }
+
+  function tourBack() {
+    if (tourStep <= 0) return;
+    tourShowFrom(tourStep - 1, -1);
+  }
+
+  document.getElementById('tutorial-btn').addEventListener('click', tourStart);
+  tourTooltip.querySelector('.tour-next').addEventListener('click', tourNext);
+  tourTooltip.querySelector('.tour-back').addEventListener('click', tourBack);
+  tourTooltip.querySelector('.tour-skip').addEventListener('click', tourEnd);
+  window.addEventListener('keydown', (e) => { if (tourStep >= 0 && e.key === 'Escape') tourEnd(); });
+  window.addEventListener('resize', () => { if (tourStep >= 0) tourPosition(TOUR_STEPS[tourStep]); });
 </script>
 </body>
 </html>
