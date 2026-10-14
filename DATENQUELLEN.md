@@ -40,6 +40,7 @@ Kreis-Zuordnung seit #17 lokal über VG250 (`GebietLookup`), Nominatim-Rückwär
 | H ✅ | Ladesäulenregister (BNetzA) — umgesetzt #22, 116.422 Ladeeinrichtungen in Betrieb | Ladepunkte | Punkt | CC BY 4.0 | S | als neue POI-Kategorie |
 | I ✅ | GTFS Deutschland (DELFI/gtfs.de) — umgesetzt #24, 234.861 Stationen mit Abfahrten je Werktag | Abfahrten je Haltestelle -> ÖPNV-Takt | Punkt | CC BY 4.0 | L | später: macht aus „Haltestelle in der Nähe“ eine echte Anbindungsqualität |
 | J | Radon-Vorsorgegebiete (BfS) | Radon-Potenzial | WMS | dl-de/by-2.0 | S | optional |
+| L | OpenStreetMap: öffentliche (auch barrierefreie) Toiletten, Briefkästen, Packstationen, Post-/DHL-Filialen, E-Bike-Ladestationen — Issue #1 | weitere POI-Kategorien | Punkt | ODbL | M | ja (Wunsch User), gleiche Technik wie die bestehenden POIs |
 | K | Bodenrichtwerte (BORIS) | Bodenpreise | je Land verschieden | uneinheitlich | - | nein (Lizenz je Land, teils nicht offen) |
 | - | Bundestagswahlen (in INKAR) | Stimmenanteile | Kreis | dl-de/by-2.0 | - | **nein** (Entscheidung User 14.10.2026) |
 
