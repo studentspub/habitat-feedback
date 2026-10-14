@@ -430,6 +430,14 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
+  // Alles, was aus API-Antworten stammt (OSM-Namen, Nominatim-Straßen,
+  // UBA-Stationen, importierte Statistik-Texte), geht nur hierüber in
+  // HTML-Strings. Leaflet behandelt Popup-/Tooltip-Strings als HTML, und
+  // OSM-Namen kann jeder editieren (Stored XSS, Issue #9).
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+  }
+
   const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Übersicht
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -508,11 +516,11 @@
       }).addTo(ratingsLayer);
 
       marker.bindPopup(
-        '<div class="wl-popup"><h3>' + seg.street_name + ' (Abschnitt ' + seg.segment_index + ')</h3>' +
-        '<p>' + seg.postal_code + ' ' + seg.city + '</p>' +
+        '<div class="wl-popup"><h3>' + escapeHtml(seg.street_name) + ' (Abschnitt ' + escapeHtml(seg.segment_index) + ')</h3>' +
+        '<p>' + escapeHtml(seg.postal_code) + ' ' + escapeHtml(seg.city) + '</p>' +
         '<p class="score">Gesamt: ' + parseFloat(seg.avg_overall).toFixed(1) + ' / 5</p>' +
-        '<p>' + seg.rating_count + ' Bewertungen &middot; ' + seg.address_count + ' Adressen im Abschnitt</p>' +
-        '<p><a href="/melden?segment=' + seg.id + '">Bewertungen melden</a></p></div>'
+        '<p>' + escapeHtml(seg.rating_count) + ' Bewertungen &middot; ' + escapeHtml(seg.address_count) + ' Adressen im Abschnitt</p>' +
+        '<p><a href="/melden?segment=' + encodeURIComponent(seg.id) + '">Bewertungen melden</a></p></div>'
       );
     });
   }
@@ -810,7 +818,7 @@
     state.layer = L.layerGroup(
       (data.points || []).map(p => L.marker([p.lat, p.lon], {
         icon: poiTriangleIcon(cat.color)
-      }).bindTooltip(p.name || cat.label))
+      }).bindTooltip(escapeHtml(p.name || cat.label)))
     ).addTo(map);
   }
 
@@ -888,8 +896,8 @@
       rows.push(['Luftqualität', 'Keine Daten in der Nähe verfügbar']);
     }
 
-    card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>').join('')
-      + '<div class="src">Klima: DWD, 1991–2020 · Luft: Umweltbundesamt' + (air.gemessen_bis ? ', Stand ' + air.gemessen_bis.slice(0, 10) : '') + '</div>';
+    card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + escapeHtml(k) + '</span><span class="v">' + escapeHtml(v) + '</span></div>').join('')
+      + '<div class="src">Klima: DWD, 1991–2020 · Luft: Umweltbundesamt' + (air.gemessen_bis ? ', Stand ' + escapeHtml(String(air.gemessen_bis).slice(0, 10)) : '') + '</div>';
     card.classList.add('visible');
   }
 
@@ -1088,10 +1096,10 @@
     }
 
     card.innerHTML = rows.map(([k, v, info]) => {
-      const infoBtn = info ? '<button type="button" class="info-btn" data-info="' + info.replace(/"/g, '&quot;') + '">i</button>' : '';
-      return '<div class="row"><span class="k">' + k + infoBtn + '</span><span class="v">' + v + '</span></div>';
+      const infoBtn = info ? '<button type="button" class="info-btn" data-info="' + escapeHtml(info) + '">i</button>' : '';
+      return '<div class="row"><span class="k">' + escapeHtml(k) + infoBtn + '</span><span class="v">' + escapeHtml(v) + '</span></div>';
     }).join('')
-      + '<div class="src">' + sources.join(' · ') + '</div>';
+      + '<div class="src">' + escapeHtml(sources.join(' · ')) + '</div>';
     card.classList.add('visible');
   }
 

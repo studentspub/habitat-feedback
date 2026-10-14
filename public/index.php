@@ -11,6 +11,12 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+// Sicherheits-Header für alle Antworten (Issue #9). Eine Content-Security-Policy
+// kommt erst, wenn das Inline-JS aus map.view.php ausgelagert ist (Issue #13).
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('X-Frame-Options: DENY');
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 $method = $_SERVER['REQUEST_METHOD'];
