@@ -6,7 +6,7 @@ return [
     'db' => [
         'host'    => '127.0.0.1',
         'dbname'  => 'habitat_feedback_dev',
-        'user'    => 'habitat-feedback',
+        'user'    => 'habitat_feedback',
         'pass'    => 'changeme',
         'charset' => 'utf8mb4',
     ],

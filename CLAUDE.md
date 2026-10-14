@@ -2,7 +2,7 @@
 
 Bewertungsportal für Wohnlagen in Deutschland — Karte + strukturierte Kriterien-Bewertung (kein Freitext) auf Straßenabschnitts-Ebene, DSGVO-bewusst geplant.
 
-**Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Projektname ist als Marke einer anderen Seite vergeben und wird nirgends mehr verwendet (Entscheidung des Nutzers 14.10.2026). Die internen technischen Namen (Container, `/srv`-Pfad, DB, systemd-Units, SSH-Alias) werden in Issue #25 umgestellt; bis dahin stehen unten noch die alten.
+**Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Projektname ist als Marke einer anderen Seite vergeben und wird nirgends mehr verwendet (Entscheidung des Nutzers 14.10.2026). Auch die internen Namen (Container, `/srv`-Pfad, DB, systemd-Units, SSH-Alias, WSL) sind seit 14.10.2026 umgestellt (Issue #25). Neue Dateien, Dienste, Tabellen usw. nie mit dem alten Namen anlegen.
 
 **Nur lokal:** Die Seite bleibt bis auf Weiteres im Homelab-Container und in WSL, kein Livegang, kein Strato (Nutzer 14.10.2026). Livegang-Themen sind in Issue #16 geparkt.
 
@@ -34,7 +34,7 @@ Läuft komplett in einer separaten WSL2-Distro `Debian`, getrennt von anderen WS
 - Repo-Pfad in WSL: `/mnt/d/git/habitat-feedback` (= `D:\git\habitat-feedback`, kein Sync nötig)
 - Dev-Server: `php -S 0.0.0.0:8842 -t public` → erreichbar unter `http://localhost:8842`
   - **Port 8842, nicht 8000** — 8000 wird vom Nutzer anderweitig genutzt.
-- Dev-Datenbank: MariaDB, DB `habitat_feedback_dev`, Nutzer `habitat-feedback` (Zugangsdaten in `config/config.php`, git-ignoriert; Vorlage: `config/config.example.php`)
+- Dev-Datenbank: MariaDB, DB `habitat_feedback_dev`, Nutzer `habitat_feedback` (Zugangsdaten in `config/config.php`, git-ignoriert; Vorlage: `config/config.example.php`)
 - MariaDB startet automatisch beim Distro-Boot (`/etc/wsl.conf`).
 
 Der Raspberry Pi des Nutzers ist bereits mit anderen Diensten belastet (Genealogie-Website, tägliches Update von studentspub.com) — für die Entwicklungsphase **nicht** mitbenutzen.
