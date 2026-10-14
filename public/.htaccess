@@ -1,5 +1,10 @@
-# Nur Apache (Container); der WSL-Dev-Server `php -S` ignoriert diese Datei.
-# Issue #13 (Karten-Performance).
+# Nur Apache (Container, später ggf. Strato); der WSL-Dev-Server `php -S`
+# ignoriert diese Datei. Issue #13 (Karten-Performance), Routing für Strato (#16).
+
+# Alle Pfade, die keine echte Datei sind (/bewerten, /api/…), gehen an index.php.
+# Im Container steht dasselbe in der Apache-Site; auf Strato gibt es nur diese
+# Datei — ohne die Zeile lieferte dort jede Seite außer / einen 404.
+FallbackResource /index.php
 
 # JSON/GeoJSON komprimieren — Debians deflate.conf deckt nur HTML/CSS/JS ab.
 # Die Grenzdatei schrumpft so von 322 auf ~107 KB, API-Antworten auf ein Drittel.
