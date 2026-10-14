@@ -35,8 +35,8 @@ Kreis-Zuordnung seit #17 lokal über VG250 (`GebietLookup`), Nominatim-Rückwär
 | C ✅ | **DWD 1-km-Raster** (multi-annual) — umgesetzt #19 | Hitzetage, Sommertage, Frosttage, Tage mit ≥ 20 mm Regen, Schneedeckentage, Sonnenscheindauer - je 1961-1990 **und** 1991-2020 | 1 km | CC BY 4.0 | M | **ja**: Wert genau am Ort statt nächster Station, dazu „früher/heute“ (Klimawandel am eigenen Wohnort) |
 | D ✅ | **Unfallatlas** (Statistische Ämter) — umgesetzt #20 | Unfälle mit Personenschaden mit Koordinaten, je Jahr bis 2025, mit Rad-/Fußbeteiligung | Punkt | dl-de/by-2.0 (laut GovData/Mobilithek) | M | **ja**: straßengenau, passt zur Abschnitts-Bewertung („Unfälle im Umkreis 250 m“) |
 | E | **Zensus 2022 Gitter** als lokaler Import | dieselben Werte wie heute, aber aus der eigenen DB | 100 m | dl-de/by-2.0 | L (große Dateien) | später: keine IP-Übertragung an Esri, schneller |
-| F | Umgebungslärm (EU-Lärmkartierung, Eisenbahn-Bundesamt) | Lärmbänder Straße/Schiene/Flughafen | WMS | dl-de/by-2.0 | S | ja, als zuschaltbare Ebene wie Breitband |
-| G | Hochwasser-Gefahrenkarten (BfG / Länder) | HQ häufig/100/extrem | WMS | je Land | S | ja, als Ebene |
+| F ✅ | Umgebungslärm — umgesetzt #21 über die EEA (END-Lärmkartierung Straße + Schiene, WMS `copernicus.discomap.eea.europa.eu/.../noiseStoryMap/NoiseContours_*_lden/ImageServer/WMSServer`, Stand 04/2026) | Lärmbänder Straße/Schiene/Flughafen | WMS | dl-de/by-2.0 | S | ja, als zuschaltbare Ebene wie Breitband |
+| G ✅ | Hochwasser-Gefahrenkarten — umgesetzt #21 über die BfG (HQ100 Flüsse + Küste, WMS `geoportal.bafg.de/arcgis/services/HWRMRL/HWRMRL_DE_LM|SM/MapServer/WMSServer`, Stand 2019) | HQ häufig/100/extrem | WMS | je Land | S | ja, als Ebene |
 | H | Ladesäulenregister (BNetzA) | Ladepunkte | Punkt | CC BY 4.0 | S | als neue POI-Kategorie |
 | I | GTFS Deutschland (DELFI/gtfs.de) | Abfahrten je Haltestelle -> ÖPNV-Takt | Punkt | CC BY 4.0 | L | später: macht aus „Haltestelle in der Nähe“ eine echte Anbindungsqualität |
 | J | Radon-Vorsorgegebiete (BfS) | Radon-Potenzial | WMS | dl-de/by-2.0 | S | optional |

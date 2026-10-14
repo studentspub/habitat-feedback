@@ -100,10 +100,11 @@ if ($uri === '/api/pi/resolve' && $method === 'POST') {
 if ($uri === '/' || $uri === '/index.php') {
     // Nur eigene Skripte; Styles brauchen 'unsafe-inline' (Leaflet und die
     // Panels setzen style-Attribute). Externe Ziele: OSM-Kacheln, Breitband-WMS,
-    // Zensus-Dienst (Esri). Ein eingeschleustes <script> liefe damit nicht —
+    // Lärm (EEA) und Hochwasser (BfG) als WMS (Issue #21), Zensus-Dienst (Esri). Ein eingeschleustes <script> liefe damit nicht —
     // das Sicherheitsnetz hinter escapeHtml() (Issue #9).
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-        . "img-src 'self' data: https://*.tile.openstreetmap.org https://breitbandatlas-wms.gigabit-grundbuch.online; "
+        . "img-src 'self' data: https://*.tile.openstreetmap.org https://breitbandatlas-wms.gigabit-grundbuch.online "
+        . "https://copernicus.discomap.eea.europa.eu https://geoportal.bafg.de; "
         . "connect-src 'self' https://services2.arcgis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
     require __DIR__ . '/map.view.php';
     return;

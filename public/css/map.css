@@ -249,6 +249,13 @@
   .region-control .neben-btn { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 0.4em 0.8em; background: #FBFBF7; color: #1B2420;
     border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
   .region-control .neben-btn.active { background: #E53935; color: white; border-color: transparent; }
+  /* Lärm / Hochwasser (Issue #21) nebeneinander, mit kleiner Farblegende. */
+  .region-control .neben-reihe { display: flex; gap: 6px; }
+  .region-control .neben-reihe .neben-btn { flex: 1; }
+  .region-control #laerm-btn.active { background: #E65100; }
+  .region-control #hochwasser-btn.active { background: #1E88E5; }
+  .region-control #ebenen-legende div { margin-top: 4px; }
+  .region-control .lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 2px 0 4px; vertical-align: -1px; }
   .economy-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
   .economy-card { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EBEEE5; }
   .economy-card.visible { display: block; }

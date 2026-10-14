@@ -48,6 +48,9 @@
   <li>Keine Weitergabe an Dritte außer den technisch notwendigen Diensten zur Kartendarstellung (OpenStreetMap-Kachelserver) und Geokodierung (Nominatim/Overpass, beide Projekte der OpenStreetMap Foundation).</li>
 </ul>
 
+<h2>Zuschaltbare Karten-Ebenen</h2>
+<p>Einige Ebenen lädt dein Browser erst beim Einschalten direkt von den jeweiligen Stellen; dabei wird wie bei jedem Bildabruf deine IP-Adresse übertragen: Breitband (Bundesnetzagentur), Zensus 2022 (Statistisches Bundesamt über den Kartendienst von Esri), Lärm (Europäische Umweltagentur) und Hochwasser (Bundesanstalt für Gewässerkunde). Solange eine Ebene aus ist, wird nichts geladen.</p>
+
 <h2>Links zu Google Street View</h2>
 <p>Über das Männchen auf der Karte kannst du einen Link zu Google Street View erzeugen. Solange du den Link nicht anklickst, werden keine Daten an Google übertragen. Erst mit dem Klick öffnet sich Google Maps in einem neuen Tab; dort gelten die Datenschutzbestimmungen von Google.</p>
 

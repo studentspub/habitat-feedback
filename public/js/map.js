@@ -898,6 +898,9 @@
       el.innerHTML =
         '<button type="button" id="region-btn">Lebensqualität (BBSR) anzeigen</button>' +
         '<button type="button" id="unfall-btn" class="neben-btn">Unfallorte auf der Karte</button>' +
+        '<div class="neben-reihe"><button type="button" id="laerm-btn" class="neben-btn">Lärm</button>' +
+        '<button type="button" id="hochwasser-btn" class="neben-btn">Hochwasser</button></div>' +
+        '<div class="hint" id="ebenen-legende"></div>' +
         '<div class="hint" id="region-hint"></div>' +
         '<div class="economy-card region-card" id="region-card"></div>';
       L.DomEvent.disableClickPropagation(el);
@@ -951,6 +954,46 @@
     loadUnfallPunkte();
   });
   map.on('moveend', debounce(loadUnfallPunkte, 350));
+
+  // Lärm und Hochwasser als zuschaltbare WMS-Ebenen (Issue #21), wie Breitband
+  // ohne eigenen Import. Lärm: EU-Umgebungslärmkartierung (END) über die
+  // Europäische Umweltagentur, Straße + Schiene, Lden. Hochwasser: Flächen
+  // eines 100-jährlichen Hochwassers (HQ100) an Flüssen und Küste, BfG.
+  const EEA_LAERM = 'https://copernicus.discomap.eea.europa.eu/arcgis/services/noiseStoryMap/';
+  const BFG_HW = 'https://geoportal.bafg.de/arcgis/services/HWRMRL/';
+  const laermLayer = L.layerGroup(['road', 'rail'].map(art => L.tileLayer.wms(EEA_LAERM + 'NoiseContours_' + art + '_lden/ImageServer/WMSServer', {
+    layers: 'NoiseContours_' + art + '_lden', format: 'image/png', transparent: true, opacity: 0.55,
+    attribution: 'Lärm: <a href="https://www.eea.europa.eu" target="_blank" rel="noopener">EEA</a> (END-Lärmkartierung)'
+  })));
+  const hochwasserLayer = L.layerGroup(['HWRMRL_DE_LM', 'HWRMRL_DE_SM'].map(dienst => L.tileLayer.wms(BFG_HW + dienst + '/MapServer/WMSServer', {
+    layers: '0', format: 'image/png', transparent: true, opacity: 0.6,
+    attribution: 'Hochwasser: <a href="https://geoportal.bafg.de/karten/HWRM/" target="_blank" rel="noopener">BfG</a> / Länder (HWRM-RL, Stand 2019)'
+  })));
+  const EBENEN_LEGENDE = {
+    laerm: 'Lärm (Lden, Mittel über Tag, Abend und Nacht): '
+      + '<span class="lg" style="background:#FFD54F"></span>55–59 '
+      + '<span class="lg" style="background:#FF8F00"></span>60–64 '
+      + '<span class="lg" style="background:#E53935"></span>65–69 '
+      + '<span class="lg" style="background:#8E1B1B"></span>70–74 '
+      + '<span class="lg" style="background:#9C8FD0"></span>≥ 75 dB. Kartiert sind Ballungsräume und Hauptverkehrswege, nicht jede Straße.',
+    hochwasser: '<span class="lg" style="background:#0070FF"></span>Überflutungsfläche bei einem 100-jährlichen Hochwasser (HQ100) an Flüssen und Küste. '
+      + 'Ohne Schutz durch Deiche nicht gezeigt; Starkregen fehlt. Stand 2019, gemeldet von den Ländern.'
+  };
+  const ebenenAktiv = { laerm: false, hochwasser: false };
+
+  function ebenenLegendeAktualisieren() {
+    document.getElementById('ebenen-legende').innerHTML =
+      Object.keys(ebenenAktiv).filter(k => ebenenAktiv[k]).map(k => '<div>' + EBENEN_LEGENDE[k] + '</div>').join('');
+  }
+
+  [['laerm-btn', 'laerm', laermLayer], ['hochwasser-btn', 'hochwasser', hochwasserLayer]].forEach(([id, key, layer]) => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      ebenenAktiv[key] = !ebenenAktiv[key];
+      e.target.classList.toggle('active', ebenenAktiv[key]);
+      if (ebenenAktiv[key]) layer.addTo(map); else map.removeLayer(layer);
+      ebenenLegendeAktualisieren();
+    });
+  });
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
@@ -1096,7 +1139,7 @@
       text: 'Arbeitslosenquote, Kriminalität, Einkommen, Wanderungssaldo u.v.m. für den Kreis der Kartenmitte — hier am Beispiel Frankfurt am Main. Die kleinen (i)-Symbole neben den Zeilen erklären, warum die jeweilige Zahl für die Wohnlage relevant ist.',
       onEnter: economyTourEnter
     },
-    { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland.' },
+    { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland. Darunter lassen sich Unfallorte, Lärm und Hochwasserflächen auf der Karte einblenden.' },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#examples-btn', title: 'Praxisbeispiele', text: 'Fünf fiktive Personen — Rentnerin, Student, Pendlerin, Kapitalanleger, Familie — und je drei Rückschlüsse, wie sie die Kennzahlen auf dieser Karte für ihre eigene Entscheidung nutzen könnten.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
