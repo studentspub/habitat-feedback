@@ -48,6 +48,9 @@
   <li>Keine Weitergabe an Dritte außer den technisch notwendigen Diensten zur Kartendarstellung (OpenStreetMap-Kachelserver) und Geokodierung (Nominatim/Overpass, beide Projekte der OpenStreetMap Foundation).</li>
 </ul>
 
+<h2>Links zu Google Street View</h2>
+<p>Über das Männchen auf der Karte kannst du einen Link zu Google Street View erzeugen. Solange du den Link nicht anklickst, werden keine Daten an Google übertragen. Erst mit dem Klick öffnet sich Google Maps in einem neuen Tab; dort gelten die Datenschutzbestimmungen von Google.</p>
+
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
 </body>

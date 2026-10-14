@@ -170,6 +170,14 @@
   .ratings-legend .row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
   .ratings-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1px solid rgba(27,36,32,0.4); }
 
+  /* Street-View-Männchen (Issue #11) — Knopf im Leaflet-Stil unter der
+     Legende, das Männchen selbst als ziehbarer Marker ohne Kasten. */
+  .streetview-control a { font-size: 18px; line-height: 30px; text-align: center; text-decoration: none; }
+  .streetview-control a.active { background: #D9971E; }
+  .pegman-icon { background: none !important; border: none !important; font-size: 26px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); cursor: grab; }
+  .sv-popup a { font-weight: 700; color: #31576D; }
+  .sv-popup .hint { font-size: 0.72rem; color: #4B564F; margin-top: 4px; line-height: 1.4; }
+
   /* Klima & Luft — kein Kachel-/Punkt-Layer, sondern ein Kontext-Kärtchen
      für die aktuelle Kartenmitte: beide Kennzahlen sind stationsbasiert
      und variieren kaum innerhalb einer Stadt, ein Raster wäre hier
@@ -464,6 +472,54 @@
     }
   });
   map.addControl(new RatingsLegendControl());
+
+  // Street-View-Männchen (Issue #11): Wir betten kein Street View ein,
+  // sondern erzeugen nur einen Link nach Googles „Maps URLs“-Schema (kein
+  // API-Key). Bewusst kein window.open beim Ablegen: ein echter Link im
+  // Popup wird von keinem Popup-Blocker geschluckt, und erst der bewusste
+  // Klick schickt den Nutzer (und damit Daten) zu Google.
+  const STREETVIEW_URL = 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=';
+  const PEGMAN_ICON = L.divIcon({ className: 'pegman-icon', html: '🧍', iconSize: [26, 26], iconAnchor: [13, 24] });
+  let streetViewMarker = null;
+
+  function streetViewPopupHtml(latlng) {
+    const viewpoint = latlng.lat.toFixed(6) + ',' + latlng.lng.toFixed(6);
+    return '<div class="sv-popup"><a href="' + STREETVIEW_URL + viewpoint + '" target="_blank" rel="noopener noreferrer">📷 Straßenansicht bei Google öffnen ↗</a>' +
+      '<div class="hint">Öffnet Google Maps in einem neuen Tab — sofern Google an dieser Stelle Bilder hat. Männchen verschieben, um die Stelle zu ändern.</div></div>';
+  }
+
+  function placeStreetViewMarker(latlng) {
+    if (streetViewMarker) map.removeLayer(streetViewMarker);
+    streetViewMarker = L.marker(latlng, { icon: PEGMAN_ICON, draggable: true, autoPan: true }).addTo(map);
+    streetViewMarker.bindPopup(() => streetViewPopupHtml(streetViewMarker.getLatLng()), { offset: [0, -18] });
+    streetViewMarker.on('dragstart', () => streetViewMarker.closePopup());
+    streetViewMarker.on('dragend', () => streetViewMarker.openPopup());
+    streetViewMarker.openPopup();
+    document.querySelector('.streetview-control a').classList.add('active');
+  }
+
+  function removeStreetViewMarker() {
+    if (streetViewMarker) map.removeLayer(streetViewMarker);
+    streetViewMarker = null;
+    document.querySelector('.streetview-control a').classList.remove('active');
+  }
+
+  const StreetViewControl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'leaflet-bar streetview-control');
+      el.innerHTML = '<a href="#" role="button" title="Straßenansicht: Männchen auf die Karte setzen und an die gewünschte Stelle ziehen (oder Rechtsklick / lange drücken auf die Karte)" aria-label="Straßenansicht">🧍</a>';
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.on(el.firstChild, 'click', e => {
+        L.DomEvent.preventDefault(e);
+        if (streetViewMarker) removeStreetViewMarker(); else placeStreetViewMarker(map.getCenter());
+      });
+      return el;
+    }
+  });
+  map.addControl(new StreetViewControl());
+  // Rechtsklick bzw. langes Drücken (Handy) setzt das Männchen direkt dorthin.
+  map.on('contextmenu', e => placeStreetViewMarker(e.latlng));
 
   // Vier verschiedene Ebenen (Bewertungen, Zensus, OSM-Kategorien, Klima)
   // hängen jeweils eigenständig an moveend/zoomend. Ohne Debounce feuert
@@ -1223,6 +1279,7 @@
   const TOUR_STEPS = [
     { selector: '#search-group', title: 'Straßen finden', text: 'Hier findest du bereits bewertete Straßen über die Suche.' },
     { selector: '#rate-cta', title: 'Straße bewerten', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab.' },
+    { selector: '.streetview-control', title: 'Straßenansicht', text: 'Setzt ein Männchen auf die Karte. Zieh es an die gewünschte Stelle, dann öffnet ein Link Google Street View dort (sofern Google Bilder hat). Rechtsklick oder langes Drücken auf die Karte geht auch.' },
     { selector: '.ratings-control', title: 'Bewertungen ein-/ausblenden', text: 'Blendet die farbigen Bewertungs-Punkte aus — praktisch, wenn du nur die Statistik-Ebenen sehen willst. Was Grün, Orange und Rotbraun bedeuten, erklärt die kleine Legende oben links unter dem Zoom-Regler.' },
     { selector: '.census-control', title: 'Amtliche Statistik', html: censusTourHtml },
     { selector: '.poi-control', title: 'Freizeit & Infrastruktur', html: poiTourHtml },
