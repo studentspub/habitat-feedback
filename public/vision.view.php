@@ -54,6 +54,9 @@
     padding: 0.5em 1.1em; background: #D9971E; color: #1B2420; text-decoration: none;
     border-radius: 6px; font-size: 0.82rem; font-weight: 700; white-space: nowrap;
   }
+  /* Hinweis im Nebel außerhalb Deutschlands (Issue #12, public/js/de_maske.js). */
+  .maske-hinweis { background: none; border: none; color: #31576D; font-size: 0.72rem; font-weight: 700;
+    text-align: center; line-height: 1.3; text-shadow: 0 0 3px #EBEEE5, 0 0 6px #EBEEE5; }
 </style>
 </head>
 <body>
@@ -63,6 +66,7 @@
 </div>
 <div id="map"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/js/de_maske.js"></script>
 <script>
   const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Übersicht
 
@@ -70,6 +74,7 @@
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
   }).addTo(map);
+  habitatMaske(map); // Nebel über dem Ausland, Bewegungsgrenze (Issue #12)
 
   function colorForScore(score) {
     if (score >= 4) return '#3B7A52';

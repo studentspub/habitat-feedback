@@ -379,6 +379,9 @@
   .example-body .insights-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #31576D; margin-top: 4px; }
   .example-body ol { margin: 6px 0 0; padding-left: 18px; font-size: 0.82rem; line-height: 1.5; }
   .example-body li { margin-top: 4px; }
+  /* Hinweis im Nebel außerhalb Deutschlands (Issue #12, public/js/de_maske.js). */
+  .maske-hinweis { background: none; border: none; color: #31576D; font-size: 0.72rem; font-weight: 700;
+    text-align: center; line-height: 1.3; text-shadow: 0 0 3px #EBEEE5, 0 0 6px #EBEEE5; }
 </style>
 </head>
 <body>
@@ -437,6 +440,7 @@
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/js/de_maske.js"></script>
 <script>
   // Alles, was aus API-Antworten stammt (OSM-Namen, Nominatim-Straßen,
   // UBA-Stationen, importierte Statistik-Texte), geht nur hierüber in
@@ -452,6 +456,7 @@
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende'
   }).addTo(map);
+  habitatMaske(map); // Nebel über dem Ausland, Bewegungsgrenze (Issue #12)
 
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
 
