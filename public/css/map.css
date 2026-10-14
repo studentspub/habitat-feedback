@@ -8,23 +8,33 @@
      (rechts) haben nichts miteinander zu tun und sollen auch nicht wie
      eine zusammengehörige Werkzeugleiste aussehen. */
   #search-group {
-    position: absolute; top: 10px; left: 50px; z-index: 1000; width: 280px;
+    position: absolute; top: 10px; left: 10px; z-index: 1000; width: 280px;
   }
-  #search-label {
+  /* Seit es zwei Suchfelder gibt (Issue #14), reicht die Suchgruppe bis
+     ~125 px nach unten — Zoom, Bewertungs-Legende und Street-View-Knopf
+     (Leaflet-Ecke oben links) beginnen deshalb darunter statt daneben. */
+  .leaflet-top.leaflet-left { top: 125px; }
+  /* Zwei Suchfelder untereinander (Issue #14): oben die eigene DB (nur sichtbare,
+     bewertete Abschnitte), darunter jede Adresse in Deutschland zum Hinspringen. */
+  .search-field { position: relative; }
+  .search-field + .search-field { margin-top: 6px; }
+  .search-label {
     display: inline-block; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
     color: #1B2420; background: rgba(255,255,255,0.9);
     padding: 2px 8px; border-radius: 4px 4px 0 0; margin-bottom: -1px;
   }
-  #search {
+  .search-input {
     display: block; width: 100%; box-sizing: border-box; padding: 0.6em 0.8em;
     border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.95rem; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   }
-  #suggestions {
+  .search-suggestions {
     position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 1001; margin-top: 2px;
   }
-  #suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
-  #suggestions div:hover { background: #EBEEE5; }
+  .search-suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
+  .search-suggestions div:hover { background: #EBEEE5; }
+  .search-suggestions .hint { cursor: default; color: #7C877E; font-size: 0.8rem; }
+  .search-suggestions .hint:hover { background: none; }
 
   #rate-cta {
     position: absolute; top: 10px; right: 10px; z-index: 1000;

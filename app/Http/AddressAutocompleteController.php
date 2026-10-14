@@ -16,6 +16,10 @@ final class AddressAutocompleteController
      * sondern immer über diesen serverseitigen Proxy mit Cache, damit weder
      * Nominatims Ratenlimit noch dessen Nutzungsbedingungen verletzt werden
      * und Nutzer-IPs nicht direkt bei Nominatim ankommen.
+     *
+     * Auch das Kartenfeld „Adresse finden" (Issue #14) nutzt den Endpunkt und
+     * springt mit lat/lon dorthin — es zeigt keine Bewertungsdaten an und
+     * verrät daher nicht, ob eine noch unsichtbare Adresse bewertet wurde.
      */
     public function search(): void
     {
@@ -37,8 +41,10 @@ final class AddressAutocompleteController
             'cutoff' => date('Y-m-d H:i:s', time() - self::CACHE_LIFETIME_DAYS * 86400),
         ]);
         $hit = $cached->fetchColumn();
-        if ($hit !== false) {
-            $this->json(['results' => json_decode($hit, true)]);
+        $hitResults = $hit !== false ? json_decode($hit, true) : null;
+        // Einträge von vor Issue #14 haben keine Koordinaten — dann neu holen.
+        if (is_array($hitResults) && ($hitResults === [] || isset($hitResults[0]['lat']))) {
+            $this->json(['results' => $hitResults]);
             return;
         }
 
@@ -64,7 +70,7 @@ final class AddressAutocompleteController
         $this->json(['results' => $results]);
     }
 
-    /** @return array<int, array{label:string}> */
+    /** @return array<int, array{label:string, lat:float, lon:float}> */
     private function fetchFromNominatim(string $query): array
     {
         // Siehe worker/geocode_worker.py für denselben Hinweis: ein
@@ -95,7 +101,11 @@ final class AddressAutocompleteController
 
         $data = json_decode($response, true) ?? [];
         return array_map(
-            static fn (array $r): array => ['label' => $r['display_name']],
+            static fn (array $r): array => [
+                'label' => $r['display_name'],
+                'lat' => round((float) $r['lat'], 5),
+                'lon' => round((float) $r['lon'], 5),
+            ],
             $data
         );
     }

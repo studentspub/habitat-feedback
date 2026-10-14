@@ -840,6 +840,51 @@
     if (e.target !== searchInput) suggestions.hidden = true;
   });
 
+  // „Adresse finden" (Issue #14) — jede Adresse in Deutschland, nur zum
+  // Hinspringen: kein Pin, keine Bewertungsdaten (sonst verriete das Feld,
+  // ob eine noch unsichtbare Adresse schon bewertet wurde). Läuft über den
+  // Server-Proxy /api/address-autocomplete (Cache + Nominatim-Drossel), mit
+  // denselben Regeln wie im Bewertungsformular: ab 4 Zeichen, 450 ms Pause.
+  const addressSearch = document.getElementById('address-search');
+  const addressSuggestions = document.getElementById('address-suggestions');
+  let addressTimeout = null;
+
+  addressSearch.addEventListener('input', () => {
+    clearTimeout(addressTimeout);
+    const q = addressSearch.value.trim();
+    if (q.length < 4) {
+      addressSuggestions.hidden = true;
+      return;
+    }
+    addressTimeout = setTimeout(async () => {
+      const data = await holeJson('adresse', '/api/address-autocomplete?q=' + encodeURIComponent(q));
+      if (!data) return;
+      addressSuggestions.innerHTML = '';
+      const treffer = (data.results || []).filter(r => r.lat !== undefined);
+      if (treffer.length === 0) {
+        const leer = document.createElement('div');
+        leer.className = 'hint';
+        leer.textContent = data.hinweis ? 'Kurz warten, dann weitertippen …' : 'Keine Adresse gefunden.';
+        addressSuggestions.appendChild(leer);
+      }
+      treffer.forEach(r => {
+        const item = document.createElement('div');
+        item.textContent = r.label;
+        item.addEventListener('click', () => {
+          map.setView([r.lat, r.lon], 17);
+          addressSuggestions.hidden = true;
+          addressSearch.value = r.label;
+        });
+        addressSuggestions.appendChild(item);
+      });
+      addressSuggestions.hidden = false;
+    }, 450);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== addressSearch) addressSuggestions.hidden = true;
+  });
+
   // Tutorial — geführte Tour durch die Bedienelemente. Selektoren zeigen auf
   // bereits vorhandene Panels/Controls; fehlt eines (z.B. künftig entfernt),
   // wird der Schritt beim Durchlaufen übersprungen statt die Tour abzubrechen.
@@ -888,7 +933,7 @@
   }
 
   const TOUR_STEPS = [
-    { selector: '#search-group', title: 'Straßen finden', text: 'Hier findest du bereits bewertete Straßen über die Suche.' },
+    { selector: '#search-group', title: 'Straßen finden', text: 'Oben findest du bereits bewertete Straßen. Darunter kannst du jede Adresse in Deutschland suchen — die Karte springt dann einfach dorthin.' },
     { selector: '#rate-cta', title: 'Straße bewerten', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab.' },
     { selector: '.streetview-control', title: 'Straßenansicht', text: 'Setzt ein Männchen auf die Karte. Zieh es an die gewünschte Stelle, dann öffnet ein Link Google Street View dort (sofern Google Bilder hat). Rechtsklick oder langes Drücken auf die Karte geht auch.' },
     { selector: '.ratings-control', title: 'Bewertungen ein-/ausblenden', text: 'Blendet die farbigen Bewertungs-Punkte aus — praktisch, wenn du nur die Statistik-Ebenen sehen willst. Was Grün, Orange und Rotbraun bedeuten, erklärt die kleine Legende oben links unter dem Zoom-Regler.' },

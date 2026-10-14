@@ -14,9 +14,16 @@
   <button type="button" id="examples-btn">💡 Praxisbeispiele</button>
 </div>
 <div id="search-group">
-  <span id="search-label">Bereits bewertete Straßen</span>
-  <input type="text" id="search" placeholder="z.B. Musterstraße…" autocomplete="off">
-  <div id="suggestions" hidden></div>
+  <div class="search-field">
+    <span id="search-label" class="search-label">Bereits bewertete Straßen</span>
+    <input type="text" id="search" class="search-input" placeholder="z.B. Musterstraße…" autocomplete="off">
+    <div id="suggestions" class="search-suggestions" hidden></div>
+  </div>
+  <div class="search-field">
+    <span class="search-label">Adresse finden</span>
+    <input type="text" id="address-search" class="search-input" placeholder="Straße Nr., Ort …" autocomplete="off">
+    <div id="address-suggestions" class="search-suggestions" hidden></div>
+  </div>
 </div>
 
 <div id="rate-cta">
