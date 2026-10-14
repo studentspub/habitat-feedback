@@ -3,7 +3,10 @@
 
 # JSON/GeoJSON komprimieren — Debians deflate.conf deckt nur HTML/CSS/JS ab.
 # Die Grenzdatei schrumpft so von 322 auf ~107 KB, API-Antworten auf ein Drittel.
+# Achtung: AddOutputFilterByType hier ERSETZT die Liste aus deflate.conf statt
+# sie zu ergänzen — deshalb stehen HTML/CSS/JS noch einmal mit drin.
 <IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript
     AddOutputFilterByType DEFLATE application/json application/geo+json image/svg+xml
 </IfModule>
 
