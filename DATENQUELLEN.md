@@ -19,7 +19,7 @@ BBSR und beim DWD. Beide Lizenzen erlauben auch kommerzielle Nutzung, Pflicht is
 | Luftqualität | Umweltbundesamt, Luftdaten-API | nächste Station | `bin/import_air_stations.php` + live | UBA |
 | POIs (Spielplätze, Kitas, Ärzte, Supermärkte ...) | OpenStreetMap über Overpass | Punkt | `bin/import_poi.php` | ODbL |
 | Bushaltestellen | OpenStreetMap, Geofabrik-Extrakt | Punkt | `bin/import_bus_stops.php` | ODbL |
-| Zensus 2022 (Dichte, Alter, Miete, Eigentum, Leerstand) | Destatis, ArcGIS-Dienst | 100-m-Gitter | **live** im Browser (Anfrage geht an Esri/USA) | dl-de/by-2.0 |
+| Zensus 2022 (Dichte, Alter, Miete, Eigentum, Leerstand) | Destatis, Gitterdaten-Downloads | 100 m / 1 km / 10 km | `bin/import_zensus.php` (#23), `/api/zensus` — vorher live über Esri/USA | dl-de/by-2.0 |
 | Breitband | Bundesnetzagentur, Breitbandatlas | WMS | **live** im Browser | BNetzA |
 | Gemeinde-/Kreisgrenzen (Zuordnung Punkt → Gemeinde/Kreis, Deutschland-Maske) | BKG VG250, Stand 31.12.2023 | Polygone | `bin/import_vg250.php`, `bin/build_de_grenze.php` (#17, #12) | dl-de/by-2.0 |
 | 34 Kennzahlen (Fußwege zu Hausarzt/Apotheke/Schule/Supermarkt/Haltestelle, Fahrzeiten, Pendeln, Grün, Unfälle; Ärzte, Kitas, Pflege, Mieten, Bauland, Einbrüche, Pkw, Ladepunkte) | BBSR INKAR 2025 | Gemeinde + Kreis | `bin/import_inkar.php` (#18), Panel „Lebensqualität (BBSR)“ | dl-de/by-2.0 |
@@ -34,7 +34,7 @@ Kreis-Zuordnung seit #17 lokal über VG250 (`GebietLookup`), Nominatim-Rückwär
 | B ✅ | **BBSR INKAR 2025** — umgesetzt #18 | ~600 Indikatoren, davon ~25 für uns (Liste unten) | Gemeinde + Kreis | dl-de/by-2.0 | M | **ja**, größter Gewinn |
 | C ✅ | **DWD 1-km-Raster** (multi-annual) — umgesetzt #19 | Hitzetage, Sommertage, Frosttage, Tage mit ≥ 20 mm Regen, Schneedeckentage, Sonnenscheindauer - je 1961-1990 **und** 1991-2020 | 1 km | CC BY 4.0 | M | **ja**: Wert genau am Ort statt nächster Station, dazu „früher/heute“ (Klimawandel am eigenen Wohnort) |
 | D ✅ | **Unfallatlas** (Statistische Ämter) — umgesetzt #20 | Unfälle mit Personenschaden mit Koordinaten, je Jahr bis 2025, mit Rad-/Fußbeteiligung | Punkt | dl-de/by-2.0 (laut GovData/Mobilithek) | M | **ja**: straßengenau, passt zur Abschnitts-Bewertung („Unfälle im Umkreis 250 m“) |
-| E | **Zensus 2022 Gitter** als lokaler Import | dieselben Werte wie heute, aber aus der eigenen DB | 100 m | dl-de/by-2.0 | L (große Dateien) | später: keine IP-Übertragung an Esri, schneller |
+| E ✅ | **Zensus 2022 Gitter** als lokaler Import — umgesetzt #23 | dieselben Werte wie heute, aber aus der eigenen DB | 100 m | dl-de/by-2.0 | L (große Dateien) | später: keine IP-Übertragung an Esri, schneller |
 | F ✅ | Umgebungslärm — umgesetzt #21 über die EEA (END-Lärmkartierung Straße + Schiene, WMS `copernicus.discomap.eea.europa.eu/.../noiseStoryMap/NoiseContours_*_lden/ImageServer/WMSServer`, Stand 04/2026) | Lärmbänder Straße/Schiene/Flughafen | WMS | dl-de/by-2.0 | S | ja, als zuschaltbare Ebene wie Breitband |
 | G ✅ | Hochwasser-Gefahrenkarten — umgesetzt #21 über die BfG (HQ100 Flüsse + Küste, WMS `geoportal.bafg.de/arcgis/services/HWRMRL/HWRMRL_DE_LM|SM/MapServer/WMSServer`, Stand 2019) | HQ häufig/100/extrem | WMS | je Land | S | ja, als Ebene |
 | H ✅ | Ladesäulenregister (BNetzA) — umgesetzt #22, 116.422 Ladeeinrichtungen in Betrieb | Ladepunkte | Punkt | CC BY 4.0 | S | als neue POI-Kategorie |

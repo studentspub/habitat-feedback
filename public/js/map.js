@@ -209,24 +209,20 @@
     if (ratingsEnabled) { loadPins(); } else { ratingsLayer.clearLayers(); }
   });
 
-  // Amtliche Statistik-Ebenen: Zensus 2022. Direkter Abruf beim
-  // ArcGIS-Dienst des Statistischen Bundesamts — öffentlicher,
-  // unauthentifizierter Geodatendienst ohne Nominatim-artige
-  // Ratenlimit-Problematik, daher (anders als die Adresssuche) ohne
-  // eigenen Server-Proxy.
+  // Amtliche Statistik-Ebenen: Zensus 2022. Seit Issue #23 aus der eigenen
+  // DB (/api/zensus, Gitterdaten von Destatis, bin/import_zensus.php) statt
+  // live vom ArcGIS-Dienst bei Esri — keine Besucher-IP mehr in die USA.
+  // /api/zensus liefert dasselbe GeoJSON-Format wie früher ArcGIS.
   //
-  // Der Dienst liefert dieselben Felder bereits fertig aggregiert auf drei
-  // Rasterstufen (100m/1km/10km) — eigenes Aufsummieren im Browser wäre bei
-  // größeren Kartenausschnitten (z.B. "ganz Hessen") auch gar nicht
-  // möglich: max. 2000 Zellen pro Abfrage, Hessen allein hätte ca. 44.500
-  // 100m-Zellen. Die Rasterstufe wird daher anhand der tatsächlichen
-  // Fläche des Kartenausschnitts gewählt, wie bei einer Wetterkarte.
+  // Die Daten liegen fertig aggregiert auf drei Rasterstufen (100m/1km/10km)
+  // vor; Hessen allein hätte ca. 44.500 100m-Zellen. Die Rasterstufe wird
+  // daher anhand der tatsächlichen Fläche des Kartenausschnitts gewählt,
+  // wie bei einer Wetterkarte.
   const CENSUS_RESOLUTIONS = [
-    { layer: 0, maxAreaKm2: 20, label: '100m-Raster (Straßenblock)' },
-    { layer: 1, maxAreaKm2: 1500, label: '1km-Raster (Stadt/Region)' },
-    { layer: 2, maxAreaKm2: 150000, label: '10km-Raster (Bundesland-Maßstab)' }
+    { layer: 0, stufe: '100m', maxAreaKm2: 20, label: '100m-Raster (Straßenblock)' },
+    { layer: 1, stufe: '1km', maxAreaKm2: 1500, label: '1km-Raster (Stadt/Region)' },
+    { layer: 2, stufe: '10km', maxAreaKm2: 150000, label: '10km-Raster (Bundesland-Maßstab)' }
   ];
-  const CENSUS_URL_BASE = 'https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Zensus2022_grid_final/FeatureServer/';
   const CENSUS_FILL_OPACITY = 0.32; // bewusst niedrig — bei mehreren gleichzeitig
                                      // aktiven Ebenen muss die Karte lesbar bleiben
 
@@ -326,7 +322,7 @@
     if (anyEnabled && !resolution) {
       hint.textContent = 'Weiter reinzoomen, um Werte zu sehen (z.B. auf Bundesland-Ebene beginnen).';
     } else if (anyEnabled) {
-      hint.textContent = 'Amtliche Zensus-2022-Daten, ' + resolution.label + '. Weiter reinzoomen für feinere Auflösung.';
+      hint.textContent = 'Amtliche Zensus-2022-Daten (Statistisches Bundesamt), ' + resolution.label + '. Weiter reinzoomen für feinere Auflösung.';
     } else {
       hint.textContent = '';
     }
@@ -358,12 +354,7 @@
     if (!resolution) return;
 
     const breaks = metricBreaks(metric, resolution);
-    const b = map.getBounds();
-    const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-    const url = CENSUS_URL_BASE + resolution.layer + '/query?' + new URLSearchParams({
-      geometry: bbox, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
-      spatialRel: 'esriSpatialRelIntersects', outFields: metric.field, returnGeometry: 'true', f: 'geojson'
-    });
+    const url = '/api/zensus?' + new URLSearchParams({ stufe: resolution.stufe, feld: metric.field, bbox: rasterBbox() });
     const geojson = await holeJson('zensus-' + metric.key, url);
     if (!geojson) return;
 
