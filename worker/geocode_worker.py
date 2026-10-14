@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Habitat Feedback Geocode-Worker.
+Habitat-Feedback Geocode-Worker.
 
 Holt offene Adressen aus /api/pi/queue, geokodiert über Nominatim,
 bestimmt den Straßenabschnitt (Zehnerblock-Fallback, siehe Bauplan

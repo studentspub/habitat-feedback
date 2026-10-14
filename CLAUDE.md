@@ -2,6 +2,8 @@
 
 Bewertungsportal für Wohnlagen in Deutschland — Karte + strukturierte Kriterien-Bewertung (kein Freitext) auf Straßenabschnitts-Ebene, DSGVO-bewusst geplant.
 
+**Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Name „Habitat Feedback" ist vergeben (habitat-feedback.de, eingetragene Marke „Habitat Feedback®", Entscheidung des Nutzers 14.10.2026) und darf auf der Seite, in Texten und User-Agents nicht mehr vorkommen. Interne technische Namen heißen noch `habitat-feedback` (LXC 120, `/srv/habitat-feedback`, DB `habitat_feedback_dev`, systemd-Units `habitat-feedback-*`, SSH-Alias `habitat-feedback-lxc`) — Besucher sehen sie nicht.
+
 Planungsdokumente (Konzept, Rechtsrahmen, technischer Bauplan): siehe Artifact-Links, die im Gesprächsverlauf geteilt wurden. Kurzfassung der Architektur:
 
 - **Stack:** PHP 8 + MariaDB/MySQL, kein Framework (bewusst — kein CLI-Zugriff auf Strato-Zielserver).
