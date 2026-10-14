@@ -40,7 +40,7 @@ Für Daten auf **Gemeinde**-Ebene reicht das nicht (siehe Kandidat A).
 | I | GTFS Deutschland (DELFI/gtfs.de) | Abfahrten je Haltestelle -> ÖPNV-Takt | Punkt | CC BY 4.0 | L | später: macht aus „Haltestelle in der Nähe“ eine echte Anbindungsqualität |
 | J | Radon-Vorsorgegebiete (BfS) | Radon-Potenzial | WMS | dl-de/by-2.0 | S | optional |
 | K | Bodenrichtwerte (BORIS) | Bodenpreise | je Land verschieden | uneinheitlich | - | nein (Lizenz je Land, teils nicht offen) |
-| - | Bundestagswahlen (in INKAR) | Stimmenanteile | Kreis | dl-de/by-2.0 | - | **Entscheidung User**: politisch, gehört eher nicht in ein Wohnlagen-Portal |
+| - | Bundestagswahlen (in INKAR) | Stimmenanteile | Kreis | dl-de/by-2.0 | - | **nein** (Entscheidung User 14.10.2026) |
 
 ### INKAR - Auswahl für Habitat Feedback
 

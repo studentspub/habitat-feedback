@@ -262,7 +262,7 @@
     position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
     display: flex; gap: 8px;
   }
-  #tutorial-btn, #vision-link {
+  #tutorial-btn, #vision-link, #examples-btn {
     border: none; border-radius: 20px; padding: 0.5em 1.2em; font-weight: 700;
     font-size: 0.85rem; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
     text-decoration: none; white-space: nowrap;
@@ -758,26 +758,33 @@
   // Kommentar bei den CSS-Regeln oben. Punktdaten statt Flächenraster, daher
   // Marker statt Choropleth, und ein fester Mindest-Zoom (dichte Städte
   // hätten sonst tausende Treffer in einem Rutsch).
+  // Farben (Issue #10): je Kategorie ein eigener Farbton mit genug Abstand
+  // in Ton UND Helligkeit, damit auch ähnliche Paare (Unis/ÖPNV,
+  // Freizeit/Kita) auseinanderzuhalten sind; keine Grüntöne, weil der Rand
+  // neongrün ist. textColor = Schrift auf dem aktiven Knopf (hell bei
+  // dunklen Farben, dunkel bei Gelb/Orange).
   const POI_CATEGORIES = [
-    { key: 'playground', label: 'Spielplätze', color: '#3B7A52' },
-    { key: 'food_drink', label: 'Kneipen & Cafés', color: '#A63603' },
-    { key: 'leisure', label: 'Freizeit', color: '#31576D' },
-    { key: 'university', label: 'Unis', color: '#54278F' },
-    { key: 'school', label: 'Kitas & Schulen', color: '#2171B5' },
-    { key: 'doctor', label: 'Ärzte & Apotheken', color: '#DE2D26' },
-    { key: 'supermarket', label: 'Supermärkte', color: '#D9971E' },
-    { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#1B2420' }
+    { key: 'playground', label: 'Spielplätze', color: '#EC407A', textColor: 'white' },
+    { key: 'food_drink', label: 'Kneipen & Cafés', color: '#FF8F00', textColor: '#1B2420' },
+    { key: 'leisure', label: 'Freizeit', color: '#00897B', textColor: 'white' },
+    { key: 'university', label: 'Unis', color: '#8E24AA', textColor: 'white' },
+    { key: 'school', label: 'Kitas & Schulen', color: '#FDD835', textColor: '#1B2420' },
+    { key: 'doctor', label: 'Ärzte & Apotheken', color: '#E53935', textColor: 'white' },
+    { key: 'supermarket', label: 'Supermärkte', color: '#1E88E5', textColor: 'white' },
+    { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#263238', textColor: 'white' }
   ];
   const POI_MIN_ZOOM = 14;
+  const POI_BORDER_COLOR = '#39FF14'; // leuchtendes Neongrün (TODO.md, User)
 
   // Kleines Dreieck als Inline-SVG statt divIcon-Text — SVG erlaubt einen
-  // echten weißen Rand (stroke) um die Farbfläche, der reine CSS-Border-Trick
+  // echten Rand (stroke) um die Farbfläche, der reine CSS-Border-Trick
   // für Dreiecke (Border-Winkel) kann das nicht sauber, siehe CSS-Kommentar
-  // bei .poi-triangle-icon.
+  // bei .poi-triangle-icon. Rand 2,25 statt 1,5 (+50 %), daher 18er-Kachel,
+  // damit der dickere Rand nicht abgeschnitten wird.
   function poiTriangleIcon(color) {
-    const svg = '<svg width="16" height="16" viewBox="0 0 16 16">' +
-      '<polygon points="8,1.5 15,14.5 1,14.5" fill="' + color + '" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>';
-    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [16, 16], iconAnchor: [8, 8] });
+    const svg = '<svg width="18" height="18" viewBox="0 0 18 18">' +
+      '<polygon points="9,2.5 16.5,15.5 1.5,15.5" fill="' + color + '" stroke="' + POI_BORDER_COLOR + '" stroke-width="2.25" stroke-linejoin="round"/></svg>';
+    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [18, 18], iconAnchor: [9, 9] });
   }
 
   const poiState = {};
@@ -846,6 +853,7 @@
       state.enabled = !state.enabled;
       btn.classList.toggle('active', state.enabled);
       btn.style.background = state.enabled ? cat.color : '';
+      btn.style.color = state.enabled ? cat.textColor : '';
       loadPoiCategory(cat);
     });
   });
