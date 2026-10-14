@@ -803,6 +803,70 @@
   });
   map.on('moveend', debounce(loadEconomyCard, 350));
 
+  // Lebensqualität aus BBSR INKAR (Issue #18): Gemeinde- und Kreiswerte der
+  // Kartenmitte (Fußwege zu Hausarzt/Apotheke/Schule/Supermarkt/Haltestelle,
+  // Fahrzeiten, Pendeln, Grün, Unfälle, Ärzte, Kitas, Mieten …), je mit dem
+  // Wert für ganz Deutschland. Grün/rot nur, wo „besser" eindeutig ist.
+  let regionEnabled = false;
+  let regionRequestId = 0;
+
+  function zahlDe(wert, stellen) {
+    return wert.toLocaleString('de-DE', { minimumFractionDigits: stellen, maximumFractionDigits: stellen });
+  }
+
+  async function loadRegionCard() {
+    const myRequestId = ++regionRequestId;
+    const card = document.getElementById('region-card');
+    const hint = document.getElementById('region-hint');
+    if (!regionEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
+
+    hint.textContent = 'Lädt…';
+    const data = await holeJson('region', '/api/region?' + new URLSearchParams(rasterMitte()));
+    if (!data || myRequestId !== regionRequestId || !regionEnabled) return;
+    if (!data.gemeinde) {
+      hint.textContent = 'Die Kartenmitte liegt außerhalb Deutschlands.';
+      card.classList.remove('visible');
+      return;
+    }
+
+    hint.textContent = 'Gemeinde ' + data.gemeinde.name + ' (' + data.kreis.bez + ' ' + data.kreis.name + '). „DE" = Wert für ganz Deutschland.';
+    card.innerHTML = data.gruppen.map(g => '<div class="grp">' + escapeHtml(g.titel) + '</div>' + g.werte.map(w => {
+      const wert = w.wert === null ? 'keine Daten' : zahlDe(w.wert, w.stellen) + ' ' + w.einheit;
+      let klasse = '';
+      if (w.wert !== null && w.deutschland !== null && w.besser) {
+        klasse = (w.besser === 'hoch' ? w.wert >= w.deutschland : w.wert <= w.deutschland) ? ' gut' : ' schlecht';
+      }
+      const de = w.deutschland !== null ? '<span class="de">DE ' + escapeHtml(zahlDe(w.deutschland, w.stellen)) + '</span>' : '';
+      const info = '<button type="button" class="info-btn" data-info="' + escapeHtml(w.info + (w.jahr ? ' Stand: ' + w.jahr + '.' : '')) + '">i</button>';
+      return '<div class="row"><span class="k">' + escapeHtml(w.label) + info + '</span><span class="v' + klasse + '">' + escapeHtml(wert) + de + '</span></div>';
+    }).join('')).join('') + '<div class="src">' + escapeHtml(data.quelle) + '</div>';
+    card.classList.add('visible');
+  }
+
+  const RegionControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      const el = L.DomUtil.create('div', 'economy-control region-control');
+      el.innerHTML =
+        '<button type="button" id="region-btn">Lebensqualität (BBSR) anzeigen</button>' +
+        '<div class="hint" id="region-hint"></div>' +
+        '<div class="economy-card region-card" id="region-card"></div>';
+      L.DomEvent.disableClickPropagation(el);
+      L.DomEvent.disableScrollPropagation(el);
+      attachInfoPopovers(el);
+      return el;
+    }
+  });
+  map.addControl(new RegionControl());
+
+  document.getElementById('region-btn').addEventListener('click', (e) => {
+    regionEnabled = !regionEnabled;
+    e.target.textContent = regionEnabled ? 'Lebensqualität ausblenden' : 'Lebensqualität (BBSR) anzeigen';
+    e.target.classList.toggle('active', regionEnabled);
+    loadRegionCard();
+  });
+  map.on('moveend', debounce(loadRegionCard, 350));
+
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
   const suggestions = document.getElementById('suggestions');
@@ -947,6 +1011,7 @@
       text: 'Arbeitslosenquote, Kriminalität, Einkommen, Wanderungssaldo u.v.m. für den Kreis der Kartenmitte — hier am Beispiel Frankfurt am Main. Die kleinen (i)-Symbole neben den Zeilen erklären, warum die jeweilige Zahl für die Wohnlage relevant ist.',
       onEnter: economyTourEnter
     },
+    { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland.' },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#examples-btn', title: 'Praxisbeispiele', text: 'Fünf fiktive Personen — Rentnerin, Student, Pendlerin, Kapitalanleger, Familie — und je drei Rückschlüsse, wie sie die Kennzahlen auf dieser Karte für ihre eigene Entscheidung nutzen könnten.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }

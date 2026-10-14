@@ -226,12 +226,25 @@
     background: rgba(255,255,255,0.92); padding: 10px; border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.15); font-size: 0.82rem; width: 230px;
   }
-  #economy-btn {
+  #economy-btn, #region-btn {
     display: block; width: 100%; box-sizing: border-box; padding: 0.55em 0.8em;
     background: #1B2420; color: white; border: none; border-radius: 6px;
     font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: center;
   }
-  #economy-btn.active { background: #31576D; }
+  #economy-btn.active, #region-btn.active { background: #31576D; }
+
+  /* Lebensqualität (BBSR INKAR, Issue #18) — oben rechts unter „Straße
+     bewerten?“, weil die Spalte unten rechts schon voll ist. Die Karte hat
+     34 Zeilen, daher scrollbar. */
+  .leaflet-top.leaflet-right { top: 95px; z-index: 1001; } /* offen über der unteren Panel-Spalte statt darunter */
+  .region-control { width: 260px; }
+  .region-card { max-height: 38vh; overflow-y: auto; }
+  .region-card .grp { font-weight: 700; font-size: 0.74rem; color: #1B2420; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.02em; }
+  .region-card .grp:first-child { margin-top: 0; }
+  .region-card .row .v { white-space: nowrap; }
+  .region-card .row .v.gut { color: #3B7A52; }
+  .region-card .row .v.schlecht { color: #AA4A25; }
+  .region-card .row .de { display: block; font-weight: 400; font-size: 0.68rem; color: #7C877E; }
   .economy-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
   .economy-card { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EBEEE5; }
   .economy-card.visible { display: block; }
