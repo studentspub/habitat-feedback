@@ -685,7 +685,8 @@
 
     if (myRequestId !== economyRequestId || !economyEnabled) return;
 
-    hint.textContent = 'Werte für die Kartenmitte (' + (data.kreis || '–') + ') — beim Verschieben der Karte aktualisiert sich die Anzeige.';
+    const ort = data.gemeinde && data.gemeinde.name !== (data.kreis || '').split(',')[0] ? data.gemeinde.name + ', ' + (data.kreis || '–') : (data.kreis || '–');
+    hint.textContent = 'Werte für den Kreis der Kartenmitte (' + ort + ') — beim Verschieben der Karte aktualisiert sich die Anzeige.';
 
     const rows = [];
     const sources = [];

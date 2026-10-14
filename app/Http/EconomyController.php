@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Support\Db;
+use App\Support\GebietLookup;
 use App\Support\KreisNames;
 
 final class EconomyController
@@ -13,8 +14,10 @@ final class EconomyController
      * GET /api/economy?lat=&lon= — Kennzahlen des Kreises, in dem die
      * Kartenmitte liegt (Arbeitsmarkt, Kriminalität, Soziales, Bauen &
      * Wohnen, Bevölkerungsbewegung, Wirtschaft). Zweistufig: erst
-     * herausfinden, welcher Kreis das überhaupt ist (Reverse-Geocoding bei
-     * Nominatim, gecacht — siehe kreis_lookup_cache), dann alle Kennzahlen
+     * herausfinden, welcher Kreis das überhaupt ist — seit Issue #17 lokal
+     * über die VG250-Grenzen (GebietLookup, < 1 ms, liefert auch die
+     * Gemeinde), nur noch ersatzweise per Nominatim-Rückwärtssuche (gecacht,
+     * kreis_lookup_cache), falls die Grenzen fehlen —, dann alle Kennzahlen
      * aus den eigenen, einmalig importierten Tabellen lesen (bin/import_*).
      * Alle teilen sich dieselbe Kreis-Zuordnung, deshalb ein gemeinsamer
      * Endpunkt statt vieler getrennter — jeder weitere Reverse-Geocoding-
@@ -30,7 +33,8 @@ final class EconomyController
             return;
         }
 
-        $kreisName = $this->resolveKreis($lat, $lon);
+        $gebiet = GebietLookup::fuerPunkt($lat, $lon);
+        $kreisName = $gebiet['kreis_name'] ?? $this->resolveKreis($lat, $lon);
         if ($kreisName === null) {
             $this->json(['kreis' => null]);
             return;
@@ -52,6 +56,7 @@ final class EconomyController
 
         $this->json([
             'kreis' => $kreisName,
+            'gemeinde' => $gebiet !== null ? ['name' => $gebiet['gemeinde'], 'ags' => $gebiet['gemeinde_ags'], 'kreis_ags' => $gebiet['kreis_ags']] : null,
             'arbeitslosenquote' => $unemployment !== null ? [
                 'quote' => (float) $unemployment['quote'],
                 'monat' => $unemployment['reporting_month'],
