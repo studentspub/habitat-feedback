@@ -5,7 +5,7 @@
  *
  * Die INKAR-Gesamtdatei ist eine einzige CSV mit 6,7 GB (alle ~600
  * Indikatoren, alle Raumebenen). Sie wird direkt aus dem Zip gestreamt
- * (`unzip -p`), Zeile für Zeile gefiltert und nie entpackt gespeichert.
+ * (`unzip -p` bzw. Python zipfile), Zeile für Zeile gefiltert und nie entpackt gespeichert.
  * Spalten: Bereich;ID;Kuerzel;Indikator;Raumbezug;Kennziffer;Name;Zeitbezug;Wert
  * (UTF-8, Dezimalkomma). Gemeinden und Kreise haben 8-stellige Kennziffern,
  * bei Kreisen mit angehängtem "000".
@@ -69,7 +69,17 @@ $schreiben = function () use (&$puffer, $db): void {
 };
 
 $start = microtime(true);
-$csv = popen('unzip -p ' . escapeshellarg($zip) . ' inkar_2025.csv', 'r');
+// Entpacken als Datenstrom: `unzip -p`, wo vorhanden (WSL), sonst Pythons
+// zipfile (Container hat kein unzip). PHPs zip://-Stream scheitert an der
+// 6,7-GB-Datei (Zip64).
+$befehl = trim((string) shell_exec('command -v unzip')) !== ''
+    ? 'unzip -p ' . escapeshellarg($zip) . ' inkar_2025.csv'
+    : 'python3 -c ' . escapeshellarg('import shutil, sys, zipfile; shutil.copyfileobj(zipfile.ZipFile(sys.argv[1]).open("inkar_2025.csv"), sys.stdout.buffer, 1 << 20)') . ' ' . escapeshellarg($zip);
+$csv = popen($befehl, 'r');
+if ($csv === false) {
+    fwrite(STDERR, "inkar_2025.csv in $zip nicht lesbar\n");
+    exit(1);
+}
 fgets($csv); // Kopfzeile
 $zeilen = 0;
 $treffer = [];
