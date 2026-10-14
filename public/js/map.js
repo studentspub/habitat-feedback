@@ -839,7 +839,7 @@
       const de = w.deutschland !== null ? '<span class="de">DE ' + escapeHtml(zahlDe(w.deutschland, w.stellen)) + '</span>' : '';
       const info = '<button type="button" class="info-btn" data-info="' + escapeHtml(w.info + (w.jahr ? ' Stand: ' + w.jahr + '.' : '')) + '">i</button>';
       return '<div class="row"><span class="k">' + escapeHtml(w.label) + info + '</span><span class="v' + klasse + '">' + escapeHtml(wert) + de + '</span></div>';
-    }).join('')).join('') + '<div class="src">' + escapeHtml(data.quelle) + '</div>';
+    }).join('')).join('') + '<div class="src">' + escapeHtml(data.quelle) + ' · <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstitut für Bau-, Stadt- und Raumforschung</a></div>';
     card.classList.add('visible');
   }
 

@@ -21,16 +21,17 @@ BBSR und beim DWD. Beide Lizenzen erlauben auch kommerzielle Nutzung, Pflicht is
 | Bushaltestellen | OpenStreetMap, Geofabrik-Extrakt | Punkt | `bin/import_bus_stops.php` | ODbL |
 | Zensus 2022 (Dichte, Alter, Miete, Eigentum, Leerstand) | Destatis, ArcGIS-Dienst | 100-m-Gitter | **live** im Browser (Anfrage geht an Esri/USA) | dl-de/by-2.0 |
 | Breitband | Bundesnetzagentur, Breitbandatlas | WMS | **live** im Browser | BNetzA |
+| Gemeinde-/Kreisgrenzen (Zuordnung Punkt → Gemeinde/Kreis, Deutschland-Maske) | BKG VG250, Stand 31.12.2023 | Polygone | `bin/import_vg250.php`, `bin/build_de_grenze.php` (#17, #12) | dl-de/by-2.0 |
+| 34 Kennzahlen (Fußwege zu Hausarzt/Apotheke/Schule/Supermarkt/Haltestelle, Fahrzeiten, Pendeln, Grün, Unfälle; Ärzte, Kitas, Pflege, Mieten, Bauland, Einbrüche, Pkw, Ladepunkte) | BBSR INKAR 2025 | Gemeinde + Kreis | `bin/import_inkar.php` (#18), Panel „Lebensqualität (BBSR)“ | dl-de/by-2.0 |
 
-Kreis-Zuordnung heute: Nominatim-Rückwärtssuche + Namensabgleich (`EconomyController::resolveKreis`, `KreisNames`).
-Für Daten auf **Gemeinde**-Ebene reicht das nicht (siehe Kandidat A).
+Kreis-Zuordnung seit #17 lokal über VG250 (`GebietLookup`), Nominatim-Rückwärtssuche nur noch als Rückfall.
 
 ## 2. Kandidaten, nach Nutzen sortiert
 
 | # | Quelle | Was wir bekommen | Ebene | Lizenz | Aufwand | Empfehlung |
 |---|---|---|---|---|---|---|
-| A | **BKG VG250** (Verwaltungsgebiete) | Gemeinde- und Kreisgrenzen mit amtlichem Schlüssel (AGS) | Polygone | dl-de/by-2.0 | M | **Grundlage** für B: Punkt -> Gemeinde/Kreis lokal per `ST_Contains`, ersetzt die Nominatim-Rückwärtssuche |
-| B | **BBSR INKAR 2025** | ~600 Indikatoren, davon ~25 für uns (Liste unten) | Gemeinde + Kreis | dl-de/by-2.0 | M | **ja**, größter Gewinn |
+| A ✅ | **BKG VG250** (Verwaltungsgebiete) — umgesetzt #17 | Gemeinde- und Kreisgrenzen mit amtlichem Schlüssel (AGS) | Polygone | dl-de/by-2.0 | M | **Grundlage** für B: Punkt -> Gemeinde/Kreis lokal per `ST_Contains`, ersetzt die Nominatim-Rückwärtssuche |
+| B ✅ | **BBSR INKAR 2025** — umgesetzt #18 | ~600 Indikatoren, davon ~25 für uns (Liste unten) | Gemeinde + Kreis | dl-de/by-2.0 | M | **ja**, größter Gewinn |
 | C | **DWD 1-km-Raster** (multi-annual) | Hitzetage, Sommertage, Frosttage, Tage mit ≥ 20 mm Regen, Schneedeckentage, Sonnenscheindauer - je 1961-1990 **und** 1991-2020 | 1 km | CC BY 4.0 | M | **ja**: Wert genau am Ort statt nächster Station, dazu „früher/heute“ (Klimawandel am eigenen Wohnort) |
 | D | **Unfallatlas** (Statistische Ämter) | Unfälle mit Personenschaden mit Koordinaten, je Jahr bis 2025, mit Rad-/Fußbeteiligung | Punkt | dl-de/by-2.0 ⚠️ *beim Import im Datensatz prüfen* | M | **ja**: straßengenau, passt zur Abschnitts-Bewertung („Unfälle im Umkreis 250 m“) |
 | E | **Zensus 2022 Gitter** als lokaler Import | dieselben Werte wie heute, aber aus der eigenen DB | 100 m | dl-de/by-2.0 | L (große Dateien) | später: keine IP-Übertragung an Esri, schneller |
