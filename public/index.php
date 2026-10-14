@@ -62,6 +62,16 @@ if ($uri === '/api/air-quality' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/unfaelle' && $method === 'GET') {
+    (new App\Http\UnfallController())->umkreis();
+    return;
+}
+
+if ($uri === '/api/unfaelle/punkte' && $method === 'GET') {
+    (new App\Http\UnfallController())->punkte();
+    return;
+}
+
 if ($uri === '/api/region' && $method === 'GET') {
     (new App\Http\RegionController())->forLocation();
     return;

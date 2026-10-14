@@ -169,12 +169,24 @@
         '<p>' + escapeHtml(seg.postal_code) + ' ' + escapeHtml(seg.city) + '</p>' +
         '<p class="score">Gesamt: ' + parseFloat(seg.avg_overall).toFixed(1) + ' / 5</p>' +
         '<p>' + escapeHtml(seg.rating_count) + ' Bewertungen &middot; ' + escapeHtml(seg.address_count) + ' Adressen im Abschnitt</p>' +
+        '<p class="unfall-zeile" data-lat="' + escapeHtml(seg.centroid_lat) + '" data-lon="' + escapeHtml(seg.centroid_lon) + '">Unfälle in 250 m: lädt …</p>' +
         '<p><a href="/melden?segment=' + encodeURIComponent(seg.id) + '">Bewertungen melden</a></p></div>'
       );
     });
   }
 
   map.on('moveend', debounce(loadPins, 350));
+
+  // Unfallzahl im Bewertungs-Popup erst beim Öffnen holen (Issue #20).
+  map.on('popupopen', async (e) => {
+    const el = e.popup.getElement() && e.popup.getElement().querySelector('.unfall-zeile');
+    if (!el) return;
+    const u = await holeJson('unfall-popup', '/api/unfaelle?' + new URLSearchParams({ lat: el.dataset.lat, lon: el.dataset.lon, radius: 250 }));
+    if (!u) return;
+    el.textContent = u.jahre
+      ? 'Unfälle mit Personenschaden in 250 m (' + u.jahre + '): ' + u.gesamt + ' — davon ' + u.rad + ' mit Rad, ' + u.fuss + ' mit Fußgängern'
+      : 'Keine Unfalldaten geladen.';
+  });
   loadPins();
 
   const RatingsControl = L.Control.extend({
@@ -836,7 +848,12 @@
     if (!regionEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
 
     hint.textContent = 'Lädt…';
-    const data = await holeJson('region', '/api/region?' + new URLSearchParams(rasterMitte()));
+    const c = map.getCenter();
+    const [data, unfall] = await Promise.all([
+      holeJson('region', '/api/region?' + new URLSearchParams(rasterMitte())),
+      // Unfälle genauer als die 0,01°-Rasterung (≈ 100 m), sonst läge der 500-m-Kreis neben der Kartenmitte
+      holeJson('unfall-umkreis', '/api/unfaelle?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 500 }))
+    ]);
     if (!data || myRequestId !== regionRequestId || !regionEnabled) return;
     if (!data.gemeinde) {
       hint.textContent = 'Die Kartenmitte liegt außerhalb Deutschlands.';
@@ -854,8 +871,24 @@
       const de = w.deutschland !== null ? '<span class="de">DE ' + escapeHtml(zahlDe(w.deutschland, w.stellen)) + '</span>' : '';
       const info = '<button type="button" class="info-btn" data-info="' + escapeHtml(w.info + (w.jahr ? ' Stand: ' + w.jahr + '.' : '')) + '">i</button>';
       return '<div class="row"><span class="k">' + escapeHtml(w.label) + info + '</span><span class="v' + klasse + '">' + escapeHtml(wert) + de + '</span></div>';
-    }).join('')).join('') + '<div class="src">' + escapeHtml(data.quelle) + ' · <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstitut für Bau-, Stadt- und Raumforschung</a></div>';
+    }).join('')).join('') + unfallGruppeHtml(unfall) + '<div class="src">' + escapeHtml(data.quelle) + ' · <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstitut für Bau-, Stadt- und Raumforschung</a>'
+      + (unfall && unfall.jahre ? ' · Unfälle: ' + escapeHtml(unfall.quelle) : '') + '</div>';
     card.classList.add('visible');
+  }
+
+  // Unfallatlas (Issue #20): Unfälle mit Personenschaden im Umkreis der
+  // Kartenmitte. Mehr Unfälle heißt oft nur mehr Verkehr — deshalb als
+  // Zählung ohne Rot/Grün.
+  function unfallGruppeHtml(u) {
+    if (!u || !u.jahre) return '';
+    const zeile = (k, v, info) => '<div class="row"><span class="k">' + escapeHtml(k)
+      + (info ? '<button type="button" class="info-btn" data-info="' + escapeHtml(info) + '">i</button>' : '')
+      + '</span><span class="v">' + escapeHtml(v) + '</span></div>';
+    return '<div class="grp">Unfälle im Umkreis ' + u.radius + ' m (' + escapeHtml(u.jahre) + ')</div>'
+      + zeile('Mit Personenschaden', u.gesamt.toLocaleString('de-DE'), 'Alle polizeilich erfassten Straßenverkehrsunfälle mit Verletzten oder Getöteten in ' + u.radius + ' m um die Kartenmitte. Viel Verkehr (Hauptstraßen, Innenstadt) bedeutet fast immer auch mehr Unfälle.')
+      + zeile('davon mit Getöteten / Schwerverletzten', u.getoetet + ' / ' + u.schwer)
+      + zeile('davon mit Radbeteiligung', u.rad.toLocaleString('de-DE'))
+      + zeile('davon mit Fußgängern', u.fuss.toLocaleString('de-DE'));
   }
 
   const RegionControl = L.Control.extend({
@@ -864,6 +897,7 @@
       const el = L.DomUtil.create('div', 'economy-control region-control');
       el.innerHTML =
         '<button type="button" id="region-btn">Lebensqualität (BBSR) anzeigen</button>' +
+        '<button type="button" id="unfall-btn" class="neben-btn">Unfallorte auf der Karte</button>' +
         '<div class="hint" id="region-hint"></div>' +
         '<div class="economy-card region-card" id="region-card"></div>';
       L.DomEvent.disableClickPropagation(el);
@@ -881,6 +915,42 @@
     loadRegionCard();
   });
   map.on('moveend', debounce(loadRegionCard, 350));
+
+  // Unfallorte als Punkte (ab Zoom 15): Farbe nach Schwere, Canvas wie die POIs.
+  const UNFALL_MIN_ZOOM = 15;
+  const UNFALL_FARBE = { 1: '#4A0D0D', 2: '#E53935', 3: '#FB8C00' };
+  const UNFALL_TEXT = { 1: 'mit Getöteten', 2: 'mit Schwerverletzten', 3: 'mit Leichtverletzten' };
+  const unfallRenderer = L.canvas({ padding: 0.5 });
+  let unfallEnabled = false;
+  let unfallLayer = null;
+  let unfallRequestId = 0;
+
+  async function loadUnfallPunkte() {
+    const myRequestId = ++unfallRequestId;
+    const hint = document.getElementById('region-hint');
+    if (!unfallEnabled || map.getZoom() < UNFALL_MIN_ZOOM) {
+      if (unfallLayer) { map.removeLayer(unfallLayer); unfallLayer = null; }
+      if (unfallEnabled && !regionEnabled) hint.textContent = 'Unfallorte: weiter reinzoomen (ab Stadtteil-Ebene).';
+      return;
+    }
+    const data = await holeJson('unfall-punkte', '/api/unfaelle/punkte?bbox=' + rasterBbox());
+    if (!data || myRequestId !== unfallRequestId || !unfallEnabled) return;
+    if (unfallLayer) map.removeLayer(unfallLayer);
+    unfallLayer = L.layerGroup(data.punkte.map(([lat, lon, jahr, kat, rad, fuss]) => L.circleMarker([lat, lon], {
+      renderer: unfallRenderer, radius: kat === 3 ? 4 : 5, weight: 1, color: '#FFFFFF', opacity: 0.9,
+      fillColor: UNFALL_FARBE[kat], fillOpacity: 0.9
+    }).bindTooltip(jahr + ': Unfall ' + UNFALL_TEXT[kat] + (rad ? ', mit Rad' : '') + (fuss ? ', mit Fußgänger' : '')))).addTo(map);
+    if (!regionEnabled) hint.textContent = 'Unfallorte ' + (data.gekuerzt ? '(gekürzt, schwerste zuerst) ' : '') + '— Statistische Ämter des Bundes und der Länder, Unfallatlas.';
+  }
+
+  document.getElementById('unfall-btn').addEventListener('click', (e) => {
+    unfallEnabled = !unfallEnabled;
+    e.target.classList.toggle('active', unfallEnabled);
+    e.target.textContent = unfallEnabled ? 'Unfallorte ausblenden' : 'Unfallorte auf der Karte';
+    if (!unfallEnabled && !regionEnabled) document.getElementById('region-hint').textContent = '';
+    loadUnfallPunkte();
+  });
+  map.on('moveend', debounce(loadUnfallPunkte, 350));
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');

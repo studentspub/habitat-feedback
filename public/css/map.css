@@ -245,6 +245,10 @@
   .region-card .row .v.gut { color: #3B7A52; }
   .region-card .row .v.schlecht { color: #AA4A25; }
   .region-card .row .de { display: block; font-weight: 400; font-size: 0.68rem; color: #7C877E; }
+  /* Schalter „Unfallorte auf der Karte“ (Issue #20) — zweitrangig, daher hell. */
+  .region-control .neben-btn { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 0.4em 0.8em; background: #FBFBF7; color: #1B2420;
+    border: 1px solid #CFD8C9; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .region-control .neben-btn.active { background: #E53935; color: white; border-color: transparent; }
   .economy-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
   .economy-card { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #EBEEE5; }
   .economy-card.visible { display: block; }
