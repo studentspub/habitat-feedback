@@ -22,4 +22,18 @@ final class PoiCategories
         'supermarket' => ['shop=supermarket'],
         'transit'     => ['highway=bus_stop', 'railway=tram_stop', 'railway=station'],
     ];
+
+    /**
+     * Kategorien aus anderen Quellen als OSM — liegen ebenfalls in
+     * poi_locations, werden aber nicht von bin/import_poi.php befüllt.
+     */
+    public const EXTERN = [
+        'charging' => 'Ladesäulenregister der Bundesnetzagentur (bin/import_ladesaeulen.php, Issue #22)',
+    ];
+
+    /** @return list<string> alle Kategorien, die /api/poi ausliefert */
+    public static function alle(): array
+    {
+        return array_merge(array_keys(self::CATEGORIES), array_keys(self::EXTERN));
+    }
 }

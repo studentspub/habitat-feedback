@@ -432,7 +432,9 @@
     { key: 'school', label: 'Kitas & Schulen', color: '#FDD835', textColor: '#1B2420' },
     { key: 'doctor', label: 'Ärzte & Apotheken', color: '#E53935', textColor: 'white' },
     { key: 'supermarket', label: 'Supermärkte', color: '#1E88E5', textColor: 'white' },
-    { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#263238', textColor: 'white' }
+    { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#263238', textColor: 'white' },
+    // Ladesäulen kommen nicht aus OSM, sondern aus dem BNetzA-Register (Issue #22)
+    { key: 'charging', label: 'Ladesäulen', color: '#6D4C41', textColor: 'white', quelle: 'Ladesäulen: Bundesnetzagentur.de (CC BY 4.0)' }
   ];
   const POI_MIN_ZOOM = 14;
   const POI_BORDER_COLOR = '#39FF14'; // leuchtendes Neongrün (TODO.md, User)
@@ -471,7 +473,8 @@
     if (map.getZoom() < POI_MIN_ZOOM) {
       hint.textContent = 'Weiter reinzoomen, um Standorte zu sehen (ab Stadtteil-Ebene).';
     } else {
-      hint.textContent = 'Daten von OpenStreetMap-Mitwirkenden.';
+      const extra = POI_CATEGORIES.filter(c => c.quelle && poiState[c.key].enabled).map(c => ' · ' + c.quelle).join('');
+      hint.textContent = 'Daten von OpenStreetMap-Mitwirkenden' + extra + '.';
     }
   }
 
@@ -510,7 +513,7 @@
     onAdd: function () {
       const el = L.DomUtil.create('div', 'poi-control');
       el.innerHTML =
-        '<div class="panel-title">Freizeit &amp; Infrastruktur (OSM)</div>' +
+        '<div class="panel-title">Freizeit &amp; Infrastruktur</div>' +
         '<div class="poi-metric-grid">' +
         POI_CATEGORIES.map(c => '<button type="button" class="poi-metric-btn" data-key="' + c.key + '">' + c.label + '</button>').join('') +
         '</div>' +
@@ -1101,7 +1104,7 @@
   }
 
   function poiTourHtml() {
-    return 'Acht Kategorien aus OpenStreetMap, jede als eigenfarbiges Dreieck auf der Karte:' +
+    return 'Acht Kategorien aus OpenStreetMap und die Ladesäulen der Bundesnetzagentur, jede als eigenfarbiges Dreieck auf der Karte:' +
       '<ul class="tour-list">' +
       POI_CATEGORIES.map(c => '<li><span class="tour-swatch triangle" style="background:' + c.color + '"></span><span>' + c.label + '</span></li>').join('') +
       '</ul>';

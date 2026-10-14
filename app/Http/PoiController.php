@@ -29,7 +29,7 @@ final class PoiController
         $einzeln = isset($_GET['category']) && !isset($_GET['categories']);
         $raw = (string) ($einzeln ? $_GET['category'] : ($_GET['categories'] ?? ''));
         $categories = array_values(array_unique(array_filter(explode(',', $raw))));
-        if ($categories === [] || array_diff($categories, array_keys(PoiCategories::CATEGORIES)) !== []) {
+        if ($categories === [] || array_diff($categories, PoiCategories::alle()) !== []) {
             http_response_code(422);
             $this->json(['error' => 'Unbekannte Kategorie.']);
             return;
