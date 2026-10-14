@@ -132,10 +132,7 @@
   /* Dreiecke statt Kreise, bewusst anders als die runden Bewertungs-Pins —
      sobald beide Ebenen gleichzeitig an sind, muss auf einen Blick erkennbar
      sein, was eine Bewertung und was ein OSM-Infrastrukturpunkt ist.
-     Leaflets divIcon setzt standardmäßig einen weißen Kasten-Hintergrund
-     samt Rahmen (für Icon-Bilder gedacht) — hier per !important entfernt,
-     damit nur das SVG-Dreieck selbst sichtbar bleibt. */
-  .poi-triangle-icon { background: none !important; border: none !important; }
+     Gezeichnet werden sie seit Issue #13 auf Canvas (map.js, PoiDreieck). */
 
   /* Bewertungs-Pins — eigene Ebene mit An/Aus-Schalter (wie Klima/Breitband/
      Wirtschaft), damit man bei Bedarf nur die Statistik-Ebenen sehen kann,

@@ -179,6 +179,10 @@ final class EconomyController
     private function json(array $data): void
     {
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if (http_response_code() === 200) {
+            // Kreis-Kennzahlen werden höchstens monatlich neu importiert; die Karte rundet lat/lon auf 0,01°, damit der Browser-Cache greift (Issue #13).
+            header('Cache-Control: public, max-age=86400');
+        }
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 }

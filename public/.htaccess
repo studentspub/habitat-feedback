@@ -1,0 +1,16 @@
+# Nur Apache (Container); der WSL-Dev-Server `php -S` ignoriert diese Datei.
+# Issue #13 (Karten-Performance).
+
+# JSON/GeoJSON komprimieren — Debians deflate.conf deckt nur HTML/CSS/JS ab.
+# Die Grenzdatei schrumpft so von 322 auf ~107 KB, API-Antworten auf ein Drittel.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/json application/geo+json image/svg+xml
+</IfModule>
+
+# Statische Dateien lange cachen. map.js/map.css werden über ?v=<Änderungszeit>
+# eingebunden, eine neue Version hat also automatisch eine neue URL.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|geojson|png|svg)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

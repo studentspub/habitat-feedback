@@ -11,8 +11,9 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-// Sicherheits-Header für alle Antworten (Issue #9). Eine Content-Security-Policy
-// kommt erst, wenn das Inline-JS aus map.view.php ausgelagert ist (Issue #13).
+// Sicherheits-Header für alle Antworten (Issue #9). Die Content-Security-Policy
+// gilt bisher nur für die Kartenseite (siehe Route '/'): nur dort ist das JS
+// ausgelagert (Issue #13); die übrigen Seiten haben noch Inline-Skripte.
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: DENY');
@@ -82,6 +83,13 @@ if ($uri === '/api/pi/resolve' && $method === 'POST') {
 }
 
 if ($uri === '/' || $uri === '/index.php') {
+    // Nur eigene Skripte; Styles brauchen 'unsafe-inline' (Leaflet und die
+    // Panels setzen style-Attribute). Externe Ziele: OSM-Kacheln, Breitband-WMS,
+    // Zensus-Dienst (Esri). Ein eingeschleustes <script> liefe damit nicht —
+    // das Sicherheitsnetz hinter escapeHtml() (Issue #9).
+    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        . "img-src 'self' data: https://*.tile.openstreetmap.org https://breitbandatlas-wms.gigabit-grundbuch.online; "
+        . "connect-src 'self' https://services2.arcgis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
     require __DIR__ . '/map.view.php';
     return;
 }

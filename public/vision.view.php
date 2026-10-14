@@ -66,7 +66,7 @@
 </div>
 <div id="map"></div>
 <script src="/vendor/leaflet-1.9.4/leaflet.min.js"></script>
-<script src="/js/de_maske.js"></script>
+<script src="/js/de_maske.js?v=<?= filemtime(__DIR__ . '/js/de_maske.js') ?>"></script>
 <script>
   const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Übersicht
 

@@ -63,7 +63,7 @@
   </div>
 </div>
 <script src="/vendor/leaflet-1.9.4/leaflet.min.js"></script>
-<script src="/js/de_maske.js"></script>
+<script src="/js/de_maske.js?v=<?= filemtime(__DIR__ . '/js/de_maske.js') ?>"></script>
 <script src="/js/map.js?v=<?= filemtime(__DIR__ . '/js/map.js') ?>"></script>
 </body>
 </html>

@@ -101,6 +101,37 @@
     };
   }
 
+  // Veraltete Anfragen abbrechen (Issue #13): wer schnell schwenkt, erzeugt
+  // Anfragen, deren Antworten ohnehin verworfen würden — bisher wurden sie
+  // trotzdem vollständig geladen. Je Name läuft höchstens eine Anfrage;
+  // abgebrochen liefert holeJson() null.
+  const laufendeAnfragen = {};
+  async function holeJson(name, url) {
+    if (laufendeAnfragen[name]) laufendeAnfragen[name].abort();
+    const controller = new AbortController();
+    laufendeAnfragen[name] = controller;
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      return await res.json();
+    } catch (e) {
+      if (e.name === 'AbortError') return null;
+      throw e;
+    }
+  }
+
+  // Ausschnitt bzw. Kartenmitte auf ein 0,01°-Raster (≈ 1 km) runden —
+  // Ausschnitt nach außen, damit nichts fehlt. Gleiche Stelle = gleiche URL,
+  // dann greifen die Cache-Control-Header der Referenzdaten-Endpunkte.
+  function rasterBbox() {
+    const b = map.getBounds();
+    return [Math.floor(b.getWest() * 100) / 100, Math.floor(b.getSouth() * 100) / 100,
+      Math.ceil(b.getEast() * 100) / 100, Math.ceil(b.getNorth() * 100) / 100].join(',');
+  }
+  function rasterMitte() {
+    const c = map.getCenter();
+    return { lat: (Math.round(c.lat * 100) / 100).toFixed(2), lon: (Math.round(c.lng * 100) / 100).toFixed(2) };
+  }
+
   function colorForScore(score) {
     if (score >= 4) return '#3B7A52';
     if (score >= 3) return '#D9971E';
@@ -118,8 +149,8 @@
   async function loadPins() {
     const b = map.getBounds();
     const bbox = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].join(',');
-    const res = await fetch('/api/map?bbox=' + encodeURIComponent(bbox));
-    const data = await res.json();
+    const data = await holeJson('pins', '/api/map?bbox=' + encodeURIComponent(bbox));
+    if (!data) return;
 
     ratingsLayer.clearLayers();
     if (!ratingsEnabled) return;
@@ -321,8 +352,8 @@
       geometry: bbox, geometryType: 'esriGeometryEnvelope', inSR: '4326', outSR: '4326',
       spatialRel: 'esriSpatialRelIntersects', outFields: metric.field, returnGeometry: 'true', f: 'geojson'
     });
-    const res = await fetch(url);
-    const geojson = await res.json();
+    const geojson = await holeJson('zensus-' + metric.key, url);
+    if (!geojson) return;
 
     // Zwischenzeitlich wieder ausgeschaltet oder von einer neueren Anfrage
     // für dieselbe Kennzahl überholt? Dann dieses veraltete Ergebnis verwerfen.
@@ -394,20 +425,32 @@
   const POI_MIN_ZOOM = 14;
   const POI_BORDER_COLOR = '#39FF14'; // leuchtendes Neongrün (TODO.md, User)
 
-  // Kleines Dreieck als Inline-SVG statt divIcon-Text — SVG erlaubt einen
-  // echten Rand (stroke) um die Farbfläche, der reine CSS-Border-Trick
-  // für Dreiecke (Border-Winkel) kann das nicht sauber, siehe CSS-Kommentar
-  // bei .poi-triangle-icon. Rand 2,25 statt 1,5 (+50 %); das Dreieck ist
-  // dafür größer (22 statt 16 px), sonst bleibt neben dem dicken Rand kaum
-  // Farbfläche übrig und alle Kategorien sähen grün aus.
-  function poiTriangleIcon(color) {
-    const svg = '<svg width="22" height="22" viewBox="0 0 22 22">' +
-      '<polygon points="11,2.5 20.5,19 1.5,19" fill="' + color + '" stroke="' + POI_BORDER_COLOR + '" stroke-width="2.25" stroke-linejoin="round"/></svg>';
-    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [22, 22], iconAnchor: [11, 11] });
-  }
+  // POI-Dreiecke auf Canvas (Issue #13): früher war jedes Dreieck ein
+  // eigenes DOM-Element (divIcon + SVG) — bei 8 Kategorien × 500 Punkten
+  // bis zu 4.000 Elemente, die bei jedem Zoom neu positioniert wurden.
+  // Jetzt zeichnet ein gemeinsamer Canvas-Renderer alles in ein Bild.
+  // Form und Maße wie das frühere 22-px-SVG: Spitze 8,5 px über, Grundlinie
+  // 8 px unter der Mitte, 19 px breit; Rand neongrün 2,25 px (Issue #10).
+  L.Canvas.include({
+    _updatePoiDreieck(layer) {
+      if (!this._drawing || layer._empty()) return;
+      const p = layer._point, ctx = this._ctx;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - 8.5);
+      ctx.lineTo(p.x + 9.5, p.y + 8);
+      ctx.lineTo(p.x - 9.5, p.y + 8);
+      ctx.closePath();
+      this._fillStroke(ctx, layer);
+    }
+  });
+  const PoiDreieck = L.CircleMarker.extend({
+    _updatePath() { this._renderer._updatePoiDreieck(this); }
+  });
+  const poiRenderer = L.canvas({ padding: 0.5 });
 
   const poiState = {};
-  POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false, requestId: 0 }; });
+  POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false }; });
+  let poiRequestId = 0;
 
   function updatePoiHint() {
     const hint = document.getElementById('poi-hint');
@@ -420,32 +463,34 @@
     }
   }
 
-  async function loadPoiCategory(cat) {
-    const state = poiState[cat.key];
-    const myRequestId = ++state.requestId;
-
+  function removePoiLayer(key) {
+    const state = poiState[key];
     if (state.layer) { map.removeLayer(state.layer); state.layer = null; }
-    if (!state.enabled) { updatePoiHint(); return; }
+  }
 
+  // Eine Anfrage für alle aktiven Kategorien statt einer je Kategorie.
+  // Die alten Dreiecke bleiben stehen, bis die neuen da sind (kein Flackern).
+  async function loadPois() {
+    const myRequestId = ++poiRequestId;
     updatePoiHint();
-    if (map.getZoom() < POI_MIN_ZOOM) return;
-
-    const b = map.getBounds();
-    const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-    const res = await fetch('/api/poi?' + new URLSearchParams({ category: cat.key, bbox }));
-    const data = await res.json();
-
-    if (myRequestId !== state.requestId || !state.enabled) return;
-
-    if (data.hinweis) {
-      document.getElementById('poi-hint').textContent = data.hinweis;
+    const aktiv = POI_CATEGORIES.filter(c => poiState[c.key].enabled);
+    if (aktiv.length === 0 || map.getZoom() < POI_MIN_ZOOM) {
+      POI_CATEGORIES.forEach(c => removePoiLayer(c.key));
+      return;
     }
 
-    state.layer = L.layerGroup(
-      (data.points || []).map(p => L.marker([p.lat, p.lon], {
-        icon: poiTriangleIcon(cat.color)
-      }).bindTooltip(escapeHtml(p.name || cat.label)))
-    ).addTo(map);
+    const data = await holeJson('poi', '/api/poi?' + new URLSearchParams({ categories: aktiv.map(c => c.key).join(','), bbox: rasterBbox() }));
+    if (!data || myRequestId !== poiRequestId) return;
+
+    POI_CATEGORIES.forEach(c => removePoiLayer(c.key));
+    aktiv.forEach(cat => {
+      if (!poiState[cat.key].enabled) return;
+      const punkte = (data.categories || {})[cat.key] || [];
+      poiState[cat.key].layer = L.layerGroup(punkte.map(p => new PoiDreieck([p.lat, p.lon], {
+        renderer: poiRenderer, radius: 9, color: POI_BORDER_COLOR, weight: 2.25, opacity: 1,
+        fillColor: cat.color, fillOpacity: 1, lineJoin: 'round'
+      }).bindTooltip(escapeHtml(p.name || cat.label)))).addTo(map);
+    });
   }
 
   const PoiControl = L.Control.extend({
@@ -465,6 +510,7 @@
   map.addControl(new PoiControl());
 
   const poiByKey = Object.fromEntries(POI_CATEGORIES.map(c => [c.key, c]));
+  const loadPoisNachKlick = debounce(loadPois, 150); // mehrere schnelle Klicks = eine Anfrage
   document.querySelectorAll('.poi-metric-btn').forEach(btn => {
     const cat = poiByKey[btn.dataset.key];
     btn.addEventListener('click', () => {
@@ -473,10 +519,15 @@
       btn.classList.toggle('active', state.enabled);
       btn.style.background = state.enabled ? cat.color : '';
       btn.style.color = state.enabled ? cat.textColor : '';
-      loadPoiCategory(cat);
+      if (state.enabled) {
+        loadPoisNachKlick();
+      } else {
+        removePoiLayer(cat.key); // ausschalten braucht keine neue Anfrage
+        updatePoiHint();
+      }
     });
   });
-  map.on('moveend zoomend', debounce(() => POI_CATEGORIES.forEach(loadPoiCategory), 350));
+  map.on('moveend zoomend', debounce(loadPois, 350));
 
   // Klima & Luft — Kontext-Kärtchen für die Kartenmitte statt Kachel-Layer
   // (siehe CSS-Kommentar oben). Zwei eigenständige, aber inhaltlich
@@ -497,13 +548,12 @@
     if (!climateEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
 
     hint.textContent = 'Lädt…';
-    const center = map.getCenter();
-    const [climateRes, airRes] = await Promise.all([
-      fetch('/api/climate?' + new URLSearchParams({ lat: center.lat, lon: center.lng })),
-      fetch('/api/air-quality?' + new URLSearchParams({ lat: center.lat, lon: center.lng }))
+    const mitte = new URLSearchParams(rasterMitte());
+    const [climate, air] = await Promise.all([
+      holeJson('klima', '/api/climate?' + mitte),
+      holeJson('luft', '/api/air-quality?' + mitte)
     ]);
-    const climate = await climateRes.json();
-    const air = await airRes.json();
+    if (!climate || !air) return;
 
     if (myRequestId !== climateRequestId || !climateEnabled) return;
 
@@ -630,9 +680,8 @@
     if (!economyEnabled) { card.classList.remove('visible'); hint.textContent = ''; return; }
 
     hint.textContent = 'Lädt…';
-    const center = map.getCenter();
-    const res = await fetch('/api/economy?' + new URLSearchParams({ lat: center.lat, lon: center.lng }));
-    const data = await res.json();
+    const data = await holeJson('wirtschaft', '/api/economy?' + new URLSearchParams(rasterMitte()));
+    if (!data) return;
 
     if (myRequestId !== economyRequestId || !economyEnabled) return;
 
