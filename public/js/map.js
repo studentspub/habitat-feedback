@@ -843,10 +843,11 @@
 
     hint.textContent = 'Lädt…';
     const c = map.getCenter();
-    const [data, unfall] = await Promise.all([
+    const [data, unfall, oepnv] = await Promise.all([
       holeJson('region', '/api/region?' + new URLSearchParams(rasterMitte())),
       // Unfälle genauer als die 0,01°-Rasterung (≈ 100 m), sonst läge der 500-m-Kreis neben der Kartenmitte
-      holeJson('unfall-umkreis', '/api/unfaelle?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 500 }))
+      holeJson('unfall-umkreis', '/api/unfaelle?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 500 })),
+      holeJson('oepnv-umkreis', '/api/oepnv?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 600 }))
     ]);
     if (!data || myRequestId !== regionRequestId || !regionEnabled) return;
     if (!data.gemeinde) {
@@ -865,9 +866,28 @@
       const de = w.deutschland !== null ? '<span class="de">DE ' + escapeHtml(zahlDe(w.deutschland, w.stellen)) + '</span>' : '';
       const info = '<button type="button" class="info-btn" data-info="' + escapeHtml(w.info + (w.jahr ? ' Stand: ' + w.jahr + '.' : '')) + '">i</button>';
       return '<div class="row"><span class="k">' + escapeHtml(w.label) + info + '</span><span class="v' + klasse + '">' + escapeHtml(wert) + de + '</span></div>';
-    }).join('')).join('') + unfallGruppeHtml(unfall) + '<div class="src">' + escapeHtml(data.quelle) + ' · <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstitut für Bau-, Stadt- und Raumforschung</a>'
+    }).join('')).join('') + oepnvGruppeHtml(oepnv) + unfallGruppeHtml(unfall) + '<div class="src">' + escapeHtml(data.quelle) + ' · <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstitut für Bau-, Stadt- und Raumforschung</a>'
+      + (oepnv && oepnv.stichtag ? ' · ÖPNV: ' + escapeHtml(oepnv.quelle) : '')
       + (unfall && unfall.jahre ? ' · Unfälle: ' + escapeHtml(unfall.quelle) : '') + '</div>';
     card.classList.add('visible');
+  }
+
+  // ÖPNV-Takt aus GTFS Deutschland (Issue #24): Stationen in 600 m um die
+  // Kartenmitte mit ihren Abfahrten an einem normalen Werktag — „wie oft
+  // fährt hier etwas“ statt nur „gibt es eine Haltestelle“.
+  function oepnvGruppeHtml(o) {
+    if (!o || !o.stichtag) return '';
+    const datum = new Date(o.stichtag + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' });
+    const info = 'Abfahrten aller Linien und Richtungen an einem normalen Werktag (' + datum + '), aus dem Fahrplan-Datensatz für ganz Deutschland. '
+      + 'Zum Vergleich: ab ~100 Abfahrten am Tag fährt tagsüber etwa alle 15–20 Minuten etwas.';
+    const zeile = (k, v, i) => '<div class="row"><span class="k">' + escapeHtml(k)
+      + (i ? '<button type="button" class="info-btn" data-info="' + escapeHtml(i) + '">i</button>' : '')
+      + '</span><span class="v">' + escapeHtml(v) + '</span></div>';
+    let html = '<div class="grp">ÖPNV im Umkreis ' + o.radius + ' m (Werktag)</div>'
+      + zeile('Haltestellen / Abfahrten', o.anzahl + ' / ' + o.abfahrten_summe.toLocaleString('de-DE'), info);
+    if (o.stationen.length === 0) return html + zeile('Nächste Haltestelle', 'keine im Umkreis');
+    return html + o.stationen.slice(0, 3).map(s => zeile(s.name + ' (' + s.entfernung + ' m)',
+      s.abfahrten.toLocaleString('de-DE') + ' · ' + s.verkehrsmittel)).join('');
   }
 
   // Unfallatlas (Issue #20): Unfälle mit Personenschaden im Umkreis der
@@ -891,7 +911,8 @@
       const el = L.DomUtil.create('div', 'economy-control region-control');
       el.innerHTML =
         '<button type="button" id="region-btn">Lebensqualität (BBSR) anzeigen</button>' +
-        '<button type="button" id="unfall-btn" class="neben-btn">Unfallorte auf der Karte</button>' +
+        '<div class="neben-reihe"><button type="button" id="unfall-btn" class="neben-btn">Unfallorte</button>' +
+        '<button type="button" id="oepnv-btn" class="neben-btn">ÖPNV-Takt</button></div>' +
         '<div class="neben-reihe"><button type="button" id="laerm-btn" class="neben-btn">Lärm</button>' +
         '<button type="button" id="hochwasser-btn" class="neben-btn">Hochwasser</button></div>' +
         '<div class="hint" id="ebenen-legende"></div>' +
@@ -943,11 +964,52 @@
   document.getElementById('unfall-btn').addEventListener('click', (e) => {
     unfallEnabled = !unfallEnabled;
     e.target.classList.toggle('active', unfallEnabled);
-    e.target.textContent = unfallEnabled ? 'Unfallorte ausblenden' : 'Unfallorte auf der Karte';
+    e.target.textContent = unfallEnabled ? 'Unfallorte aus' : 'Unfallorte';
     if (!unfallEnabled && !regionEnabled) document.getElementById('region-hint').textContent = '';
     loadUnfallPunkte();
   });
   map.on('moveend', debounce(loadUnfallPunkte, 350));
+
+  // ÖPNV-Takt als Kartenebene (Issue #24, ab Zoom 13): Kreis je Station,
+  // Größe und Farbe nach Abfahrten am Werktag.
+  const OEPNV_MIN_ZOOM = 13;
+  const OEPNV_STUFEN = [
+    { min: 500, farbe: '#1B5E20', r: 9, text: '≥ 500' }, { min: 150, farbe: '#43A047', r: 7, text: '150–499' },
+    { min: 50, farbe: '#FDD835', r: 6, text: '50–149' }, { min: 20, farbe: '#FB8C00', r: 5, text: '20–49' },
+    { min: 0, farbe: '#9E9E9E', r: 4, text: '< 20' }
+  ];
+  const oepnvRenderer = L.canvas({ padding: 0.5 });
+  let oepnvEnabled = false;
+  let oepnvLayer = null;
+  let oepnvRequestId = 0;
+
+  async function loadOepnvPunkte() {
+    const myRequestId = ++oepnvRequestId;
+    if (!oepnvEnabled || map.getZoom() < OEPNV_MIN_ZOOM) {
+      if (oepnvLayer) { map.removeLayer(oepnvLayer); oepnvLayer = null; }
+      return;
+    }
+    const data = await holeJson('oepnv-punkte', '/api/oepnv/punkte?bbox=' + rasterBbox());
+    if (!data || myRequestId !== oepnvRequestId || !oepnvEnabled) return;
+    if (oepnvLayer) map.removeLayer(oepnvLayer);
+    // kleinste zuerst zeichnen, damit große Knoten obenauf liegen
+    oepnvLayer = L.layerGroup(data.punkte.slice().reverse().map(([lat, lon, name, abf, abfTag, vm]) => {
+      const st = OEPNV_STUFEN.find(s => abf >= s.min);
+      return L.circleMarker([lat, lon], {
+        renderer: oepnvRenderer, radius: st.r, weight: 1.5, color: '#FFFFFF', opacity: 1, fillColor: st.farbe, fillOpacity: 0.95
+      }).bindTooltip(escapeHtml(name) + ': ' + abf.toLocaleString('de-DE') + ' Abfahrten/Werktag (6–20 Uhr: ' + abfTag.toLocaleString('de-DE') + ') · ' + escapeHtml(vm));
+    })).addTo(map);
+  }
+
+  document.getElementById('oepnv-btn').addEventListener('click', (e) => {
+    oepnvEnabled = !oepnvEnabled;
+    e.target.classList.toggle('active', oepnvEnabled);
+    e.target.textContent = oepnvEnabled ? 'ÖPNV-Takt aus' : 'ÖPNV-Takt';
+    ebenenAktiv.oepnv = oepnvEnabled;
+    ebenenLegendeAktualisieren();
+    loadOepnvPunkte();
+  });
+  map.on('moveend', debounce(loadOepnvPunkte, 350));
 
   // Lärm und Hochwasser als zuschaltbare WMS-Ebenen (Issue #21), wie Breitband
   // ohne eigenen Import. Lärm: EU-Umgebungslärmkartierung (END) über die
@@ -973,7 +1035,9 @@
     hochwasser: '<span class="lg" style="background:#0070FF"></span>Überflutungsfläche bei einem 100-jährlichen Hochwasser (HQ100) an Flüssen und Küste. '
       + 'Ohne Schutz durch Deiche nicht gezeigt; Starkregen fehlt. Stand 2019, gemeldet von den Ländern.'
   };
-  const ebenenAktiv = { laerm: false, hochwasser: false };
+  EBENEN_LEGENDE.oepnv = 'ÖPNV-Takt (Abfahrten je Werktag, ab Zoom ' + OEPNV_MIN_ZOOM + '): '
+    + OEPNV_STUFEN.map(s => '<span class="lg" style="background:' + s.farbe + '"></span>' + s.text).join(' ');
+  const ebenenAktiv = { laerm: false, hochwasser: false, oepnv: false };
 
   function ebenenLegendeAktualisieren() {
     document.getElementById('ebenen-legende').innerHTML =
@@ -1133,7 +1197,7 @@
       text: 'Arbeitslosenquote, Kriminalität, Einkommen, Wanderungssaldo u.v.m. für den Kreis der Kartenmitte — hier am Beispiel Frankfurt am Main. Die kleinen (i)-Symbole neben den Zeilen erklären, warum die jeweilige Zahl für die Wohnlage relevant ist.',
       onEnter: economyTourEnter
     },
-    { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland. Darunter lassen sich Unfallorte, Lärm und Hochwasserflächen auf der Karte einblenden.' },
+    { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland. Darunter lassen sich Unfallorte, der ÖPNV-Takt (Abfahrten je Haltestelle), Lärm und Hochwasserflächen auf der Karte einblenden.' },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#examples-btn', title: 'Praxisbeispiele', text: 'Fünf fiktive Personen — Rentnerin, Student, Pendlerin, Kapitalanleger, Familie — und je drei Rückschlüsse, wie sie die Kennzahlen auf dieser Karte für ihre eigene Entscheidung nutzen könnten.' },
     { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }

@@ -254,6 +254,7 @@
   .region-control .neben-reihe .neben-btn { flex: 1; }
   .region-control #laerm-btn.active { background: #E65100; }
   .region-control #hochwasser-btn.active { background: #1E88E5; }
+  .region-control #oepnv-btn.active { background: #2E7D32; }
   .region-control #ebenen-legende div { margin-top: 4px; }
   .region-control .lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 2px 0 4px; vertical-align: -1px; }
   .economy-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }

@@ -62,6 +62,16 @@ if ($uri === '/api/air-quality' && $method === 'GET') {
     return;
 }
 
+if ($uri === '/api/oepnv' && $method === 'GET') {
+    (new App\Http\OepnvController())->umkreis();
+    return;
+}
+
+if ($uri === '/api/oepnv/punkte' && $method === 'GET') {
+    (new App\Http\OepnvController())->punkte();
+    return;
+}
+
 if ($uri === '/api/zensus' && $method === 'GET') {
     (new App\Http\ZensusController())->zellen();
     return;
