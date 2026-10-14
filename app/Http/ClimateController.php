@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Support\Db;
+use App\Support\Gk3;
 
 final class ClimateController
 {
@@ -13,6 +14,10 @@ final class ClimateController
      * Temperatur- bzw. Niederschlagsnormalwerten (1991-2020). Reine
      * Datenbank-Abfrage, kein externer Aufruf zur Laufzeit — die Werte
      * liegen bereits importiert vor (bin/import_climate_normals.php).
+     *
+     * Seit Issue #19 zusätzlich `raster`: Kenntage (heiß, Sommer, Frost, Eis,
+     * Starkregen, Schnee) und Sonnenstunden genau am Ort aus den 1-km-Rastern
+     * des DWD, je für 1961-1990 und 1991-2020 (bin/import_dwd_raster.php).
      */
     public function nearest(): void
     {
@@ -39,7 +44,39 @@ final class ClimateController
             'temperatur' => $temp,
             'niederschlag' => $precip,
             'zeitraum' => '1991–2020',
+            'raster' => $this->rasterAmOrt($lat, $lon),
         ]);
+    }
+
+    /** @return array<string, array{frueher: ?float, heute: ?float}>|null */
+    private function rasterAmOrt(float $lat, float $lon): ?array
+    {
+        $db = Db::get();
+        try {
+            $g = $db->query('SELECT xll, yll, zellgroesse, zeilen FROM klima_raster_gitter WHERE id = 1')->fetch();
+        } catch (\PDOException $e) {
+            return null; // Migration 021 noch nicht eingespielt
+        }
+        if ($g === false) {
+            return null;
+        }
+        [$rechts, $hoch] = Gk3::fromLatLon($lat, $lon);
+        $spalte = (int) floor(($rechts - $g['xll']) / $g['zellgroesse']);
+        $zeile = (int) floor(($g['yll'] + $g['zeilen'] * $g['zellgroesse'] - $hoch) / $g['zellgroesse']);
+        $stmt = $db->prepare('SELECT * FROM klima_raster WHERE spalte = ? AND zeile = ?');
+        $stmt->execute([$spalte, $zeile]);
+        $r = $stmt->fetch();
+        if ($r === false) {
+            return null; // außerhalb Deutschlands
+        }
+        $out = [];
+        foreach (['heiss', 'sommer', 'frost', 'eis', 'starkregen', 'schnee', 'sonne'] as $f) {
+            $out[$f] = [
+                'frueher' => $r["{$f}_6190"] !== null ? (float) $r["{$f}_6190"] : null,
+                'heute' => $r["{$f}_9120"] !== null ? (float) $r["{$f}_9120"] : null,
+            ];
+        }
+        return $out;
     }
 
     private function nearestWith(string $distanceExpr, float $lat, float $lon, string $requiredField): ?array

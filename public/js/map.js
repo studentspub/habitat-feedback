@@ -567,6 +567,21 @@
     if (climate.niederschlag) {
       rows.push(['Ø Jahresniederschlag', climate.niederschlag.jahreswert + ' mm']);
     }
+    // 1-km-Raster des DWD genau am Ort (Issue #19): heute (1991–2020) und
+    // in Klammern früher (1961–1990) — der Klimawandel vor der eigenen Haustür.
+    if (climate.raster) {
+      const r = climate.raster;
+      const kenntag = (label, w, einheit) => {
+        if (w.heute === null) return;
+        rows.push([label, Math.round(w.heute) + ' ' + einheit + (w.frueher !== null ? ' (früher ' + Math.round(w.frueher) + ')' : '')]);
+      };
+      kenntag('Heiße Tage ≥ 30 °C / Jahr', r.heiss, 'Tage');
+      kenntag('Sommertage ≥ 25 °C / Jahr', r.sommer, 'Tage');
+      kenntag('Frosttage / Jahr', r.frost, 'Tage');
+      kenntag('Tage mit Schneedecke', r.schnee, 'Tage');
+      kenntag('Starkregen ≥ 20 mm / Jahr', r.starkregen, 'Tage');
+      kenntag('Sonnenstunden / Jahr', r.sonne, 'h');
+    }
     if (air.index_label) {
       rows.push(['Luftqualität (' + air.station + ')', air.index_label + ' · PM10 ' + (air.werte.PM10 ?? '–') + ' · NO2 ' + (air.werte.NO2 ?? '–') + ' µg/m³']);
     } else {
@@ -574,7 +589,7 @@
     }
 
     card.innerHTML = rows.map(([k, v]) => '<div class="row"><span class="k">' + escapeHtml(k) + '</span><span class="v">' + escapeHtml(v) + '</span></div>').join('')
-      + '<div class="src">Klima: DWD, 1991–2020 · Luft: Umweltbundesamt' + (air.gemessen_bis ? ', Stand ' + escapeHtml(String(air.gemessen_bis).slice(0, 10)) : '') + '</div>';
+      + '<div class="src">Klima: Deutscher Wetterdienst, 1991–2020' + (climate.raster ? ' (Kenntage am Ort, 1-km-Raster; „früher“ = 1961–1990)' : '') + ' · Luft: Umweltbundesamt' + (air.gemessen_bis ? ', Stand ' + escapeHtml(String(air.gemessen_bis).slice(0, 10)) : '') + '</div>';
     card.classList.add('visible');
   }
 
@@ -1004,7 +1019,7 @@
     { selector: '.ratings-control', title: 'Bewertungen ein-/ausblenden', text: 'Blendet die farbigen Bewertungs-Punkte aus — praktisch, wenn du nur die Statistik-Ebenen sehen willst. Was Grün, Orange und Rotbraun bedeuten, erklärt die kleine Legende oben links unter dem Zoom-Regler.' },
     { selector: '.census-control', title: 'Amtliche Statistik', html: censusTourHtml },
     { selector: '.poi-control', title: 'Freizeit & Infrastruktur', html: poiTourHtml },
-    { selector: '.climate-control', title: 'Klima & Luft', text: 'Temperatur, Niederschlag und Luftqualität für die aktuelle Kartenmitte.' },
+    { selector: '.climate-control', title: 'Klima & Luft', text: 'Temperatur, Niederschlag und Luftqualität für die Kartenmitte — dazu heiße Tage, Frost, Schnee, Starkregen und Sonnenstunden genau an diesem Ort, heute und vor 30 Jahren.' },
     { selector: '.broadband-control', title: 'Breitband', text: 'Verfügbarkeit von schnellem Festnetz-Internet (≥ 50 Mbit/s).' },
     {
       selector: '.economy-control', title: 'Wirtschaft',
