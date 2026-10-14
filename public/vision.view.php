@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Vision – Habitat Feedback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.min.css">
 <style>
   html, body { margin: 0; height: 100%; font-family: sans-serif; }
   #map { height: 100%; }
@@ -65,7 +65,7 @@
   <a id="vision-back" href="/">Zur echten Karte</a>
 </div>
 <div id="map"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/vendor/leaflet-1.9.4/leaflet.min.js"></script>
 <script src="/js/de_maske.js"></script>
 <script>
   const map = L.map('map').setView([51.1657, 10.4515], 6); // Deutschland-Übersicht
