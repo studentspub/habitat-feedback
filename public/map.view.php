@@ -779,12 +779,13 @@
   // Kleines Dreieck als Inline-SVG statt divIcon-Text — SVG erlaubt einen
   // echten Rand (stroke) um die Farbfläche, der reine CSS-Border-Trick
   // für Dreiecke (Border-Winkel) kann das nicht sauber, siehe CSS-Kommentar
-  // bei .poi-triangle-icon. Rand 2,25 statt 1,5 (+50 %), daher 18er-Kachel,
-  // damit der dickere Rand nicht abgeschnitten wird.
+  // bei .poi-triangle-icon. Rand 2,25 statt 1,5 (+50 %); das Dreieck ist
+  // dafür größer (22 statt 16 px), sonst bleibt neben dem dicken Rand kaum
+  // Farbfläche übrig und alle Kategorien sähen grün aus.
   function poiTriangleIcon(color) {
-    const svg = '<svg width="18" height="18" viewBox="0 0 18 18">' +
-      '<polygon points="9,2.5 16.5,15.5 1.5,15.5" fill="' + color + '" stroke="' + POI_BORDER_COLOR + '" stroke-width="2.25" stroke-linejoin="round"/></svg>';
-    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [18, 18], iconAnchor: [9, 9] });
+    const svg = '<svg width="22" height="22" viewBox="0 0 22 22">' +
+      '<polygon points="11,2.5 20.5,19 1.5,19" fill="' + color + '" stroke="' + POI_BORDER_COLOR + '" stroke-width="2.25" stroke-linejoin="round"/></svg>';
+    return L.divIcon({ className: 'poi-triangle-icon', html: svg, iconSize: [22, 22], iconAnchor: [11, 11] });
   }
 
   const poiState = {};
