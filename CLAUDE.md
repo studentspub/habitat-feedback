@@ -2,7 +2,11 @@
 
 Bewertungsportal für Wohnlagen in Deutschland — Karte + strukturierte Kriterien-Bewertung (kein Freitext) auf Straßenabschnitts-Ebene, DSGVO-bewusst geplant.
 
-**Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Name „Habitat Feedback" ist vergeben (habitat-feedback.de, eingetragene Marke „Habitat Feedback®", Entscheidung des Nutzers 14.10.2026) und darf auf der Seite, in Texten und User-Agents nicht mehr vorkommen. Interne technische Namen heißen noch `habitat-feedback` (LXC 120, `/srv/habitat-feedback`, DB `habitat_feedback_dev`, systemd-Units `habitat-feedback-*`, SSH-Alias `habitat-feedback-lxc`) — Besucher sehen sie nicht.
+**Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Projektname ist als Marke einer anderen Seite vergeben und wird nirgends mehr verwendet (Entscheidung des Nutzers 14.10.2026). Die internen technischen Namen (Container, `/srv`-Pfad, DB, systemd-Units, SSH-Alias) werden in Issue #25 umgestellt; bis dahin stehen unten noch die alten.
+
+**Nur lokal:** Die Seite bleibt bis auf Weiteres im Homelab-Container und in WSL, kein Livegang, kein Strato (Nutzer 14.10.2026). Livegang-Themen sind in Issue #16 geparkt.
+
+**Board:** Aufträge laufen über GitHub-Projekt 3 „Habitat Feedback“ — Spalten, Labels und Issue-Vorlage in [`ZUSAMMENARBEIT_Claude.md`](ZUSAMMENARBEIT_Claude.md). Neue Datenquellen erst in [`DATENQUELLEN.md`](DATENQUELLEN.md) bewerten. Ergebnis-Kommentar im Issue mit `Ergebnis` / `Wo` / `Bitte prüfen` / `Offen`.
 
 Planungsdokumente (Konzept, Rechtsrahmen, technischer Bauplan): siehe Artifact-Links, die im Gesprächsverlauf geteilt wurden. Kurzfassung der Architektur:
 
