@@ -14,12 +14,13 @@ Planungsdokumente (Konzept, Rechtsrahmen, technischer Bauplan): siehe Artifact-L
 - **Granularität:** kleinste sichtbare Einheit ist der Straßenabschnitt, nicht die Hausnummer (Sichtbarkeitsschwellen: ≥ 6 Adressen, ≥ 3 Bewertungen).
 - **Karte:** Leaflet.js + OpenStreetMap.
 - **Geocoding:** Raspberry Pi als periodischer Worker (Nominatim + Overpass), läuft aktuell nur produktiv später — während der Entwicklung nicht benötigt.
+- **Adress-Vorschläge beim Tippen** nur aus dem eigenen Straßenverzeichnis (Tabelle `strassen`, `bin/import_strassen.php`, #15), nie live von Nominatim (Nutzungsrichtlinie). Nominatim fragt nur der Worker, einmal je abgeschickter Bewertung.
 
 ## Entwickeln in WSL, Container ist nur Testserver (Nutzer 14.10.2026)
 
 - **Entwickelt und getestet wird in WSL-Debian** (`http://localhost:8842`, Code wirkt sofort beim Speichern, siehe unten). Erst wenn es dort läuft: committen + pushen — der Container holt sich den Stand dann selbst.
 - Daten und Importe für die Entwicklung gehen in die **WSL-DB**; WSL während langer Läufe wachhalten (`wsl -d Debian -- sleep infinity`, sonst Idle-Stopp nach ~90 s). Im Container wird nur nachgezogen, was der Testserver braucht (Migration + Import).
-- Rohdaten-Downloads (VG250, INKAR …) in WSL unter `/srv/daten/`, nicht ins Repo.
+- Rohdaten-Downloads (VG250, INKAR, OSM-Extrakt …) in WSL unter `/srv/daten/`, nicht ins Repo.
 
 ## Test-Server im Homelab (seit 11.10.2026)
 

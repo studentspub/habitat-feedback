@@ -19,6 +19,7 @@ BBSR und beim DWD. Beide Lizenzen erlauben auch kommerzielle Nutzung, Pflicht is
 | Luftqualität | Umweltbundesamt, Luftdaten-API | nächste Station | `bin/import_air_stations.php` + live | UBA |
 | POIs (Spielplätze, Kitas, Ärzte, Supermärkte ...) | OpenStreetMap über Overpass | Punkt | `bin/import_poi.php` | ODbL |
 | Bushaltestellen | OpenStreetMap, Geofabrik-Extrakt | Punkt | `bin/import_bus_stops.php` | ODbL |
+| Straßenverzeichnis (Straße + PLZ + Ort, ohne Hausnummern) für die Adress-Vorschläge | OpenStreetMap, Geofabrik-Extrakt (Straßen, Adresspunkte, PLZ-Gebiete) | Straße | `bin/import_strassen.php` (#15), `/api/address-autocomplete` — vorher live über Nominatim | ODbL |
 | Zensus 2022 (Dichte, Alter, Miete, Eigentum, Leerstand) | Destatis, Gitterdaten-Downloads | 100 m / 1 km / 10 km | `bin/import_zensus.php` (#23), `/api/zensus` — vorher live über Esri/USA | dl-de/by-2.0 |
 | Breitband | Bundesnetzagentur, Breitbandatlas | WMS | **live** im Browser | BNetzA |
 | Gemeinde-/Kreisgrenzen (Zuordnung Punkt → Gemeinde/Kreis, Deutschland-Maske) | BKG VG250, Stand 31.12.2023 | Polygone | `bin/import_vg250.php`, `bin/build_de_grenze.php` (#17, #12) | dl-de/by-2.0 |

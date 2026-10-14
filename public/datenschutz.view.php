@@ -30,7 +30,8 @@
 <h2>Was beim Abgeben einer Bewertung passiert</h2>
 <p>Du gibst eine Adresse und fünf Bewertungskriterien (je 1–5) ein. Kein Freitext, kein Klarname, keine E-Mail-Pflicht.</p>
 <ul>
-  <li>Die Adresse wird verwendet, um sie einem <strong>Straßenabschnitt</strong> zuzuordnen (Koordinaten über den Kartendienst OpenStreetMap/Nominatim). Die genaue Hausnummer wird danach <strong>nicht dauerhaft gespeichert</strong> — in der Datenbank landet nur Straße, Abschnitt, Postleitzahl und Ort.</li>
+  <li>Die Straßen-Vorschläge beim Tippen kommen aus einem Straßenverzeichnis auf unserem eigenen Server (erstellt aus OpenStreetMap-Daten). Was du tippst, wird dabei an keinen anderen Dienst übermittelt.</li>
+  <li>Erst nach dem Absenden wird die Adresse einmal verwendet, um sie einem <strong>Straßenabschnitt</strong> zuzuordnen (Koordinaten über den Kartendienst OpenStreetMap/Nominatim; dabei übermittelt unser Server die Adresse, nicht deine IP-Adresse). Die genaue Hausnummer wird danach <strong>nicht dauerhaft gespeichert</strong> — in der Datenbank landet nur Straße, Abschnitt, Postleitzahl und Ort.</li>
   <li>Deine Bewertung wird erst öffentlich sichtbar, wenn der Abschnitt mindestens 6 unterschiedliche Adressen und mindestens 3 unabhängige Bewertungen erreicht hat. Einzelne Bewertungen werden nie angezeigt, nur der Durchschnitt.</li>
 </ul>
 

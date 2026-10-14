@@ -21,7 +21,7 @@
   </div>
   <div class="search-field">
     <span class="search-label">Adresse finden</span>
-    <input type="text" id="address-search" class="search-input" placeholder="Straße Nr., Ort …" autocomplete="off">
+    <input type="text" id="address-search" class="search-input" placeholder="Straße oder Ort …" autocomplete="off">
     <div id="address-suggestions" class="search-suggestions" hidden></div>
   </div>
 </div>

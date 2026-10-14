@@ -16,7 +16,11 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 10; margin-top: 2px;
   }
   #address-suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
-  #address-suggestions div:hover { background: #EBEEE5; }
+  #address-suggestions div:hover, #address-suggestions div.active { background: #EBEEE5; }
+  #address-suggestions div.hint { cursor: default; color: #4B564F; }
+  .address-row { display: flex; gap: 8px; align-items: flex-start; }
+  .address-row .address-wrap { flex: 1; }
+  #hausnummer { width: 6.5em; }
   .scale { display: flex; gap: 8px; margin-top: 6px; }
   .scale button {
     flex: 1; padding: 0.6em 0; border: 1px solid #CFD8C9; background: #FBFBF7;
@@ -40,11 +44,14 @@
 
 <form id="rating-form">
   <label for="address">Adresse
-    <div class="hint">Tippen und einen Vorschlag auswählen — vermeidet Tippfehler. Die genaue Hausnummer wird nach der Zuordnung nicht gespeichert.</div>
+    <div class="hint">Straße und Ort tippen und einen Vorschlag auswählen — vermeidet Tippfehler. Die Hausnummer braucht es nur, um den Straßenabschnitt zu finden; sie wird danach nicht gespeichert.</div>
   </label>
-  <div class="address-wrap">
-    <input type="text" id="address" name="address" required placeholder="Straße Hausnummer, PLZ Ort" autocomplete="off">
-    <div id="address-suggestions" hidden></div>
+  <div class="address-row">
+    <div class="address-wrap">
+      <input type="text" id="address" name="address" required placeholder="Straße, Ort" autocomplete="off" aria-label="Straße und Ort">
+      <div id="address-suggestions" hidden></div>
+    </div>
+    <input type="text" id="hausnummer" name="hausnummer" required placeholder="Nr." autocomplete="off" aria-label="Hausnummer" maxlength="12">
   </div>
 
   <div class="criteria">
@@ -70,102 +77,6 @@
 
 <footer><a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
-<script>
-  const criteria = ['ruhe', 'instandhaltung', 'umgangston', 'infrastruktur', 'sicherheit'];
-  const scores = {};
-
-  document.querySelectorAll('.scale').forEach(el => {
-    const key = el.dataset.key;
-    for (let i = 1; i <= 5; i++) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = i;
-      btn.addEventListener('click', () => {
-        scores[key] = i;
-        el.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-      el.appendChild(btn);
-    }
-  });
-
-  // Adress-Autovervollständigung — läuft über unseren eigenen Server-Proxy,
-  // nie direkt gegen Nominatim (siehe app/Http/AddressAutocompleteController.php)
-  const addressInput = document.getElementById('address');
-  const addressSuggestions = document.getElementById('address-suggestions');
-  let addressTimeout = null;
-
-  addressInput.addEventListener('input', () => {
-    clearTimeout(addressTimeout);
-    const q = addressInput.value.trim();
-    if (q.length < 4) {
-      addressSuggestions.hidden = true;
-      return;
-    }
-    addressTimeout = setTimeout(async () => {
-      const res = await fetch('/api/address-autocomplete?q=' + encodeURIComponent(q));
-      const data = await res.json();
-      addressSuggestions.innerHTML = '';
-      if (!data.results || data.results.length === 0) {
-        addressSuggestions.hidden = true;
-        return;
-      }
-      data.results.forEach(r => {
-        const item = document.createElement('div');
-        item.textContent = r.label;
-        item.addEventListener('click', () => {
-          addressInput.value = r.label;
-          addressSuggestions.hidden = true;
-        });
-        addressSuggestions.appendChild(item);
-      });
-      addressSuggestions.hidden = false;
-    }, 450); // deutlich träger als die Kartensuche — Nominatim braucht Abstand zwischen Anfragen
-  });
-
-  document.addEventListener('click', (e) => {
-    if (e.target !== addressInput) addressSuggestions.hidden = true;
-  });
-
-  document.getElementById('rating-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const resultEl = document.getElementById('result');
-    const submitBtn = document.getElementById('submit');
-
-    if (criteria.some(k => !scores[k])) {
-      resultEl.hidden = false;
-      resultEl.className = 'error';
-      resultEl.textContent = 'Bitte alle fünf Kriterien bewerten.';
-      return;
-    }
-
-    submitBtn.disabled = true;
-    try {
-      const res = await fetch('/api/ratings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: document.getElementById('address').value, scores })
-      });
-      const data = await res.json();
-      resultEl.hidden = false;
-      if (res.ok) {
-        resultEl.className = 'ok';
-        resultEl.textContent = data.hinweis || 'Danke, deine Bewertung wurde übermittelt.';
-        document.getElementById('rating-form').reset();
-        document.querySelectorAll('.scale button.active').forEach(b => b.classList.remove('active'));
-        Object.keys(scores).forEach(k => delete scores[k]);
-      } else {
-        resultEl.className = 'error';
-        resultEl.textContent = data.error || 'Etwas ist schiefgelaufen.';
-      }
-    } catch (err) {
-      resultEl.hidden = false;
-      resultEl.className = 'error';
-      resultEl.textContent = 'Verbindung fehlgeschlagen. Bitte später erneut versuchen.';
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-</script>
+<script src="/js/bewerten.js?v=<?= filemtime(__DIR__ . '/js/bewerten.js') ?>"></script>
 </body>
 </html>

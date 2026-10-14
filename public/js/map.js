@@ -1091,11 +1091,11 @@
     if (e.target !== searchInput) suggestions.hidden = true;
   });
 
-  // „Adresse finden" (Issue #14) — jede Adresse in Deutschland, nur zum
-  // Hinspringen: kein Pin, keine Bewertungsdaten (sonst verriete das Feld,
-  // ob eine noch unsichtbare Adresse schon bewertet wurde). Läuft über den
-  // Server-Proxy /api/address-autocomplete (Cache + Nominatim-Drossel), mit
-  // denselben Regeln wie im Bewertungsformular: ab 4 Zeichen, 450 ms Pause.
+  // „Adresse finden" (Issue #14) — jede Straße und jeder Ort in Deutschland,
+  // nur zum Hinspringen: kein Pin, keine Bewertungsdaten (sonst verriete das
+  // Feld, ob eine noch unsichtbare Adresse schon bewertet wurde). Vorschläge
+  // aus dem eigenen Straßenverzeichnis plus Gemeinden (Issue #15, orte=1) —
+  // kein externer Dienst, daher ab 3 Zeichen und mit kurzer Pause.
   const addressSearch = document.getElementById('address-search');
   const addressSuggestions = document.getElementById('address-suggestions');
   let addressTimeout = null;
@@ -1103,33 +1103,38 @@
   addressSearch.addEventListener('input', () => {
     clearTimeout(addressTimeout);
     const q = addressSearch.value.trim();
-    if (q.length < 4) {
+    if (q.length < 3) {
       addressSuggestions.hidden = true;
       return;
     }
     addressTimeout = setTimeout(async () => {
-      const data = await holeJson('adresse', '/api/address-autocomplete?q=' + encodeURIComponent(q));
+      const data = await holeJson('adresse', '/api/address-autocomplete?orte=1&q=' + encodeURIComponent(q));
       if (!data) return;
       addressSuggestions.innerHTML = '';
       const treffer = (data.results || []).filter(r => r.lat !== undefined);
       if (treffer.length === 0) {
         const leer = document.createElement('div');
         leer.className = 'hint';
-        leer.textContent = data.hinweis ? 'Kurz warten, dann weitertippen …' : 'Keine Adresse gefunden.';
+        leer.textContent = data.hinweis ? 'Straßenverzeichnis nicht verfügbar.' : 'Keine Straße und kein Ort gefunden.';
         addressSuggestions.appendChild(leer);
       }
       treffer.forEach(r => {
         const item = document.createElement('div');
         item.textContent = r.label;
         item.addEventListener('click', () => {
-          map.setView([r.lat, r.lon], 17);
+          if (r.bbox) {
+            // Gemeinde: ganzen Ort zeigen, [minLon, minLat, maxLon, maxLat]
+            map.fitBounds([[r.bbox[1], r.bbox[0]], [r.bbox[3], r.bbox[2]]], { maxZoom: 14 });
+          } else {
+            map.setView([r.lat, r.lon], 17);
+          }
           addressSuggestions.hidden = true;
           addressSearch.value = r.label;
         });
         addressSuggestions.appendChild(item);
       });
       addressSuggestions.hidden = false;
-    }, 450);
+    }, 200);
   });
 
   document.addEventListener('click', (e) => {

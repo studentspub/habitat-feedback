@@ -10,8 +10,9 @@
  * weiterhin normal über Overpass, nur Bushaltestellen brauchen diesen Weg.
  *
  * Voraussetzung: osmium-tool installiert (apt install osmium-tool) und ein
- * Deutschland-Extrakt von Geofabrik heruntergeladen:
- *   curl -L -o germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
+ * Deutschland-Extrakt von Geofabrik heruntergeladen (seit #15 unter
+ * /srv/daten/osm/, den nutzt auch bin/import_strassen.php):
+ *   curl -L -o /srv/daten/osm/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
  * (ca. 4,8 GB — kein Overpass-Query, daher kein Timeout-/Rate-Limit-Risiko.)
  *
  * Verarbeitung lokal über osmium (kein PHP-PBF-Parser nötig, siehe
@@ -27,7 +28,7 @@ require __DIR__ . '/../app/Support/Db.php';
 
 use App\Support\Db;
 
-const PBF_PATH = '/tmp/germany-latest.osm.pbf';
+const PBF_PATH = '/srv/daten/osm/germany-latest.osm.pbf';
 const FILTERED_PBF = '/tmp/bus_stops.osm.pbf';
 const GEOJSON_PATH = '/tmp/bus_stops.geojson';
 

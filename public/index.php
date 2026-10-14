@@ -12,8 +12,8 @@ spl_autoload_register(function (string $class): void {
 });
 
 // Sicherheits-Header für alle Antworten (Issue #9). Die Content-Security-Policy
-// gilt bisher nur für die Kartenseite (siehe Route '/'): nur dort ist das JS
-// ausgelagert (Issue #13); die übrigen Seiten haben noch Inline-Skripte.
+// gilt bisher für die Kartenseite (Route '/', JS ausgelagert in #13) und das
+// Bewertungsformular ('/bewerten', #15); die übrigen Seiten haben noch Inline-Skripte.
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: DENY');
@@ -126,6 +126,9 @@ if ($uri === '/' || $uri === '/index.php') {
 }
 
 if ($uri === '/bewerten') {
+    // Nur eigenes JS (public/js/bewerten.js) und Anfragen an den eigenen Server — auch die Straßen-Vorschläge (#15).
+    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        . "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
     require __DIR__ . '/bewerten.view.php';
     return;
 }
