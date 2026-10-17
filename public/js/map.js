@@ -50,12 +50,26 @@
       '<div class="hint">Öffnet Google Maps in einem neuen Tab — sofern Google an dieser Stelle Bilder hat. Männchen verschieben, um die Stelle zu ändern.</div></div>';
   }
 
+  // Nach dem Absetzen per Finger (Handy, Rückmeldung in #27) war das Männchen
+  // bis zum nächsten Neuzeichnen unsichtbar. Deshalb nach jedem Ziehen: Marker
+  // neu aufsetzen (frisches Icon an der neuen Stelle), Kartengröße neu lesen
+  // und die Karte so nachziehen, dass Männchen und Popup im Bild sind.
+  function streetViewMarkerAuffrischen() {
+    if (!streetViewMarker) return;
+    const latlng = streetViewMarker.getLatLng();
+    map.removeLayer(streetViewMarker);
+    map.invalidateSize({ pan: false });
+    streetViewMarker.addTo(map);
+    map.panInside(latlng, { paddingTopLeft: [20, 150], paddingBottomRight: [20, 70] });
+    streetViewMarker.openPopup();
+  }
+
   function placeStreetViewMarker(latlng) {
     if (streetViewMarker) map.removeLayer(streetViewMarker);
     streetViewMarker = L.marker(latlng, { icon: PEGMAN_ICON, draggable: true, autoPan: true }).addTo(map);
     streetViewMarker.bindPopup(() => streetViewPopupHtml(streetViewMarker.getLatLng()), { offset: [0, -18] });
     streetViewMarker.on('dragstart', () => streetViewMarker.closePopup());
-    streetViewMarker.on('dragend', () => streetViewMarker.openPopup());
+    streetViewMarker.on('dragend', streetViewMarkerAuffrischen);
     streetViewMarker.openPopup();
     document.querySelector('.streetview-control a').classList.add('active');
   }
