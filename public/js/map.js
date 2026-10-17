@@ -234,7 +234,8 @@
   // Rasterstufen hinweg gleich eingeteilt.
   const CENSUS_METRICS = [
     {
-      key: 'population', label: 'Einwohnerdichte', field: 'Einwohner', unit: 'Einw.',
+      // ­ = weiche Trennstelle: unsichtbar, erlaubt in schmalen Feldern (Tablet, #27) einen sauberen Umbruch.
+      key: 'population', label: 'Einwohner­dichte', field: 'Einwohner', unit: 'Einw.',
       breaksByLayer: {
         0: [
           { max: 9, color: '#EFF3FF' }, { max: 49, color: '#BDD7E7' }, { max: 99, color: '#6BAED6' },
@@ -272,7 +273,7 @@
       labels: ['bis 6€', '6–8€', '8–10€', '10–13€', 'ab 13€']
     },
     {
-      key: 'ownership', label: 'Eigentümerquote', field: 'Eigentuemerquote', unit: '%',
+      key: 'ownership', label: 'Eigentümer­quote', field: 'Eigentuemerquote', unit: '%',
       breaks: [
         { max: 20, color: '#EDF8E9' }, { max: 40, color: '#BAE4B3' }, { max: 60, color: '#74C476' },
         { max: 80, color: '#31A354' }, { max: Infinity, color: '#006D2C' }
@@ -280,7 +281,7 @@
       labels: ['bis 20%', '20–40%', '40–60%', '60–80%', 'ab 80%']
     },
     {
-      key: 'vacancy', label: 'Leerstandsquote', field: 'Leerstandsquote', unit: '%',
+      key: 'vacancy', label: 'Leerstands­quote', field: 'Leerstandsquote', unit: '%',
       breaks: [
         { max: 2, color: '#FEE5D9' }, { max: 4, color: '#FCAE91' }, { max: 6, color: '#FB6A4A' },
         { max: 10, color: '#DE2D26' }, { max: Infinity, color: '#A50F15' }
@@ -293,6 +294,17 @@
   // von einer neueren Anfrage überholte Anzeige wieder aufleben lässt).
   const censusState = {};
   CENSUS_METRICS.forEach(m => { censusState[m.key] = { layer: null, enabled: false, requestId: 0 }; });
+
+  // Zensus-Zellen auf Canvas (Issue #26): als SVG war jede Zelle ein eigenes
+  // <path>-Element - bei zwei Kennzahlen auf Stadtteil-Zoom über 2.000, bis
+  // zu 8.000 auf großen Bildschirmen -, dasselbe Problem wie die POI-Marker
+  // vor #13. Ein gemeinsamer Canvas für alle Kennzahlen zeichnet alles in
+  // ein Bild. Eigene Ebene zwischen Nebel (350) und den übrigen Daten-Ebenen
+  // (overlayPane 400): so liegt der Zensus immer unter Pins, POIs, Unfällen
+  // und ÖPNV, egal in welcher Reihenfolge die Ebenen eingeschaltet wurden
+  // (bringToBack() ordnet nur innerhalb eines Renderers, nicht Canvas gegen Canvas).
+  map.createPane('zensusPane').style.zIndex = 380;
+  const zensusRenderer = L.canvas({ padding: 0.5, pane: 'zensusPane' });
 
   function viewportAreaKm2() {
     const b = map.getBounds();
@@ -366,13 +378,15 @@
     // statt fälschlich in die unterste Stufe zu fallen.
     geojson.features = geojson.features.filter(f => f.properties[metric.field] !== null && f.properties[metric.field] !== undefined);
 
+    // interactive: false - die Zellen haben weder Popup noch Tooltip; sonst
+    // prüfte der Canvas bei jeder Mausbewegung alle Zellen auf Treffer.
     state.layer = L.geoJSON(geojson, {
+      renderer: zensusRenderer, pane: 'zensusPane', interactive: false,
       style: f => ({
         fillColor: breaks.find(br => f.properties[metric.field] <= br.max).color,
         fillOpacity: CENSUS_FILL_OPACITY, color: 'rgba(27,36,32,0.15)', weight: 1
       })
     }).addTo(map);
-    state.layer.bringToBack();
   }
 
   const CensusControl = L.Control.extend({
@@ -924,7 +938,8 @@
       return el;
     }
   });
-  map.addControl(new RegionControl());
+  const regionControl = new RegionControl();
+  map.addControl(regionControl);
 
   document.getElementById('region-btn').addEventListener('click', (e) => {
     regionEnabled = !regionEnabled;
@@ -1052,6 +1067,51 @@
       ebenenLegendeAktualisieren();
     });
   });
+
+  // Handy-Layout (Issue #27): unter 760 px Breite liegen die Bedienfelder nicht
+  // mehr dauerhaft auf der Karte (sie verdeckten sie dort komplett), sondern
+  // in einer Schublade von unten, die der Knopf „Ebenen“ unten rechts öffnet.
+  // Die Schublade IST der Leaflet-Container unten rechts (CSS in map.css,
+  // body.ebenen-offen); die Felder bleiben dieselben Elemente mit denselben
+  // IDs, das Tutorial findet sie weiter. Nur per DOM verschoben werden die
+  // drei Entdecken-Knöpfe und das Lebensqualität-Feld (oben rechts -> in die
+  // Schublade) sowie die Quellenangabe (nach unten links, damit sie bei
+  // geschlossener Schublade sichtbar bleibt). Bewusst kein setPosition():
+  // das riefe onAdd() neu auf und verlöre die gebundenen Klick-Handler.
+  const HANDY = window.matchMedia('(max-width: 760px)');
+  const schublade = document.querySelector('.leaflet-bottom.leaflet-right');
+  schublade.id = 'ebenen-schublade';
+  const schubladeKopf = L.DomUtil.create('div', 'ebenen-kopf', schublade);
+  schubladeKopf.innerHTML = '<span>Ebenen &amp; Kennzahlen</span><button type="button" id="ebenen-schliessen" aria-label="Schließen">✕</button>';
+  // Tippen und Wischen auf dem Schubladen-Hintergrund darf die Karte nicht bewegen.
+  L.DomEvent.disableClickPropagation(schublade);
+  L.DomEvent.disableScrollPropagation(schublade);
+
+  function schubladeZeigen(offen) {
+    document.body.classList.toggle('ebenen-offen', offen);
+    document.getElementById('ebenen-btn').setAttribute('aria-expanded', offen ? 'true' : 'false');
+  }
+
+  function handyLayout(aktiv) {
+    const discover = document.getElementById('discover-group');
+    const region = regionControl.getContainer();
+    const quelle = map.attributionControl.getContainer();
+    if (aktiv) {
+      schublade.appendChild(discover);
+      schublade.appendChild(region);
+      document.querySelector('.leaflet-bottom.leaflet-left').appendChild(quelle);
+    } else {
+      document.body.insertBefore(discover, document.getElementById('search-group'));
+      document.querySelector('.leaflet-top.leaflet-right').appendChild(region);
+      schublade.appendChild(quelle);
+      schubladeZeigen(false);
+    }
+  }
+  handyLayout(HANDY.matches);
+  HANDY.addEventListener('change', e => handyLayout(e.matches));
+  document.getElementById('ebenen-btn').addEventListener('click', () => schubladeZeigen(true));
+  document.getElementById('ebenen-schliessen').addEventListener('click', () => schubladeZeigen(false));
+  map.on('click', () => { if (HANDY.matches) schubladeZeigen(false); });
 
   // Suche mit Autovervollständigung
   const searchInput = document.getElementById('search');
@@ -1223,7 +1283,7 @@
       width: (r.width + pad * 2) + 'px', height: (r.height + pad * 2) + 'px'
     });
 
-    const tw = 320;
+    const tw = Math.min(320, window.innerWidth - 20); // Handy: schmaler als der Bildschirm (Issue #27)
     let left = r.left + r.width / 2 - tw / 2;
     left = Math.max(10, Math.min(left, window.innerWidth - tw - 10));
     // Reichhaltigere Schritte (Listen mit bis zu 8 Einträgen) sind deutlich
@@ -1258,6 +1318,19 @@
     const step = TOUR_STEPS[tourStep];
     if (prevStep && prevStep !== step && prevStep.onLeave) prevStep.onLeave();
     if (step.onEnter) step.onEnter();
+    // Handy (Issue #27): Ziele in der Schublade brauchen die offene Schublade,
+    // für alle anderen muss sie zu sein, sonst verdeckt sie die Karte.
+    if (HANDY.matches) {
+      const ziel = document.querySelector(step.selector);
+      const inSchublade = schublade.contains(ziel);
+      schubladeZeigen(inSchublade);
+      // Kein scrollIntoView(): das scrollt auch den #map-Container (overflow:
+      // hidden) mit, Leaflet setzt ihn gleich zurück und der Rahmen säße falsch.
+      if (inSchublade) {
+        const abstand = ziel.getBoundingClientRect().top - schublade.getBoundingClientRect().top;
+        schublade.scrollTop += abstand - (schublade.clientHeight - ziel.offsetHeight) / 2;
+      }
+    }
     tourPosition(step);
     // onEnter kann Panels asynchron nachladen (z.B. Wirtschaft) — die
     // Zielgröße ändert sich dadurch erst nach der Antwort, daher eine kurze
@@ -1280,6 +1353,7 @@
     tourClickguard.hidden = true;
     tourSpotlight.hidden = true;
     tourTooltip.hidden = true;
+    if (HANDY.matches) schubladeZeigen(false);
   }
 
   function tourNext() {

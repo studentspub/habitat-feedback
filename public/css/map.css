@@ -407,3 +407,74 @@
   /* Hinweis im Nebel außerhalb Deutschlands (Issue #12, public/js/de_maske.js). */
   .maske-hinweis { background: none; border: none; color: #31576D; font-size: 0.72rem; font-weight: 700;
     text-align: center; line-height: 1.3; text-shadow: 0 0 3px #EBEEE5, 0 0 6px #EBEEE5; }
+
+  /* ---- Handy und Tablet (Issue #27) ------------------------------------------
+     Auf dem Desktop ändert sich nichts. Der „Ebenen“-Knopf und der Schubladen-
+     Kopf existieren zwar immer im DOM (map.js), sind aber nur unter 760 px
+     sichtbar. Dort wird der Leaflet-Container unten rechts (alle Bedienfelder
+     plus, per JS verschoben, Lebensqualität und die Entdecken-Knöpfe) zur
+     Schublade: body.ebenen-offen blendet ihn als scrollbare Fläche von unten ein,
+     sonst ist er weg und die Karte frei. */
+  #ebenen-btn, .ebenen-kopf { display: none; }
+
+  /* Tablet: Desktop-Aufbau, aber schmalere Felder, und die Entdecken-Knöpfe
+     rechts neben der Suche statt mittig (bei 768 px lägen sie sonst darüber). */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    .census-control, .poi-control, .ratings-control, .climate-control, .broadband-control, .economy-control { width: 200px; overflow-x: hidden; }
+    .region-control { width: 230px; }
+    /* Lange Beschriftungen („Eigentümerquote“) brechen in den schmaleren Feldern an den
+       weichen Trennstellen aus map.js um, statt das Feld zu sprengen. */
+    .census-metric-grid, .poi-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .census-metric-btn, .poi-metric-btn { min-width: 0; overflow-wrap: break-word; }
+    /* Entdecken-Knöpfe in einer Reihe unter der Suche, rechts neben dem Zoom-Regler
+       (zwischen Suche und „Straße bewerten?“ ist bei 768 px kein Platz mehr). */
+    #discover-group { top: 132px; left: 56px; transform: none; }
+    #tutorial-btn, #vision-link, #examples-btn { font-size: 0.78rem; padding: 0.45em 0.9em; flex: none; }
+    #rate-cta-heading { display: none; }
+  }
+
+  @media (max-width: 760px) {
+    /* Oben: beide Suchfelder über die volle Breite, Zoom/Legende/Männchen darunter. */
+    #search-group { width: auto; right: 10px; }
+    .leaflet-top.leaflet-left { top: 132px; }
+    .leaflet-top.leaflet-right { display: none; } /* Lebensqualität sitzt auf dem Handy in der Schublade */
+
+    /* Unten: links Rechtliches, Maßstab und Quelle; rechts der Ebenen-Knopf;
+       dazwischen der Bewerten-Knopf ohne Überschrift. */
+    #rate-cta { top: auto; bottom: 10px; left: 10px; right: 112px; padding: 0; background: none; box-shadow: none; }
+    #rate-cta-heading { display: none; }
+    #rate-link { padding: 0.8em 1em; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+    #ebenen-btn {
+      display: block; position: absolute; bottom: 10px; right: 10px; z-index: 1000;
+      padding: 0.8em 1em; border: none; border-radius: 6px; background: #31576D; color: white;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.3); white-space: nowrap;
+    }
+    #legal { bottom: 60px; left: 10px; font-size: 0.72rem; padding: 3px 8px; }
+    .leaflet-bottom.leaflet-left { bottom: 86px; }
+    .leaflet-control-attribution { font-size: 10px; max-width: calc(100vw - 20px); }
+    #welcome-overlay { bottom: 62px; }
+
+    /* Die Schublade. */
+    .leaflet-bottom.leaflet-right { display: none; }
+    body.ebenen-offen .leaflet-bottom.leaflet-right {
+      display: flex; flex-flow: column nowrap; direction: ltr; align-content: stretch;
+      left: 0; right: 0; bottom: 0; max-height: 72vh; overflow-y: auto; touch-action: pan-y;
+      pointer-events: auto; gap: 8px; padding: 0 10px 12px; z-index: 1100;
+      background: rgba(242,244,239,0.98); border-radius: 14px 14px 0 0; box-shadow: 0 -2px 12px rgba(0,0,0,0.25);
+    }
+    body.ebenen-offen #ebenen-btn, body.ebenen-offen #rate-cta, body.ebenen-offen #welcome-overlay { display: none; }
+    .ebenen-kopf {
+      display: flex; order: -3; position: sticky; top: 0; z-index: 1; align-items: center; justify-content: space-between;
+      margin: 0 -10px; padding: 10px 14px; background: #1B2420; color: white; font-weight: 700; font-size: 0.95rem;
+    }
+    .ebenen-kopf button { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; padding: 4px 6px; line-height: 1; }
+    #discover-group { position: static; transform: none; order: -2; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
+    #tutorial-btn, #vision-link, #examples-btn { font-size: 0.8rem; padding: 0.5em 0.9em; }
+    .region-control { order: -1; }
+    /* Die Felder füllen die Schublade in der Breite, nur die Schublade selbst scrollt. */
+    .census-control, .poi-control, .ratings-control, .climate-control, .broadband-control, .economy-control, .region-control {
+      width: auto; max-height: none; overflow: visible;
+    }
+    .region-card { max-height: none; }
+    .census-metric-grid, .poi-metric-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
