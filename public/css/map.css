@@ -32,7 +32,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 1001; margin-top: 2px;
   }
   .search-suggestions div { padding: 0.6em 0.8em; cursor: pointer; font-size: 0.9rem; }
-  .search-suggestions div:hover { background: #EBEEE5; }
+  .search-suggestions div:hover, .search-suggestions div.active { background: #EBEEE5; } /* .active = per Pfeiltaste markiert (#28) */
   .search-suggestions .hint { cursor: default; color: #7C877E; font-size: 0.8rem; }
   .search-suggestions .hint:hover { background: none; }
 

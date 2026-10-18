@@ -119,17 +119,32 @@
   // Anfragen, deren Antworten ohnehin verworfen würden — bisher wurden sie
   // trotzdem vollständig geladen. Je Name läuft höchstens eine Anfrage;
   // abgebrochen liefert holeJson() null.
+  //
+  // Rückgabe (Issue #28): Objekt = Daten; null = abgebrochen, weil eine neuere
+  // Anfrage läuft (nichts tun, die neuere aktualisiert die Anzeige); false =
+  // fehlgeschlagen (Server weg, Netz weg, HTTP-Fehler) - dann zeigen die
+  // Kärtchen einen Hinweis statt für immer „Lädt…“. Je Name wird ein Fehler nur
+  // einmal in der Konsole gemeldet, bis es wieder klappt.
   const laufendeAnfragen = {};
+  const gemeldeteFehler = {};
+  const NICHT_ERREICHBAR = 'Daten gerade nicht erreichbar. Beim nächsten Verschieben der Karte wird es erneut versucht.';
   async function holeJson(name, url) {
     if (laufendeAnfragen[name]) laufendeAnfragen[name].abort();
     const controller = new AbortController();
     laufendeAnfragen[name] = controller;
     try {
       const res = await fetch(url, { signal: controller.signal });
-      return await res.json();
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      delete gemeldeteFehler[name];
+      return data;
     } catch (e) {
       if (e.name === 'AbortError') return null;
-      throw e;
+      if (!gemeldeteFehler[name]) {
+        gemeldeteFehler[name] = true;
+        console.warn('Anfrage „' + name + '“ fehlgeschlagen (' + url + '): ' + e.message);
+      }
+      return false;
     }
   }
 
@@ -196,7 +211,8 @@
     const el = e.popup.getElement() && e.popup.getElement().querySelector('.unfall-zeile');
     if (!el) return;
     const u = await holeJson('unfall-popup', '/api/unfaelle?' + new URLSearchParams({ lat: el.dataset.lat, lon: el.dataset.lon, radius: 250 }));
-    if (!u) return;
+    if (u === null) return;
+    if (u === false) { el.textContent = 'Unfalldaten gerade nicht erreichbar.'; return; }
     el.textContent = u.jahre
       ? 'Unfälle mit Personenschaden in 250 m (' + u.jahre + '): ' + u.gesamt + ' — davon ' + u.rad + ' mit Rad, ' + u.fuss + ' mit Fußgängern'
       : 'Keine Unfalldaten geladen.';
@@ -587,9 +603,14 @@
       holeJson('klima', '/api/climate?' + mitte),
       holeJson('luft', '/api/air-quality?' + mitte)
     ]);
-    if (!climate || !air) return;
+    if (climate === null || air === null) return; // abgebrochen, neuere Anfrage läuft
 
     if (myRequestId !== climateRequestId || !climateEnabled) return;
+    if (climate === false || air === false) {
+      hint.textContent = NICHT_ERREICHBAR;
+      card.classList.remove('visible');
+      return;
+    }
 
     hint.textContent = 'Werte für die Kartenmitte — beim Verschieben der Karte aktualisiert sich die Anzeige.';
 
@@ -730,9 +751,14 @@
 
     hint.textContent = 'Lädt…';
     const data = await holeJson('wirtschaft', '/api/economy?' + new URLSearchParams(rasterMitte()));
-    if (!data) return;
+    if (data === null) return; // abgebrochen, neuere Anfrage läuft
 
     if (myRequestId !== economyRequestId || !economyEnabled) return;
+    if (data === false) {
+      hint.textContent = NICHT_ERREICHBAR;
+      card.classList.remove('visible');
+      return;
+    }
 
     const ort = data.gemeinde && data.gemeinde.name !== (data.kreis || '').split(',')[0] ? data.gemeinde.name + ', ' + (data.kreis || '–') : (data.kreis || '–');
     hint.textContent = 'Werte für den Kreis der Kartenmitte (' + ort + ') — beim Verschieben der Karte aktualisiert sich die Anzeige.';
@@ -877,7 +903,12 @@
       holeJson('unfall-umkreis', '/api/unfaelle?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 500 })),
       holeJson('oepnv-umkreis', '/api/oepnv?' + new URLSearchParams({ lat: c.lat.toFixed(3), lon: c.lng.toFixed(3), radius: 600 }))
     ]);
-    if (!data || myRequestId !== regionRequestId || !regionEnabled) return;
+    if (data === null || myRequestId !== regionRequestId || !regionEnabled) return;
+    if (data === false) {
+      hint.textContent = NICHT_ERREICHBAR;
+      card.classList.remove('visible');
+      return;
+    }
     if (!data.gemeinde) {
       hint.textContent = 'Die Kartenmitte liegt außerhalb Deutschlands.';
       card.classList.remove('visible');
@@ -1127,9 +1158,47 @@
   document.getElementById('ebenen-schliessen').addEventListener('click', () => schubladeZeigen(false));
   map.on('click', () => { if (HANDY.matches) schubladeZeigen(false); });
 
-  // Suche mit Autovervollständigung
+  // Tastaturbedienung für die Vorschlagslisten beider Suchfelder (Issue #28, wie
+  // im Bewertungsformular bewerten.js): Pfeil hoch/runter markiert, Enter wählt
+  // den markierten Eintrag (löst dessen Klick aus), Escape schließt. Einträge
+  // sind die div[data-i] in der Liste; Hinweiszeilen (.hint) zählen nicht mit.
+  // Rückgabe: Funktion, die die Markierung beim Neuaufbau der Liste zurücksetzt.
+  function tastaturFuerVorschlaege(input, liste) {
+    let markiert = -1;
+    const eintraege = () => liste.querySelectorAll('div[data-i]');
+    function markieren(i) {
+      const items = eintraege();
+      markiert = items.length ? Math.max(-1, Math.min(i, items.length - 1)) : -1;
+      items.forEach((el, k) => el.classList.toggle('active', k === markiert));
+    }
+    input.addEventListener('keydown', (e) => {
+      if (liste.hidden) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        markieren(markiert + (e.key === 'ArrowDown' ? 1 : -1));
+      } else if (e.key === 'Enter' && markiert >= 0) {
+        e.preventDefault();
+        eintraege()[markiert].click();
+      } else if (e.key === 'Escape') {
+        liste.hidden = true;
+      }
+    });
+    return () => { markiert = -1; };
+  }
+
+  function hinweisZeile(liste, text) {
+    const leer = document.createElement('div');
+    leer.className = 'hint';
+    leer.textContent = text;
+    liste.appendChild(leer);
+  }
+
+  // Suche mit Autovervollständigung: bereits sichtbare, bewertete Abschnitte.
+  // Über holeJson() (Issue #28): eine langsame alte Antwort kann eine neuere
+  // nicht mehr überschreiben, Ausfälle zeigen einen Hinweis statt nichts.
   const searchInput = document.getElementById('search');
   const suggestions = document.getElementById('suggestions');
+  const sucheZuruecksetzen = tastaturFuerVorschlaege(searchInput, suggestions);
   let searchTimeout = null;
 
   searchInput.addEventListener('input', () => {
@@ -1140,15 +1209,22 @@
       return;
     }
     searchTimeout = setTimeout(async () => {
-      const res = await fetch('/api/search?q=' + encodeURIComponent(q));
-      const data = await res.json();
+      const data = await holeJson('suche', '/api/search?q=' + encodeURIComponent(q));
+      if (data === null) return;
       suggestions.innerHTML = '';
+      sucheZuruecksetzen();
+      if (data === false) {
+        hinweisZeile(suggestions, 'Suche gerade nicht erreichbar.');
+        suggestions.hidden = false;
+        return;
+      }
       if (!data.results || data.results.length === 0) {
         suggestions.hidden = true;
         return;
       }
-      data.results.forEach(r => {
+      data.results.forEach((r, i) => {
         const item = document.createElement('div');
+        item.dataset.i = i;
         item.textContent = r.street_name + ' (Abschnitt ' + r.segment_index + '), ' + r.postal_code + ' ' + r.city;
         item.addEventListener('click', () => {
           map.setView([r.centroid_lat, r.centroid_lon], 16);
@@ -1172,6 +1248,7 @@
   // kein externer Dienst, daher ab 3 Zeichen und mit kurzer Pause.
   const addressSearch = document.getElementById('address-search');
   const addressSuggestions = document.getElementById('address-suggestions');
+  const adresseZuruecksetzen = tastaturFuerVorschlaege(addressSearch, addressSuggestions);
   let addressTimeout = null;
 
   addressSearch.addEventListener('input', () => {
@@ -1183,17 +1260,21 @@
     }
     addressTimeout = setTimeout(async () => {
       const data = await holeJson('adresse', '/api/address-autocomplete?orte=1&q=' + encodeURIComponent(q));
-      if (!data) return;
+      if (data === null) return;
       addressSuggestions.innerHTML = '';
+      adresseZuruecksetzen();
+      if (data === false) {
+        hinweisZeile(addressSuggestions, 'Suche gerade nicht erreichbar.');
+        addressSuggestions.hidden = false;
+        return;
+      }
       const treffer = (data.results || []).filter(r => r.lat !== undefined);
       if (treffer.length === 0) {
-        const leer = document.createElement('div');
-        leer.className = 'hint';
-        leer.textContent = data.hinweis ? 'Straßenverzeichnis nicht verfügbar.' : 'Keine Straße und kein Ort gefunden.';
-        addressSuggestions.appendChild(leer);
+        hinweisZeile(addressSuggestions, data.hinweis ? 'Straßenverzeichnis nicht verfügbar.' : 'Keine Straße und kein Ort gefunden.');
       }
-      treffer.forEach(r => {
+      treffer.forEach((r, i) => {
         const item = document.createElement('div');
+        item.dataset.i = i;
         item.textContent = r.label;
         item.addEventListener('click', () => {
           if (r.bbox) {

@@ -29,9 +29,11 @@ final class SearchController
              ORDER BY s.street_name, s.segment_index
              LIMIT 15'
         );
+        // %, _ und \ sind in LIKE Platzhalter - geschützt sucht "100%" wirklich nach "100%" (Issue #28).
+        $muster = '%' . addcslashes($q, '%_\\') . '%';
         $stmt->execute([
-            'q1' => '%' . $q . '%',
-            'q2' => '%' . $q . '%',
+            'q1' => $muster,
+            'q2' => $muster,
             'min_addr' => $visibility['min_address_count'],
             'min_ratings' => $visibility['min_rating_count'],
         ]);
