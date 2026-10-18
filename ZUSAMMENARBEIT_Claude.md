@@ -9,9 +9,10 @@ Stand: 14.10.2026. Repo `studentspub/habitat-feedback`, **Projekt 3 „Habitat F
 
 ## 0. Rahmen
 
-- **Die Seite bleibt lokal** (Entscheidung des Users 14.10.2026): Sie läuft nur im Homelab-Container und in WSL,
-  kein Livegang, kein Strato. Ideen, die nur für einen Livegang nötig wären (Strato-Anpassung, Cloudflare,
-  Impressum-Adressdienst, Lasttest gegen Strato), werden nicht umgesetzt, sondern landen in `Future toDo`.
+- **Ziel ist die Veröffentlichung auf Strato** (User 18.10.2026; vom 14. bis 18.10. galt „nur lokal“). Entwickelt
+  und getestet wird weiter in WSL und im Homelab-Container. Jede Änderung muss Strato-tauglich sein (siehe
+  `CLAUDE.md`); Livegang-Themen (Strato-Probelauf, Cloudflare, Impressum-Adressdienst, DB-Größe, Latenz) sammelt
+  Issue #16 und wird bei Bedarf in eigene Issues aufgeteilt.
 - **Sprache:** Issues, Kommentare, Board-Texte und Commit-Messages auf Deutsch.
 - Commits direkt auf `main` (siehe `CLAUDE.md`). Ein Push ist nach spätestens 2 Minuten im Container sichtbar.
 

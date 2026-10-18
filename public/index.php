@@ -11,12 +11,27 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-// Sicherheits-Header für alle Antworten (Issue #9). Die Content-Security-Policy
-// gilt bisher für die Kartenseite (Route '/', JS ausgelagert in #13) und das
-// Bewertungsformular ('/bewerten', #15); die übrigen Seiten haben noch Inline-Skripte.
+// Sicherheits-Header für alle Antworten (Issue #9, #30).
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: DENY');
+header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+
+// Content-Security-Policy für alle HTML-Seiten (Issue #9, #13, #30): nur eigene
+// Skripte - seit #30 hat keine Seite mehr Inline-JS -, Styles inline erlaubt
+// (Leaflet und die Panels setzen style-Attribute), Anfragen nur an den eigenen
+// Server. Ein eingeschleustes <script> liefe damit nicht: das Sicherheitsnetz
+// hinter escapeHtml(). $bildQuellen: externe Kachel-/WMS-Hosts, die nur die
+// beiden Kartenseiten brauchen (OSM-Kacheln, Breitband-WMS, Lärm EEA,
+// Hochwasser BfG, Issue #21; Zensus kommt seit #23 aus der eigenen DB).
+function csp(string $bildQuellen = ''): void
+{
+    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+        . "img-src 'self' data:" . ($bildQuellen !== '' ? ' ' . $bildQuellen : '') . "; "
+        . "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+}
+const KARTEN_BILDQUELLEN = 'https://*.tile.openstreetmap.org https://breitbandatlas-wms.gigabit-grundbuch.online '
+    . 'https://copernicus.discomap.eea.europa.eu https://geoportal.bafg.de';
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
@@ -112,49 +127,22 @@ if ($uri === '/api/pi/resolve' && $method === 'POST') {
     return;
 }
 
-if ($uri === '/' || $uri === '/index.php') {
-    // Nur eigene Skripte; Styles brauchen 'unsafe-inline' (Leaflet und die
-    // Panels setzen style-Attribute). Externe Ziele: OSM-Kacheln, Breitband-WMS,
-    // Lärm (EEA) und Hochwasser (BfG) als WMS (Issue #21). Zensus kommt seit #23 aus der eigenen DB. Ein eingeschleustes <script> liefe damit nicht —
-    // das Sicherheitsnetz hinter escapeHtml() (Issue #9).
-    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-        . "img-src 'self' data: https://*.tile.openstreetmap.org https://breitbandatlas-wms.gigabit-grundbuch.online "
-        . "https://copernicus.discomap.eea.europa.eu https://geoportal.bafg.de; "
-        . "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-    require __DIR__ . '/map.view.php';
-    return;
-}
-
-if ($uri === '/bewerten') {
-    // Nur eigenes JS (public/js/bewerten.js) und Anfragen an den eigenen Server — auch die Straßen-Vorschläge (#15).
-    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-        . "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
-    require __DIR__ . '/bewerten.view.php';
-    return;
-}
-
-if ($uri === '/melden') {
-    require __DIR__ . '/melden.view.php';
-    return;
-}
-
-if ($uri === '/impressum') {
-    require __DIR__ . '/impressum.view.php';
-    return;
-}
-
-if ($uri === '/datenschutz') {
-    require __DIR__ . '/datenschutz.view.php';
-    return;
-}
-
-if ($uri === '/ueber') {
-    require __DIR__ . '/ueber.view.php';
-    return;
-}
-
-if ($uri === '/vision') {
-    require __DIR__ . '/vision.view.php';
+// HTML-Seiten: Route => [View, Bildquellen für die CSP]. Die beiden Kartenseiten
+// laden Kacheln und WMS-Bilder von außen, alle anderen nur eigene Bilder.
+$seiten = [
+    '/' => ['map.view.php', KARTEN_BILDQUELLEN],
+    '/index.php' => ['map.view.php', KARTEN_BILDQUELLEN],
+    '/vision' => ['vision.view.php', KARTEN_BILDQUELLEN],
+    '/bewerten' => ['bewerten.view.php', ''],
+    '/melden' => ['melden.view.php', ''],
+    '/impressum' => ['impressum.view.php', ''],
+    '/datenschutz' => ['datenschutz.view.php', ''],
+    '/ueber' => ['ueber.view.php', ''],
+];
+if (isset($seiten[$uri])) {
+    [$view, $bildQuellen] = $seiten[$uri];
+    csp($bildQuellen);
+    require __DIR__ . '/' . $view;
     return;
 }
 

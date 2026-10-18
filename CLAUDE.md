@@ -4,7 +4,7 @@ Bewertungsportal für Wohnlagen in Deutschland — Karte + strukturierte Kriteri
 
 **Name:** Die Seite heißt **Habitat Feedback** (technisch `habitat-feedback`). Der frühere Projektname ist als Marke einer anderen Seite vergeben und wird nirgends mehr verwendet (Entscheidung des Nutzers 14.10.2026). Auch die internen Namen (Container, `/srv`-Pfad, DB, systemd-Units, SSH-Alias, WSL) sind seit 14.10.2026 umgestellt (Issue #25). Neue Dateien, Dienste, Tabellen usw. nie mit dem alten Namen anlegen.
 
-**Nur lokal:** Die Seite bleibt bis auf Weiteres im Homelab-Container und in WSL, kein Livegang, kein Strato (Nutzer 14.10.2026). Livegang-Themen sind in Issue #16 geparkt.
+**Ziel Strato, Entwicklung lokal:** Entwickelt und getestet wird in WSL und im Homelab-Container, **Ziel ist die Veröffentlichung auf Strato-Webhosting** (Nutzer 18.10.2026; bis dahin galt „nur lokal“). Deshalb muss jede Änderung dort laufen: PHP 8 ohne Erweiterungen jenseits des Strato-Standards, MariaDB 10.11 (nicht MySQL 8), keine Server-Konfiguration (`my.cnf`, Apache-Module) voraussetzen, Importe lokal und als Dump nach Strato, DB-Größe unter 2 GB je Datenbank im Blick (Stand 18.10.: 1,35 GB). Was nur im Container geht (z. B. InnoDB-Puffer, #29), wird als solches gekennzeichnet. Sammelpunkt für den Livegang: Issue #16.
 
 **Board:** Aufträge laufen über GitHub-Projekt 3 „Habitat Feedback“ — Spalten, Labels und Issue-Vorlage in [`ZUSAMMENARBEIT_Claude.md`](ZUSAMMENARBEIT_Claude.md). Neue Datenquellen erst in [`DATENQUELLEN.md`](DATENQUELLEN.md) bewerten. Ergebnis-Kommentar im Issue mit `Ergebnis` / `Wo` / `Bitte prüfen` / `Offen`.
 

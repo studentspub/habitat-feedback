@@ -40,42 +40,6 @@ $segmentId = (int) ($_GET['segment'] ?? 0);
 
 <footer><a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
-<script>
-  const form = document.getElementById('report-form');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const resultEl = document.getElementById('result');
-      const submitBtn = document.getElementById('submit');
-      submitBtn.disabled = true;
-      try {
-        const res = await fetch('/api/reports', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            segment_id: parseInt(document.getElementById('segment_id').value, 10),
-            reason: document.getElementById('reason').value
-          })
-        });
-        const data = await res.json();
-        resultEl.hidden = false;
-        if (res.ok) {
-          resultEl.className = 'ok';
-          resultEl.textContent = data.status || 'Danke, deine Meldung wird geprüft.';
-          form.reset();
-        } else {
-          resultEl.className = 'error';
-          resultEl.textContent = data.error || 'Etwas ist schiefgelaufen.';
-        }
-      } catch (err) {
-        resultEl.hidden = false;
-        resultEl.className = 'error';
-        resultEl.textContent = 'Verbindung fehlgeschlagen. Bitte später erneut versuchen.';
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-  }
-</script>
+<script src="/js/melden.js?v=<?= filemtime(__DIR__ . '/js/melden.js') ?>"></script>
 </body>
 </html>
