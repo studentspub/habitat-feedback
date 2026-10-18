@@ -35,7 +35,7 @@
 </div>
 <div id="map"></div>
 <div id="legal">
-  <a href="/ueber">Über Habitat Feedback</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+  <a href="/ueber">Über Habitat Feedback</a><a href="/projekt">Über das Projekt</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
 </div>
 <!-- Nur auf dem Handy sichtbar (Issue #27): öffnet die Bedienfelder als Schublade von unten. -->
 <button type="button" id="ebenen-btn" aria-controls="ebenen-schublade" aria-expanded="false">☰ Ebenen</button>
@@ -43,7 +43,7 @@
 <div id="welcome-overlay">
   <button type="button" class="welcome-close" aria-label="Schließen">✕</button>
   <h3>👋 Willkommen bei Habitat Feedback</h3>
-  <p>Entdecke, wie sich Straßen wirklich anfühlen — oder gib in wenigen Minuten deine eigene, anonyme Einschätzung ab.</p>
+  <p>Entdecke, wie sich Straßen wirklich anfühlen — oder gib in wenigen Minuten deine eigene, anonyme Einschätzung ab. Unkommerziell und quelloffen: <a href="/projekt">mehr zum Projekt</a>.</p>
   <div class="welcome-actions">
     <a class="welcome-cta" href="/bewerten">Straße bewerten</a>
     <a class="welcome-dismiss">Vielleicht später</a>

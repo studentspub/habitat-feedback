@@ -58,6 +58,6 @@
 
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
-<footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
+<footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/projekt" style="color:#31576D;margin-right:12px">Über das Projekt</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
 </body>
 </html>

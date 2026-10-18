@@ -76,7 +76,7 @@
 </form>
 <div id="result" hidden></div>
 
-<footer><a href="/ueber">Über Habitat Feedback</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/ueber">Über Habitat Feedback</a><a href="/projekt">Über das Projekt</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
 <script src="/js/bewerten.js?v=<?= filemtime(__DIR__ . '/js/bewerten.js') ?>"></script>
 </body>

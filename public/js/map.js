@@ -1388,7 +1388,7 @@
     { selector: '.region-control', title: 'Lebensqualität', text: 'Amtliche Kennzahlen für die Gemeinde der Kartenmitte: wie weit es zu Fuß zu Hausarzt, Apotheke, Grundschule, Supermarkt und Haltestelle ist, Fahrzeiten, Pendeln, Grün, Unfälle — dazu Ärzte, Kitas und Mieten im Kreis. Jeweils mit dem Wert für ganz Deutschland. Darunter lassen sich Unfallorte, der ÖPNV-Takt (Abfahrten je Haltestelle), Lärm und Hochwasserflächen auf der Karte einblenden.' },
     { selector: '#vision-link', title: 'Vision', text: 'Ein Blick auf eine Beispielkarte mit vielen (frei erfundenen) Bewertungen — so könnte es aussehen, wenn viele Menschen mitmachen.' },
     { selector: '#examples-btn', title: 'Praxisbeispiele', text: 'Fünf fiktive Personen — Rentnerin, Student, Pendlerin, Kapitalanleger, Familie — und je drei Rückschlüsse, wie sie die Kennzahlen auf dieser Karte für ihre eigene Entscheidung nutzen könnten.' },
-    { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutzerklärung und mehr über Habitat Feedback.' }
+    { selector: '#legal', title: 'Rechtliches', text: 'Impressum, Datenschutz, Quellen & Lizenzen und die Projektseite: Habitat Feedback ist unkommerziell, quelloffen und privat betrieben.' }
   ];
 
   const tourClickguard = document.getElementById('tour-clickguard');

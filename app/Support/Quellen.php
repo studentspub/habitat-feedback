@@ -33,7 +33,7 @@ final class Quellen
         'osmf_tiles' => ['OSMF Tile Usage Policy; Daten ODbL', 'https://operations.osmfoundation.org/policies/tiles/'],
         'osmf_nominatim' => ['OSMF Nominatim Usage Policy; Daten ODbL', 'https://operations.osmfoundation.org/policies/nominatim/'],
         'google' => ['Nutzungsbedingungen von Google Maps (nur Verweis, keine Datenübernahme)', 'https://policies.google.com/terms'],
-        'eigen' => ['Eigene Texte und Daten des Betreibers', '/ueber'],
+        'eigen' => ['Eigene Texte und Daten des Betreibers', '/projekt'],
     ];
 
     private const OSM_VERMERK = '© OpenStreetMap-Mitwirkende';
@@ -247,14 +247,14 @@ final class Quellen
                     ['anzeige' => 'Praxisbeispiele (fünf Personen)', 'quelle' => 'Fiktive Personen und Situationen als Lesehilfe für die Kennzahlen',
                         'herausgeber' => 'Habitat Feedback', 'lizenz' => 'eigen', 'vermerk' => '–', 'stand' => '–', 'link' => '/'],
                     ['anzeige' => 'Erklärtexte: Tutorial, Info-Knöpfe „i“, Hinweise in den Bedienfeldern, Über-Seite', 'quelle' => 'Eigene Texte des Betreibers; die Einordnungen („Signal für …“) sind Lesehilfen, keine amtlichen Bewertungen',
-                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'eigen', 'vermerk' => '–', 'stand' => '–', 'link' => '/ueber'],
+                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'eigen', 'vermerk' => '–', 'stand' => '–', 'link' => '/projekt'],
                 ],
             ],
             [
                 'titel' => 'Software',
                 'eintraege' => [
                     ['anzeige' => 'Die Seite selbst (PHP, JavaScript, SQL)', 'quelle' => 'Eigener Quellcode, Veröffentlichung auf GitHub mit dem Livegang',
-                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'agpl', 'vermerk' => '–', 'stand' => 'laufend', 'link' => '/ueber'],
+                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'agpl', 'vermerk' => '–', 'stand' => 'laufend', 'link' => '/projekt'],
                     ['anzeige' => 'Kartenbibliothek', 'quelle' => 'Leaflet 1.9.4 (JavaScript, CSS, Marker-Bilder)',
                         'herausgeber' => 'Volodymyr Agafonkin und Mitwirkende', 'lizenz' => 'bsd2', 'vermerk' => 'Leaflet © 2010–2023 Volodymyr Agafonkin, © 2010–2011 CloudMade', 'stand' => 'Version 1.9.4', 'link' => 'https://leafletjs.com'],
                 ],

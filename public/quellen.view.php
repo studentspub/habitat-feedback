@@ -92,8 +92,8 @@ gekennzeichneten Teile lädt dein Browser direkt bei der jeweiligen Stelle (sieh
   <li><a href="<?= $h($link) ?>"<?= str_starts_with($link, 'http') ? ' target="_blank" rel="noopener"' : '' ?>><?= $h($name) ?></a></li>
 <?php endforeach; ?>
 </ul>
-<p class="hinweis">Fehlt eine Quelle oder stimmt ein Vermerk nicht? Bitte melden (siehe <a href="/ueber">Über das Projekt</a>). Stand dieser Seite: wird aus der Datenbank gelesen, Änderungen an den Quellen stehen im Quellcode (<code>app/Support/Quellen.php</code>).</p>
+<p class="hinweis">Fehlt eine Quelle oder stimmt ein Vermerk nicht? Bitte melden (siehe <a href="/projekt">Über das Projekt</a>). Stand dieser Seite: wird aus der Datenbank gelesen, Änderungen an den Quellen stehen im Quellcode (<code>app/Support/Quellen.php</code>).</p>
 
-<footer><a href="/ueber">Über Habitat Feedback</a><a href="/ueber">Über das Projekt</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/ueber">Über Habitat Feedback</a><a href="/projekt">Über das Projekt</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 </body>
 </html>

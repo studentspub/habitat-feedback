@@ -37,6 +37,6 @@
 <p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">
   Hinweis: Betreibst du Habitat Feedback als reines Hobby-/Privatprojekt ohne Gewinnerzielungsabsicht, ändert das an der Impressumspflicht grundsätzlich nichts, sobald die Seite öffentlich und dauerhaft erreichbar ist. Im Zweifel eine kurze Rechtsberatung einholen (siehe auch Konzeptpapier, Abschnitt „Rechtliches &amp; DSGVO").
 </p>
-<footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/datenschutz" style="color:#31576D;margin-right:12px">Datenschutz</a></footer>
+<footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/projekt" style="color:#31576D;margin-right:12px">Über das Projekt</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/datenschutz" style="color:#31576D;margin-right:12px">Datenschutz</a></footer>
 </body>
 </html>

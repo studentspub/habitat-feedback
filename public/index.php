@@ -144,6 +144,7 @@ $seiten = [
     '/datenschutz' => ['datenschutz.view.php', ''],
     '/ueber' => ['ueber.view.php', ''],
     '/quellen' => ['quellen.view.php', ''],
+    '/projekt' => ['projekt.view.php', ''],
 ];
 if (isset($seiten[$uri])) {
     [$view, $bildQuellen] = $seiten[$uri];
