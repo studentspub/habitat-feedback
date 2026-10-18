@@ -51,12 +51,13 @@
 </ul>
 
 <h2>Zuschaltbare Karten-Ebenen</h2>
-<p>Einige Ebenen lädt dein Browser erst beim Einschalten direkt von den jeweiligen Stellen; dabei wird wie bei jedem Bildabruf deine IP-Adresse übertragen: Breitband (Bundesnetzagentur), Lärm (Europäische Umweltagentur) und Hochwasser (Bundesanstalt für Gewässerkunde). Die Zensus-Daten kommen von unserem eigenen Server. Solange eine Ebene aus ist, wird nichts geladen.</p>
+<p>Einige Ebenen lädt dein Browser erst beim Einschalten direkt von den jeweiligen Stellen; dabei wird wie bei jedem Bildabruf deine IP-Adresse übertragen: Breitband (Bundesnetzagentur), Lärm (Europäische Umweltagentur) und Hochwasser (Bundesanstalt für Gewässerkunde). Die Zensus-Daten kommen von unserem eigenen Server. Solange eine Ebene aus ist, wird nichts geladen. Welche Stelle welche Daten liefert, steht unter <a href="/quellen">Quellen &amp; Lizenzen</a>.</p>
 
 <h2>Links zu Google Street View</h2>
 <p>Über das Männchen auf der Karte kannst du einen Link zu Google Street View erzeugen. Solange du den Link nicht anklickst, werden keine Daten an Google übertragen. Erst mit dem Klick öffnet sich Google Maps in einem neuen Tab; dort gelten die Datenschutzbestimmungen von Google.</p>
 
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
+<footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
 </body>
 </html>

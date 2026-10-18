@@ -35,7 +35,7 @@
 </div>
 <div id="map"></div>
 <div id="legal">
-  <a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
+  <a href="/ueber">Über Habitat Feedback</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
 </div>
 <!-- Nur auf dem Handy sichtbar (Issue #27): öffnet die Bedienfelder als Schublade von unten. -->
 <button type="button" id="ebenen-btn" aria-controls="ebenen-schublade" aria-expanded="false">☰ Ebenen</button>

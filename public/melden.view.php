@@ -39,7 +39,7 @@ $segmentId = (int) ($_GET['segment'] ?? 0);
   <div id="result" hidden></div>
 <?php endif; ?>
 
-<footer><a href="/ueber">Über Habitat Feedback</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/ueber">Über Habitat Feedback</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 
 <script src="/js/melden.js?v=<?= filemtime(__DIR__ . '/js/melden.js') ?>"></script>
 </body>

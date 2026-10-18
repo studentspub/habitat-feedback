@@ -31,12 +31,14 @@
 <h2>Woher kommen die Karten- und Adressdaten?</h2>
 <p>Von <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkenden — die Kachelanzeige, die Geokodierung (Nominatim) und die Ermittlung, wie viele Adressen ein Abschnitt hat (Overpass), laufen alle über offene, quelloffene Dienste des OpenStreetMap-Projekts. Die Straßen-Vorschläge beim Tippen kommen aus einem eigenen Straßenverzeichnis, das wir aus dem OpenStreetMap-Datensatz für Deutschland (über <a href="https://download.geofabrik.de" target="_blank" rel="noopener">Geofabrik</a>) erstellen, Lizenz ODbL. Auch die Standorte im Feld „Freizeit &amp; Infrastruktur“ (Spielplätze, Kitas und Schulen, Ärzte und Apotheken, Supermärkte, Haltestellen, öffentliche Toiletten, Briefkästen, Packstationen und Paketshops, E-Bike-Ladestationen) stammen aus OpenStreetMap und werden einmal eingelesen statt bei jedem Kartenschwenk abgefragt; nur die Ladesäulen für Autos kommen aus dem Register der Bundesnetzagentur.</p>
 
+<p>Eine vollständige Liste aller Quellen mit Lizenz und Datenstand, bis zur einzelnen Kennzahl: <a href="/quellen">Quellen &amp; Lizenzen</a>.</p>
+
 <h2>Woher kommen die Statistiken?</h2>
 <p>Aus amtlichen, frei nutzbaren Quellen, jeweils mit Stand an der Zahl: Kennzahlen zu Nahversorgung, Erreichbarkeit, Pendeln, Grün, Gesundheit und Wohnen aus der <a href="https://www.inkar.de" target="_blank" rel="noopener">Laufenden Raumbeobachtung des BBSR (INKAR)</a> des <a href="https://www.bbsr.bund.de" target="_blank" rel="noopener">Bundesinstituts für Bau-, Stadt- und Raumforschung</a>; Gemeinde- und Kreisgrenzen © GeoBasis-DE / <a href="https://www.bkg.bund.de" target="_blank" rel="noopener">BKG</a> (beide Datenlizenz Deutschland – Namensnennung 2.0); Klimadaten vom Deutschen Wetterdienst; Arbeitsmarkt, Kriminalität und Regionalstatistik von Bundesagentur für Arbeit, BKA und Destatis; Unfallorte aus dem Unfallatlas der Statistischen Ämter des Bundes und der Länder; Ladesäulen aus dem Ladesäulenregister der Bundesnetzagentur (Bundesnetzagentur.de, CC BY 4.0); Abfahrten je Haltestelle aus dem Fahrplan-Datensatz von DELFI e.V. über GTFS.de; Lärm von der Europäischen Umweltagentur, Hochwasserflächen von der Bundesanstalt für Gewässerkunde; Zensus 2022 und Breitbandatlas.</p>
 
 <h2>Was, wenn eine Bewertung falsch wirkt?</h2>
 <p>Über den „Bewertungen melden"-Link an jedem Kartenmarker kann jeder — auch ohne eigenes Konto — eine Meldung abgeben, die geprüft wird. Details dazu und zur Datenverarbeitung insgesamt: <a href="/datenschutz">Datenschutzerklärung</a>.</p>
 
-<footer><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
+<footer><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></footer>
 </body>
 </html>
