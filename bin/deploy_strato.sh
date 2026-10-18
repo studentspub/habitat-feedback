@@ -44,6 +44,7 @@ stand=$(git log --format=%h -1)
 trocken=""; [ "$modus" = "--testlauf" ] && trocken="--dry-run"
 
 echo "Release $rel (Commit $stand) -> $HOST:$ZIEL/releases/$rel ${trocken:+[TESTLAUF]}"
+[ -z "$trocken" ] && ssh "$HOST" "mkdir -p $ZIEL/releases"   # rsync legt nur die letzte Ebene selbst an
 rsync -az $trocken --itemize-changes \
   --include='/app/***' --include='/public/***' --include='/LICENSE' --include='/readme.md' --include='/.htaccess' \
   --exclude='*' \
