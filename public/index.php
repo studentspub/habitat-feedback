@@ -4,6 +4,9 @@
 // releases/<…>/public/index.php; __DIR__ zeigt dann auf den Docroot, nicht auf public/,
 // und app/ läge "daneben" statt eine Ebene über public/. realpath löst den Symlink auf;
 // lokal und im Container ist es derselbe Pfad wie __DIR__.
+// clearstatcache: PHP merkt sich aufgelöste Pfade bis zu 120 s (realpath_cache_ttl); ohne das Löschen
+// würde nach einem Deploy noch zwei Minuten lang das alte Release ausgeliefert (beobachtet 18.10.2026).
+clearstatcache(true, __FILE__);
 define('PUBLIC_DIR', dirname(realpath(__FILE__)));
 
 spl_autoload_register(function (string $class): void {
