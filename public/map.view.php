@@ -30,8 +30,8 @@
 </div>
 
 <div id="rate-cta">
-  <span id="rate-cta-heading">Straße bewerten?</span>
-  <a id="rate-link" href="/bewerten">Bewertung abgeben</a>
+  <span id="rate-cta-heading">Jetzt beitragen</span>
+  <a id="rate-link" href="/bewerten">Bewertung abgeben <small>(ca. 2 Minuten)</small></a>
 </div>
 <div id="map"></div>
 <div id="legal">

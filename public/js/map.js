@@ -1373,7 +1373,7 @@
 
   const TOUR_STEPS = [
     { selector: '#search-group', title: 'Straßen finden', text: 'Oben findest du bereits bewertete Straßen. Darunter kannst du jede Adresse in Deutschland suchen — die Karte springt dann einfach dorthin.' },
-    { selector: '#rate-cta', title: 'Straße bewerten', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab.' },
+    { selector: '#rate-cta', title: 'Jetzt beitragen', text: 'Wohnst du hier? Über diesen Button gibst du deine eigene Bewertung zu deiner Straße ab, fünf Kriterien, etwa zwei Minuten.' },
     { selector: '.streetview-control', title: 'Straßenansicht', text: 'Setzt ein Männchen auf die Karte. Zieh es an die gewünschte Stelle, dann öffnet ein Link Google Street View dort (sofern Google Bilder hat). Rechtsklick oder langes Drücken auf die Karte geht auch.' },
     { selector: '.ratings-control', title: 'Bewertungen ein-/ausblenden', text: 'Blendet die farbigen Bewertungs-Punkte aus — praktisch, wenn du nur die Statistik-Ebenen sehen willst. Was Grün, Orange und Rotbraun bedeuten, erklärt die kleine Legende oben links unter dem Zoom-Regler.' },
     { selector: '.census-control', title: 'Amtliche Statistik', html: censusTourHtml },
