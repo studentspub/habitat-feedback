@@ -19,19 +19,19 @@
 <h1>Impressum</h1>
 
 <div class="todo">
-  <strong>Noch auszufüllen, bevor die Seite öffentlich geht</strong>
-  Ein Impressum nach § 5 DDG (früher TMG) muss echte, ladungsfähige Angaben enthalten — Name, Anschrift, Kontakt. Diese Felder kann ich nicht für dich ausfüllen, da es deine persönlichen Daten sind. Trag sie unten direkt im Quelltext dieser Datei ein (<code>public/impressum.view.php</code>).
+  <strong>Platzhalter (Stand 18.10.2026)</strong>
+  Die Angaben unten sind noch Musterdaten. Sie werden durch die echten, ladungsfähigen Angaben (c/o-Adresse) ersetzt, bevor die Seite öffentlich beworben wird (Issue #38).
 </div>
 
 <dl>
   <dt>Angaben gemäß § 5 DDG</dt>
-  <dd>[Vor- und Nachname]<br>[Straße Hausnummer]<br>[PLZ Ort]</dd>
+  <dd>Max Mustermann<br>Musterstraße 1<br>12345 Musterstadt</dd>
 
   <dt>Kontakt</dt>
-  <dd>E-Mail: [deine-email@beispiel.de]</dd>
+  <dd>E-Mail: max.mustermann@example.org</dd>
 
   <dt>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</dt>
-  <dd>[Vor- und Nachname, Anschrift wie oben]</dd>
+  <dd>Max Mustermann, Anschrift wie oben</dd>
 </dl>
 
 <p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">
