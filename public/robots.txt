@@ -1,5 +1,4 @@
-# Habitat Feedback: öffentlich seit 18.10.2026 (Issue #38). Alle Seiten dürfen indexiert werden;
-# die API liefert nur Daten für die Karte und ist für Suchmaschinen ohne Nutzen.
+# Habitat Feedback. Alle Seiten duerfen indexiert werden; die API liefert nur Daten fuer die Karte.
 User-agent: *
 Allow: /
 Disallow: /api/

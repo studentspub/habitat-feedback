@@ -9,8 +9,6 @@
   body { font-family: sans-serif; max-width: 40em; margin: 2em auto; padding: 0 1em; color: #1B2420; background: #F2F4EF; line-height: 1.6; }
   h1 { font-size: 1.4rem; }
   h2 { font-size: 1.1rem; margin-top: 1.8em; }
-  .todo { background: #F3DDD1; border-left: 4px solid #AA4A25; padding: 1em; margin: 1.5em 0; }
-  .todo strong { display: block; margin-bottom: 4px; }
   code { background: #EBEEE5; padding: 1px 5px; border-radius: 4px; }
   a.back { display: inline-block; margin-bottom: 1em; }
 </style>
@@ -18,11 +16,6 @@
 <body>
 <a class="back" href="/">&larr; zurück zur Karte</a>
 <h1>Datenschutzerklärung</h1>
-
-<div class="todo">
-  <strong>Hinweis</strong>
-  Dieser Text beschreibt technisch, welche Daten Habitat Feedback tatsächlich verarbeitet (Stand des Codes, 18.10.2026). Er wurde ohne anwaltliche Prüfung erstellt.
-</div>
 
 <h2>Verantwortlicher</h2>
 <p>Cihan Aldanmaz<br>c/o Markant Tankstelle, Elmshorner Str. 42, 25421 Pinneberg<br>E-Mail: <a href="mailto:cihanaldanmaz@gmail.com">cihanaldanmaz@gmail.com</a></p>
@@ -61,6 +54,8 @@
 
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
+<p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">Stand: 18. Oktober 2026.</p>
+
 <footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/projekt" style="color:#31576D;margin-right:12px">Über das Projekt</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
 </body>
 </html>
