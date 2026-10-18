@@ -35,7 +35,7 @@ function fetchQuoteForKreis(string $kreisName): ?array
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (dev)'],
+            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)'],
             CURLOPT_TIMEOUT => REQUEST_TIMEOUT_SECONDS,
         ]);
         $response = curl_exec($ch);

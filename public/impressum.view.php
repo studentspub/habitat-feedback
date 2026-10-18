@@ -18,21 +18,18 @@
 <a class="back" href="/">&larr; zurück zur Karte</a>
 <h1>Impressum</h1>
 
-<div class="todo">
-  <strong>Platzhalter (Stand 18.10.2026)</strong>
-  Die Angaben unten sind noch Musterdaten. Sie werden durch die echten, ladungsfähigen Angaben (c/o-Adresse) ersetzt, bevor die Seite öffentlich beworben wird (Issue #38).
-</div>
-
 <dl>
   <dt>Angaben gemäß § 5 DDG</dt>
-  <dd>Max Mustermann<br>Musterstraße 1<br>12345 Musterstadt</dd>
+  <dd>Cihan Aldanmaz<br>c/o Markant Tankstelle<br>Elmshorner Str. 42<br>25421 Pinneberg</dd>
 
   <dt>Kontakt</dt>
-  <dd>E-Mail: max.mustermann@example.org</dd>
+  <dd>E-Mail: <a href="mailto:cihanaldanmaz@gmail.com">cihanaldanmaz@gmail.com</a></dd>
 
   <dt>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</dt>
-  <dd>Max Mustermann, Anschrift wie oben</dd>
+  <dd>Cihan Aldanmaz, Anschrift wie oben</dd>
 </dl>
+
+<p>Habitat Feedback ist ein privates, unkommerzielles Projekt ohne Gewinnerzielungsabsicht (siehe <a href="/projekt">Über das Projekt</a>).</p>
 
 <p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">
   Hinweis: Betreibst du Habitat Feedback als reines Hobby-/Privatprojekt ohne Gewinnerzielungsabsicht, ändert das an der Impressumspflicht grundsätzlich nichts, sobald die Seite öffentlich und dauerhaft erreichbar ist. Im Zweifel eine kurze Rechtsberatung einholen (siehe auch Konzeptpapier, Abschnitt „Rechtliches &amp; DSGVO").

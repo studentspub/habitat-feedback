@@ -91,7 +91,7 @@ function fetchTagFromOverpass(string $tagFilter, string $bbox = GERMANY_BBOX): ?
             // erwartet (führt zu HTTP 400 mit einer Fehlermeldung, die nach
             // MIME-Boundary-Resten aussieht, nicht nach einem Query-Fehler).
             CURLOPT_POSTFIELDS => http_build_query(['data' => $query]),
-            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (dev)'],
+            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)'],
             CURLOPT_TIMEOUT => 200,
         ]);
         $response = curl_exec($ch);

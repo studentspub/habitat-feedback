@@ -22,7 +22,7 @@ from config import BASE_URL, PI_API_TOKEN
 # E-Mail eintragen — ein Platzhalter wie "example.invalid" wird von Nominatims
 # Filter aktiv geblockt (403), das ist keine Kleinigkeit, siehe hierzu auch
 # https://operations.osmfoundation.org/policies/nominatim/
-HEADERS = {"User-Agent": "habitat-feedback-worker/1.0 (dev)"}
+HEADERS = {"User-Agent": "habitat-feedback-worker/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)"}
 AUTH_HEADERS = {**HEADERS, "Authorization": f"Bearer {PI_API_TOKEN}"}
 NOMINATIM_DELAY_SECONDS = 1.1
 OVERPASS_DELAY_SECONDS = 1.1

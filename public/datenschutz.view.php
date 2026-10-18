@@ -20,13 +20,16 @@
 <h1>Datenschutzerklärung</h1>
 
 <div class="todo">
-  <strong>Entwurf, keine Rechtsberatung</strong>
-  Dieser Text beschreibt technisch korrekt, welche Daten Habitat Feedback tatsächlich verarbeitet (Stand des Codes). Er ersetzt keine anwaltliche Prüfung vor dem Livegang — insbesondere die Kontaktangaben des Verantwortlichen unten sind noch Platzhalter.
+  <strong>Hinweis</strong>
+  Dieser Text beschreibt technisch, welche Daten Habitat Feedback tatsächlich verarbeitet (Stand des Codes, 18.10.2026). Er wurde ohne anwaltliche Prüfung erstellt.
 </div>
 
 <h2>Verantwortlicher</h2>
-<p>[Vor- und Nachname]<br>[Straße Hausnummer, PLZ Ort]<br>E-Mail: [deine-email@beispiel.de]</p>
+<p>Cihan Aldanmaz<br>c/o Markant Tankstelle, Elmshorner Str. 42, 25421 Pinneberg<br>E-Mail: <a href="mailto:cihanaldanmaz@gmail.com">cihanaldanmaz@gmail.com</a></p>
 <p>(siehe auch <a href="/impressum">Impressum</a>)</p>
+
+<h2>Hosting</h2>
+<p>Die Seite wird bei der STRATO GmbH (Otto-Ostrowski-Straße 7, 10249 Berlin) in Deutschland gehostet. Beim Aufruf verarbeitet der Webserver technisch notwendig deine IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browser-Kennung und übertragene Datenmenge in Server-Protokollen; diese dienen der Sicherheit und Fehlersuche und werden vom Hoster nach dessen Fristen gelöscht. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb). Mit STRATO besteht ein Vertrag zur Auftragsverarbeitung.</p>
 
 <h2>Was beim Abgeben einer Bewertung passiert</h2>
 <p>Du gibst eine Adresse und fünf Bewertungskriterien (je 1–5) ein. Kein Freitext, kein Klarname, keine E-Mail-Pflicht.</p>

@@ -6,6 +6,14 @@
 # Datei — ohne die Zeile lieferte dort jede Seite außer / einen 404.
 FallbackResource /index.php
 
+# HTTPS erzwingen (Issue #38) – nur für die Live-Domain, der Test-Container im Heimnetz läuft über http.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP_HOST} ^(www\.)?habitat-feedback\.de$ [NC]
+    RewriteRule ^ https://habitat-feedback.de%{REQUEST_URI} [R=301,L]
+</IfModule>
+
 # JSON/GeoJSON komprimieren — Debians deflate.conf deckt nur HTML/CSS/JS ab.
 # Die Grenzdatei schrumpft so von 322 auf ~107 KB, API-Antworten auf ein Drittel.
 # Achtung: AddOutputFilterByType hier ERSETZT die Liste aus deflate.conf statt
@@ -24,4 +32,6 @@ FallbackResource /index.php
     # PHP-Version nicht verraten (Stratos FastCGI setzt den Header, #35)
     Header unset X-Powered-By
     Header always unset X-Powered-By
+    # HSTS nur über HTTPS; erst eine Woche, nach dem ersten Monat auf 31536000 erhöhen (#38)
+    Header always set Strict-Transport-Security "max-age=604800" env=HTTPS
 </IfModule>

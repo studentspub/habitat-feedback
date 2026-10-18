@@ -157,7 +157,7 @@ final class EconomyController
     /** @return array<string, string>|null */
     private function reverseGeocode(float $lat, float $lon): ?array
     {
-        // Siehe worker/geocode_worker.py: Platzhalter-Kontakt im User-Agent
+        // Nominatim verlangt einen User-Agent mit Kontakt (Nutzungsrichtlinie); Adresse wie im Impressum (#38).
         // wird von Nominatim mit HTTP 403 geblockt, vor Live-Betrieb echten
         // eintragen. https://operations.osmfoundation.org/policies/nominatim/
         $url = 'https://nominatim.openstreetmap.org/reverse?' . http_build_query([
@@ -167,7 +167,7 @@ final class EconomyController
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-webapp/1.0 (dev)'],
+            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-webapp/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)'],
             CURLOPT_TIMEOUT => 8,
         ]);
         $response = curl_exec($ch);

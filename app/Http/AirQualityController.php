@@ -90,7 +90,7 @@ final class AirQualityController
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-webapp/1.0 (dev)'],
+            CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-webapp/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)'],
             CURLOPT_TIMEOUT => 15,
         ]);
         $response = curl_exec($ch);

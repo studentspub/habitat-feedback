@@ -38,7 +38,7 @@ function downloadXlsx(string $url, string $targetPath): void
     curl_setopt_array($ch, [
         CURLOPT_FILE => $fh,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (dev)'],
+        CURLOPT_HTTPHEADER => ['User-Agent: habitat-feedback-import/1.0 (+https://habitat-feedback.de; cihanaldanmaz@gmail.com)'],
         CURLOPT_TIMEOUT => 60,
     ]);
     $ok = curl_exec($ch);
