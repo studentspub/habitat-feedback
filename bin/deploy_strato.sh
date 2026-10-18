@@ -35,7 +35,8 @@ case "$modus" in
   *) echo "unbekannte Option: $modus (siehe Kopf des Skripts)"; exit 1 ;;
 esac
 
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+# autocrlf=true: die Arbeitskopie ist von Windows-Git mit CRLF ausgecheckt, WSL-Git soll das nicht als Änderung zählen
+if [ -n "$(git -c core.autocrlf=true status --porcelain --untracked-files=no)" ]; then
   echo "Arbeitskopie hat uncommittete Änderungen – erst committen (deployt wird der Stand der Dateien, nicht von GitHub)."; exit 1
 fi
 rel=$(date +%Y%m%d-%H%M%S)
