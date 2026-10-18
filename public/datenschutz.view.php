@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Datenschutzerklärung — Habitat Feedback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
   body { font-family: sans-serif; max-width: 40em; margin: 2em auto; padding: 0 1em; color: #1B2420; background: #F2F4EF; line-height: 1.6; }
   h1 { font-size: 1.4rem; }

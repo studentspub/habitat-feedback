@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Bewertung abgeben — Habitat Feedback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
   body { font-family: sans-serif; max-width: 34em; margin: 2em auto; padding: 0 1em; color: #1B2420; background: #F2F4EF; }
   h1 { font-size: 1.4rem; }

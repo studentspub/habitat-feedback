@@ -1,0 +1,5 @@
+# Habitat Feedback (Issue #31). Solange die Seite nur im Heimnetz läuft, gibt es nichts zu indexieren;
+# vor dem Livegang auf Strato (#16) auf "Allow: /" umstellen und die Datenschutz-/Impressum-Entscheidung
+# aus Ideas.md ("Impressum vor Webcrawlern schützen") hier nachziehen.
+User-agent: *
+Disallow: /

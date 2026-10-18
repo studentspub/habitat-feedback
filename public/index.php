@@ -36,6 +36,11 @@ const KARTEN_BILDQUELLEN = 'https://*.tile.openstreetmap.org https://breitbandat
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 $method = $_SERVER['REQUEST_METHOD'];
+// HEAD wie GET behandeln (Issue #31): Monitoring und `curl -I` bekamen auf den
+// API-Routen sonst 404. Den Body lässt PHP bei HEAD von selbst weg.
+if ($method === 'HEAD') {
+    $method = 'GET';
+}
 
 if ($uri === '/api/map' && $method === 'GET') {
     (new App\Http\MapApiController())->pins();

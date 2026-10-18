@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <title>Habitat Feedback</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<!-- Grenzdatei fuer den Nebel (de_maske.js) schon beim Laden des Kopfes anfordern statt erst aus dem Skript (Issue #31). -->
+<link rel="preload" href="/data/de_grenze.geojson" as="fetch" crossorigin>
 <link rel="stylesheet" href="/vendor/leaflet-1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="/css/map.css?v=<?= filemtime(__DIR__ . '/css/map.css') ?>">
 </head>
