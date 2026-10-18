@@ -20,7 +20,9 @@ set -euo pipefail
 HOST=${STRATO_HOST:-strato}                 # SSH-Alias aus ~/.ssh/config
 ZIEL=${STRATO_ZIEL:-habitat-feedback}       # relativ zum Home (= htdocs) auf dem Webspace
 BEHALTEN=3                                  # so viele Releases bleiben liegen
-EINSTIEGE=".htaccess index.php js css vendor data favicon.svg robots.txt"
+# index.php ist KEIN Symlink, sondern eine Kopie von bin/strato_docroot_index.php (OPcache friert __FILE__ eines
+# Symlinks ein und liefert sonst nach dem Release-Wechsel das alte Release weiter).
+EINSTIEGE=".htaccess js css vendor data favicon.svg robots.txt"
 cd "$(dirname "$0")/.."
 
 modus=${1:---testlauf}
@@ -47,6 +49,7 @@ echo "Release $rel (Commit $stand) -> $HOST:$ZIEL/releases/$rel ${trocken:+[TEST
 [ -z "$trocken" ] && ssh "$HOST" "mkdir -p $ZIEL/releases"   # rsync legt nur die letzte Ebene selbst an
 rsync -az $trocken --itemize-changes \
   --include='/app/***' --include='/public/***' --include='/LICENSE' --include='/readme.md' --include='/.htaccess' \
+  --include='/bin/' --include='/bin/strato_docroot_index.php' \
   --exclude='*' \
   ./ "$HOST:$ZIEL/releases/$rel/" | grep -v '^\.d' | sed 's/^/  /' | head -60
 
@@ -72,6 +75,10 @@ for n in $einstiege; do
   if [ -e "$n" ] && [ ! -L "$n" ]; then rm -rf "$n"; fi
   ln -sfn "current/public/$n" "$n"
 done
+# index.php als echte Datei (siehe Kommentar oben bei EINSTIEGE); nur ersetzen, wenn sie sich unterscheidet
+if [ -L index.php ] || ! cmp -s "releases/$rel/bin/strato_docroot_index.php" index.php; then
+  rm -f index.php && cp "releases/$rel/bin/strato_docroot_index.php" index.php && echo "index.php (Docroot-Einstieg) aktualisiert"
+fi
 # alte Releases aufräumen, die letzten $behalten bleiben
 ls -1dt releases/*/ | tail -n +$((behalten + 1)) | while read -r alt; do rm -rf "$alt"; echo "entfernt: $alt"; done
 echo "aktiv: $(readlink current)"
