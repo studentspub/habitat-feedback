@@ -55,11 +55,14 @@ if [ "$modus" = "--testlauf" ]; then
   exit 0
 fi
 
-ssh "$HOST" bash -s "$ZIEL" "$rel" "$BEHALTEN" "$EINSTIEGE" <<'EOF'
+# Argumente einzeln in Anführungszeichen: ssh fügt sie sonst zu einem String zusammen und die Liste zerfällt
+ssh "$HOST" "bash -s '$ZIEL' '$rel' '$BEHALTEN' '$EINSTIEGE'" <<'EOF'
 set -euo pipefail
 ZIEL=$1; rel=$2; behalten=$3; einstiege=$4
 cd "$ZIEL"
 [ -f config/config.php ] || { echo "config/config.php fehlt auf dem Webspace – zuerst anlegen (#35)."; exit 1; }
+printf 'Require all denied\n' > releases/.htaccess   # /releases/… nie direkt ausliefern
+rm -f probe_db.php                                   # Rest aus dem Probelauf #35, falls noch da
 ln -sfn ../../config "releases/$rel/config"
 echo "$rel" > "releases/$rel/RELEASE"
 # Release atomar umschalten
