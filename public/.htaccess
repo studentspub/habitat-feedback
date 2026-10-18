@@ -21,4 +21,7 @@ FallbackResource /index.php
     <FilesMatch "\.(js|css|geojson|png|svg)$">
         Header set Cache-Control "public, max-age=604800"
     </FilesMatch>
+    # PHP-Version nicht verraten (Stratos FastCGI setzt den Header, #35)
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
 </IfModule>

@@ -1,0 +1,5 @@
+# Sperrt das Repo-Verzeichnis für Apache, falls es je direkt unter einem Docroot liegt (Issue #36: auf Strato liegen
+# releases/ und current/ im Domain-Ordner). Ausgeliefert wird nur public/, dessen Einträge als Symlinks im Docroot
+# liegen; Apache liest für diese Pfade nicht diese Datei, sondern public/.htaccess. Lokal (php -S) und im Container
+# (Docroot = public/) ist die Datei ohne Wirkung.
+Require all denied
