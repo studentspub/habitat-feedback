@@ -40,12 +40,12 @@
 
 <h2>Offen</h2>
 <p>Der gesamte Quellcode der Seite steht unter der <a href="https://www.gnu.org/licenses/agpl-3.0.de.html" target="_blank" rel="noopener">GNU Affero General Public License v3.0</a> (AGPL-3.0). Das heißt: Jeder darf den Code lesen, prüfen, verändern und selbst betreiben; wer ihn verändert und als Dienst anbietet, muss seine Änderungen unter derselben Lizenz offenlegen. So bleibt das Projekt für alle nutzbar und kann nicht still in ein geschlossenes Produkt wandern.</p>
-<p>Der Code wird mit dem öffentlichen Start der Seite auf GitHub veröffentlicht (<span class="code">github.com/studentspub/habitat-feedback</span>); bis dahin ist das Repository in Vorbereitung. Alle Daten auf der Karte stammen aus offenen Quellen mit freier Lizenz; die vollständige Liste bis zur einzelnen Kennzahl steht unter <a href="/quellen">Quellen &amp; Lizenzen</a>.</p>
+<p>Der Code liegt öffentlich auf GitHub: <a href="https://github.com/studentspub/habitat-feedback" target="_blank" rel="noopener">github.com/studentspub/habitat-feedback</a> (Quelltext, Änderungsverlauf, Issues). Alle Daten auf der Karte stammen aus offenen Quellen mit freier Lizenz; die vollständige Liste bis zur einzelnen Kennzahl steht unter <a href="/quellen">Quellen &amp; Lizenzen</a>.</p>
 
 <h2>Mitmachen</h2>
 <ul>
   <li><strong>Bewerten:</strong> Die wichtigste Hilfe ist eine ehrliche Bewertung der eigenen Straße, dauert zwei Minuten: <a href="/bewerten">Bewertung abgeben</a>.</li>
-  <li><strong>Fehler und Ideen:</strong> Sobald das Repository öffentlich ist, als Issue auf GitHub; bis dahin über das Meldeformular, das in jedem Bewertungs-Popup verlinkt ist.</li>
+  <li><strong>Fehler und Ideen:</strong> als <a href="https://github.com/studentspub/habitat-feedback/issues" target="_blank" rel="noopener">Issue auf GitHub</a> (Konto nötig) oder per E-Mail an die Adresse im <a href="/impressum">Impressum</a>.</li>
   <li><strong>Unplausible Bewertungen melden:</strong> Link „Bewertungen melden“ im Popup eines Straßenabschnitts. Jede Meldung wird gelesen.</li>
   <li><strong>Mitentwickeln:</strong> Beiträge am Code sind willkommen, Hinweise dazu stehen im Repository (README, Issue-Vorlage, Sicherheitsrichtlinie).</li>
 </ul>

@@ -253,8 +253,8 @@ final class Quellen
             [
                 'titel' => 'Software',
                 'eintraege' => [
-                    ['anzeige' => 'Die Seite selbst (PHP, JavaScript, SQL)', 'quelle' => 'Eigener Quellcode, Veröffentlichung auf GitHub mit dem Livegang',
-                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'agpl', 'vermerk' => '–', 'stand' => 'laufend', 'link' => '/projekt'],
+                    ['anzeige' => 'Die Seite selbst (PHP, JavaScript, SQL)', 'quelle' => 'Eigener Quellcode, öffentlich auf GitHub (studentspub/habitat-feedback)',
+                        'herausgeber' => 'Habitat Feedback', 'lizenz' => 'agpl', 'vermerk' => '–', 'stand' => 'laufend', 'link' => 'https://github.com/studentspub/habitat-feedback'],
                     ['anzeige' => 'Kartenbibliothek', 'quelle' => 'Leaflet 1.9.4 (JavaScript, CSS, Marker-Bilder)',
                         'herausgeber' => 'Volodymyr Agafonkin und Mitwirkende', 'lizenz' => 'bsd2', 'vermerk' => 'Leaflet © 2010–2023 Volodymyr Agafonkin, © 2010–2011 CloudMade', 'stand' => 'Version 1.9.4', 'link' => 'https://leafletjs.com'],
                 ],

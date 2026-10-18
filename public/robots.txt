@@ -1,5 +1,5 @@
-# Habitat Feedback (Issue #31). Solange die Seite nur im Heimnetz läuft, gibt es nichts zu indexieren;
-# vor dem Livegang auf Strato (#16) auf "Allow: /" umstellen und die Datenschutz-/Impressum-Entscheidung
-# aus Ideas.md ("Impressum vor Webcrawlern schützen") hier nachziehen.
+# Habitat Feedback: öffentlich seit 18.10.2026 (Issue #38). Alle Seiten dürfen indexiert werden;
+# die API liefert nur Daten für die Karte und ist für Suchmaschinen ohne Nutzen.
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /api/
