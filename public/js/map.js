@@ -469,7 +469,14 @@
     { key: 'supermarket', label: 'Supermärkte', color: '#1E88E5', textColor: 'white' },
     { key: 'transit', label: 'ÖPNV-Haltestellen', color: '#263238', textColor: 'white' },
     // Ladesäulen kommen nicht aus OSM, sondern aus dem BNetzA-Register (Issue #22)
-    { key: 'charging', label: 'Ladesäulen', color: '#6D4C41', textColor: 'white', quelle: 'Ladesäulen: Bundesnetzagentur.de (CC BY 4.0)' }
+    { key: 'charging', label: 'Ladesäulen', color: '#6D4C41', textColor: 'white', quelle: 'Ladesäulen: Bundesnetzagentur.de (CC BY 4.0)' },
+    // Issue #1: drei weitere OSM-Kategorien. Hellgrau, Indigo und Cyan halten
+    // Abstand zu den neun bestehenden Tönen (kein Grün wegen des Neonrands).
+    // Toiletten haben einen Unterschalter „nur barrierefrei“ (Merkmal b aus /api/poi).
+    { key: 'toilets', label: 'Toiletten', color: '#CFD8DC', textColor: '#1B2420',
+      unterschalter: { id: 'poi-toilets-barrierefrei', label: 'nur barrierefreie Toiletten', filter: p => p.b === 1 } },
+    { key: 'post', label: 'Post & Pakete', color: '#3949AB', textColor: 'white' },
+    { key: 'ebike', label: 'E-Bike-Laden', color: '#00BCD4', textColor: '#1B2420' }
   ];
   const POI_MIN_ZOOM = 14;
   const POI_BORDER_COLOR = '#39FF14'; // leuchtendes Neongrün (TODO.md, User)
@@ -498,7 +505,7 @@
   const poiRenderer = L.canvas({ padding: 0.5 });
 
   const poiState = {};
-  POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false }; });
+  POI_CATEGORIES.forEach(c => { poiState[c.key] = { layer: null, enabled: false, punkte: [] }; });
   let poiRequestId = 0;
 
   function updatePoiHint() {
@@ -535,12 +542,23 @@
     POI_CATEGORIES.forEach(c => removePoiLayer(c.key));
     aktiv.forEach(cat => {
       if (!poiState[cat.key].enabled) return;
-      const punkte = (data.categories || {})[cat.key] || [];
-      poiState[cat.key].layer = L.layerGroup(punkte.map(p => new PoiDreieck([p.lat, p.lon], {
-        renderer: poiRenderer, radius: 9, color: POI_BORDER_COLOR, weight: 2.25, opacity: 1,
-        fillColor: cat.color, fillOpacity: 1, lineJoin: 'round'
-      }).bindTooltip(escapeHtml(p.name || cat.label)))).addTo(map);
+      poiState[cat.key].punkte = (data.categories || {})[cat.key] || [];
+      zeichnePoi(cat);
     });
+  }
+
+  // Zeichnet die zuletzt geladenen Punkte einer Kategorie; ein Unterschalter
+  // (Issue #1, „nur barrierefreie Toiletten“) filtert nur, ohne neue Anfrage.
+  function zeichnePoi(cat) {
+    removePoiLayer(cat.key);
+    let punkte = poiState[cat.key].punkte;
+    if (cat.unterschalter && document.getElementById(cat.unterschalter.id).checked) {
+      punkte = punkte.filter(cat.unterschalter.filter);
+    }
+    poiState[cat.key].layer = L.layerGroup(punkte.map(p => new PoiDreieck([p.lat, p.lon], {
+      renderer: poiRenderer, radius: 9, color: POI_BORDER_COLOR, weight: 2.25, opacity: 1,
+      fillColor: cat.color, fillOpacity: 1, lineJoin: 'round'
+    }).bindTooltip(escapeHtml(p.name || cat.label)))).addTo(map);
   }
 
   const PoiControl = L.Control.extend({
@@ -552,6 +570,10 @@
         '<div class="poi-metric-grid">' +
         POI_CATEGORIES.map(c => '<button type="button" class="poi-metric-btn" data-key="' + c.key + '">' + c.label + '</button>').join('') +
         '</div>' +
+        // Unterschalter (Issue #1) erscheinen nur, solange ihre Kategorie an ist.
+        POI_CATEGORIES.filter(c => c.unterschalter).map(c =>
+          '<label class="poi-unterschalter" for="' + c.unterschalter.id + '" hidden>' +
+          '<input type="checkbox" id="' + c.unterschalter.id + '"> ' + c.unterschalter.label + '</label>').join('') +
         '<div class="hint" id="poi-hint"></div>';
       L.DomEvent.disableClickPropagation(el);
       return el;
@@ -561,6 +583,11 @@
 
   const poiByKey = Object.fromEntries(POI_CATEGORIES.map(c => [c.key, c]));
   const loadPoisNachKlick = debounce(loadPois, 150); // mehrere schnelle Klicks = eine Anfrage
+  POI_CATEGORIES.filter(c => c.unterschalter).forEach(cat => {
+    document.getElementById(cat.unterschalter.id).addEventListener('change', () => {
+      if (poiState[cat.key].enabled && map.getZoom() >= POI_MIN_ZOOM) zeichnePoi(cat);
+    });
+  });
   document.querySelectorAll('.poi-metric-btn').forEach(btn => {
     const cat = poiByKey[btn.dataset.key];
     btn.addEventListener('click', () => {
@@ -569,6 +596,7 @@
       btn.classList.toggle('active', state.enabled);
       btn.style.background = state.enabled ? cat.color : '';
       btn.style.color = state.enabled ? cat.textColor : '';
+      if (cat.unterschalter) document.querySelector('label[for="' + cat.unterschalter.id + '"]').hidden = !state.enabled;
       if (state.enabled) {
         loadPoisNachKlick();
       } else {
@@ -1319,7 +1347,7 @@
   }
 
   function poiTourHtml() {
-    return 'Acht Kategorien aus OpenStreetMap und die Ladesäulen der Bundesnetzagentur, jede als eigenfarbiges Dreieck auf der Karte:' +
+    return 'Elf Kategorien aus OpenStreetMap und die Ladesäulen der Bundesnetzagentur, jede als eigenfarbiges Dreieck auf der Karte:' +
       '<ul class="tour-list">' +
       POI_CATEGORIES.map(c => '<li><span class="tour-swatch triangle" style="background:' + c.color + '"></span><span>' + c.label + '</span></li>').join('') +
       '</ul>';

@@ -155,9 +155,9 @@ function fetchTagByBundesland(string $tagFilter): ?array
  * ist unvollständiges Tagging der Normalfall, kein Ausnahmefall.
  *
  * @param array $elements Rohe Overpass-Elemente (gemischt node/way)
- * @return array<int, array{osm_id:int, osm_type:string, lat:float, lon:float, name:?string}>
+ * @return array<int, array{osm_id:int, osm_type:string, lat:float, lon:float, name:?string, barrierefrei:int}>
  */
-function mapElementsToRows(array $elements): array
+function mapElementsToRows(string $category, array $elements): array
 {
     $rows = [];
     foreach ($elements as $el) {
@@ -167,13 +167,16 @@ function mapElementsToRows(array $elements): array
             continue;
         }
 
-        // OSM-Namen sind ungeprüften Freitext ohne Längenbegrenzung — einzelne
+        // Beschriftung je Kategorie (PoiCategories::beschriftung, Issue #1): bei den
+        // alten Kategorien der OSM-Name, bei Toiletten/Post/E-Bike eine Art-Angabe.
+        // OSM-Namen sind ungeprüfter Freitext ohne Längenbegrenzung — einzelne
         // Einträge (offizielle Firmierungen, mehrsprachige Namen) überschreiten
         // die 200 Zeichen der Spalte. Ohne Kappung bricht INSERT mit "Data too
         // long" ab und reißt den kompletten Kategorie-Import mit sich (genau so
         // beobachtet: der Lauf starb mitten in 'doctor', 'supermarket' und
         // 'transit' wurden nie erreicht).
-        $name = $el['tags']['name'] ?? null;
+        $tags = $el['tags'] ?? [];
+        $name = PoiCategories::beschriftung($category, $tags);
         if ($name !== null && mb_strlen($name) > 200) {
             $name = mb_substr($name, 0, 200);
         }
@@ -184,17 +187,99 @@ function mapElementsToRows(array $elements): array
             'lat' => (float) $lat,
             'lon' => (float) $lon,
             'name' => $name,
+            'barrierefrei' => $category === 'toilets' && PoiCategories::barrierefrei($tags) ? 1 : 0,
         ];
     }
     return $rows;
 }
 
+/**
+ * Prüft die Tags eines Elements gegen einen Filterausdruck aus
+ * PoiCategories::CATEGORIES, ohne Overpass (Issue #1, Modus --extrakt).
+ * Verstanden werden `k=v`, `k~"regex"` und `k!~"regex"`, mit `][` verkettet,
+ * also genau die Teilmenge der Overpass-Syntax, die die Kategorien benutzen.
+ */
+function tagsPassen(array $tags, string $filter): bool
+{
+    foreach (explode('][', $filter) as $teil) {
+        if (preg_match('/^([\w:]+)(!~|~|=)"?(.*?)"?$/', $teil, $m) !== 1) {
+            throw new RuntimeException("Filter nicht verstanden: $teil");
+        }
+        [, $key, $op, $wert] = $m;
+        $vorhanden = $tags[$key] ?? null;
+        $ok = match ($op) {
+            '=' => $vorhanden === $wert,
+            '~' => $vorhanden !== null && preg_match('/' . $wert . '/', $vorhanden) === 1,
+            '!~' => $vorhanden === null || preg_match('/' . $wert . '/', $vorhanden) !== 1,
+        };
+        if (!$ok) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Mittelpunkt einer GeoJSON-Geometrie aus `osmium export`: Punkt direkt,
+ * Fläche als Mittel des äußeren Rings (reicht für Gebäude), Linie der
+ * mittlere Stützpunkt. Entspricht grob Overpass' `out center`.
+ *
+ * @return array{0: ?float, 1: ?float} [lat, lon]
+ */
+function mittelpunkt(?array $geometry): array
+{
+    $coords = $geometry['coordinates'] ?? null;
+    switch ($geometry['type'] ?? '') {
+        case 'Point':
+            return [(float) $coords[1], (float) $coords[0]];
+        case 'MultiPolygon':
+            $coords = $coords[0];
+            // fallthrough
+        case 'Polygon':
+            $ring = array_slice($coords[0], 0, -1);
+            $n = count($ring);
+            if ($n === 0) {
+                return [null, null];
+            }
+            return [array_sum(array_column($ring, 1)) / $n, array_sum(array_column($ring, 0)) / $n];
+        case 'LineString':
+            $p = $coords[intdiv(count($coords), 2)];
+            return [(float) $p[1], (float) $p[0]];
+        default:
+            return [null, null];
+    }
+}
+
 $db = Db::get();
 $upsert = $db->prepare(
-    'INSERT INTO poi_locations (category, osm_id, osm_type, lat, lon, name)
-     VALUES (:category, :osm_id, :osm_type, :lat, :lon, :name)
-     ON DUPLICATE KEY UPDATE lat = VALUES(lat), lon = VALUES(lon), name = VALUES(name), imported_at = NOW()'
+    'INSERT INTO poi_locations (category, osm_id, osm_type, lat, lon, name, barrierefrei)
+     VALUES (:category, :osm_id, :osm_type, :lat, :lon, :name, :barrierefrei)
+     ON DUPLICATE KEY UPDATE lat = VALUES(lat), lon = VALUES(lon), name = VALUES(name),
+        barrierefrei = VALUES(barrierefrei), imported_at = NOW()'
 );
+
+// --extrakt=/pfad/datei.osm.pbf (Issue #1): statt Overpass den lokalen Geofabrik-
+// Extrakt lesen, vorher mit `osmium tags-filter` auf die gewünschten Tags
+// eingedampft (siehe BETRIEB.md). Dieselben Filterausdrücke, dieselbe Beschriftung,
+// dieselbe Tabelle - nur ohne Abhängigkeit von Overpass' Tageslaune (502/504).
+$extrakt = null;
+foreach ($argv as $i => $arg) {
+    if ($i === 0) {
+        continue;
+    }
+    if ($arg === '--help' || $arg === '-h') {
+        echo "Aufruf: php bin/import_poi.php [--extrakt=DATEI.osm.pbf] [kategorie ...]\n"
+            . "  ohne Kategorien: alle aus PoiCategories::CATEGORIES\n"
+            . "  ohne --extrakt: Abfrage je Tag bei Overpass (ganz Deutschland)\n"
+            . "  mit --extrakt: Elemente aus der Datei lesen (osmium export), keine Netzanfrage\n";
+        exit(0);
+    }
+    if (str_starts_with($arg, '--extrakt=')) {
+        $extrakt = substr($arg, strlen('--extrakt='));
+        unset($argv[$i]);
+    }
+}
+$argv = array_values($argv);
 
 $requestedCategories = array_slice($argv, 1);
 if ($requestedCategories !== []) {
@@ -203,6 +288,86 @@ if ($requestedCategories !== []) {
         fwrite(STDERR, 'Unbekannte Kategorie(n): ' . implode(', ', $unknown) . "\n");
         exit(1);
     }
+}
+
+if ($extrakt !== null) {
+    if (!is_file($extrakt)) {
+        fwrite(STDERR, "Extrakt nicht gefunden: $extrakt\n");
+        exit(1);
+    }
+    $kategorien = $requestedCategories !== [] ? $requestedCategories : array_keys(PoiCategories::CATEGORIES);
+    echo 'Lese ' . $extrakt . ' für ' . implode(', ', $kategorien) . " ...\n";
+    // geojsonseq: eine Feature-Zeile je Element, @type/@id als Properties; Relationen
+    // (Multipolygon-Gebäude, sehr selten) lassen wir aus - die Spalte osm_type kennt nur node/way,
+    // und eine Relations-ID könnte mit einer Way-ID zusammenfallen.
+    // Nur point und polygon: geschlossene Wege gibt osmium sonst zusätzlich als
+    // LineString aus, dann käme jedes Gebäude doppelt an (der UNIQUE-Key fängt
+    // das zwar ab, aber die Zählung stimmte nicht mehr).
+    $cmd = 'osmium export -f geojsonseq -a type,id --geometry-types=point,polygon -o - ' . escapeshellarg($extrakt);
+    $h = popen($cmd, 'r');
+    if ($h === false) {
+        fwrite(STDERR, "osmium export ließ sich nicht starten.\n");
+        exit(1);
+    }
+    $zaehler = array_fill_keys($kategorien, 0);
+    $gelesen = 0;
+    $db->beginTransaction();
+    while (($zeile = fgets($h)) !== false) {
+        $f = json_decode(ltrim($zeile, "\x1e"), true); // RS-Zeichen vor jeder geojsonseq-Zeile
+        if (!is_array($f) || !isset($f['properties'])) {
+            continue;
+        }
+        $gelesen++;
+        $tags = $f['properties'];
+        $typ = $tags['@type'] ?? 'node';
+        $id = (int) ($tags['@id'] ?? 0);
+        unset($tags['@type'], $tags['@id']);
+        if (!in_array($typ, ['node', 'way'], true) || $id === 0) {
+            continue;
+        }
+        [$lat, $lon] = mittelpunkt($f['geometry'] ?? null);
+        if ($lat === null) {
+            continue;
+        }
+        foreach ($kategorien as $category) {
+            foreach (PoiCategories::CATEGORIES[$category] as $filter) {
+                if (!tagsPassen($tags, $filter)) {
+                    continue;
+                }
+                $name = PoiCategories::beschriftung($category, $tags);
+                $upsert->execute([
+                    'category' => $category,
+                    'osm_id' => $id,
+                    'osm_type' => $typ,
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'name' => $name !== null ? mb_substr($name, 0, 200) : null,
+                    'barrierefrei' => $category === 'toilets' && PoiCategories::barrierefrei($tags) ? 1 : 0,
+                ]);
+                $zaehler[$category]++;
+                break;
+            }
+        }
+        if ($gelesen % 20000 === 0) {
+            $db->commit();
+            $db->beginTransaction();
+            echo "  $gelesen Elemente gelesen ...\n";
+        }
+    }
+    $db->commit();
+    $exit = pclose($h);
+    if ($exit !== 0) {
+        fwrite(STDERR, "osmium export endete mit Exit-Code $exit.\n");
+        exit(1);
+    }
+    echo "$gelesen Elemente gelesen.\n";
+    $bestand = $db->prepare('SELECT COUNT(*) FROM poi_locations WHERE category = ?');
+    foreach ($zaehler as $category => $n) {
+        $bestand->execute([$category]);
+        echo "  $category: $n Treffer verarbeitet, " . $bestand->fetchColumn() . " Standorte in der Tabelle.\n";
+    }
+    echo "Fertig.\n";
+    exit(0);
 }
 
 foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
@@ -227,7 +392,7 @@ foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
             continue;
         }
 
-        $rows = mapElementsToRows($elements);
+        $rows = mapElementsToRows($category, $elements);
         foreach ($rows as $row) {
             $upsert->execute([
                 'category' => $category,
@@ -236,6 +401,7 @@ foreach (PoiCategories::CATEGORIES as $category => $tagFilters) {
                 'lat' => $row['lat'],
                 'lon' => $row['lon'],
                 'name' => $row['name'],
+                'barrierefrei' => $row['barrierefrei'],
             ]);
         }
         $categoryTotal += count($rows);

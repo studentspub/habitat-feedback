@@ -17,7 +17,7 @@ BBSR und beim DWD. Beide Lizenzen erlauben auch kommerzielle Nutzung, Pflicht is
 | Grundsicherung, Elterngeld, Wohnungsbestand, Einkommen, Wanderungssaldo, Baugenehmigungen, Baufertigstellungen, Gewerbeanzeigen, Insolvenzen | Regionaldatenbank (GENESIS), Tabellen 22151, 22922, 31231, 82000, 12711, 31111, 31121, 52311, 52411 | Kreis | `bin/import_*.php` | dl-de/by-2.0 |
 | Klima-Normalwerte 1991-2020 | DWD, Stationen (`mean_91-20`) | nächste Station | `bin/import_climate_normals.php` | CC BY 4.0 |
 | Luftqualität | Umweltbundesamt, Luftdaten-API | nächste Station | `bin/import_air_stations.php` + live | UBA |
-| POIs (Spielplätze, Kitas, Ärzte, Supermärkte ...) | OpenStreetMap über Overpass | Punkt | `bin/import_poi.php` | ODbL |
+| POIs (Spielplätze, Kitas, Ärzte, Supermärkte ...; seit #1 auch Toiletten, Post & Pakete, E-Bike-Laden) | OpenStreetMap über Overpass oder aus dem Geofabrik-Extrakt (`--extrakt`) | Punkt | `bin/import_poi.php` | ODbL |
 | Bushaltestellen | OpenStreetMap, Geofabrik-Extrakt | Punkt | `bin/import_bus_stops.php` | ODbL |
 | Straßenverzeichnis (Straße + PLZ + Ort, ohne Hausnummern) für die Adress-Vorschläge | OpenStreetMap, Geofabrik-Extrakt (Straßen, Adresspunkte, PLZ-Gebiete) | Straße | `bin/import_strassen.php` (#15), `/api/address-autocomplete` — vorher live über Nominatim | ODbL |
 | Zensus 2022 (Dichte, Alter, Miete, Eigentum, Leerstand) | Destatis, Gitterdaten-Downloads | 100 m / 1 km / 10 km | `bin/import_zensus.php` (#23), `/api/zensus` — vorher live über Esri/USA | dl-de/by-2.0 |

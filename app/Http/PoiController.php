@@ -44,7 +44,7 @@ final class PoiController
         [$minLon, $minLat, $maxLon, $maxLat] = array_map('floatval', $bboxParts);
 
         $stmt = Db::get()->prepare(
-            'SELECT lat, lon, name FROM poi_locations
+            'SELECT lat, lon, name, barrierefrei FROM poi_locations
              WHERE category = :cat AND lat BETWEEN :minLat AND :maxLat AND lon BETWEEN :minLon AND :maxLon
              LIMIT ' . self::MAX_POINTS
         );
@@ -52,11 +52,12 @@ final class PoiController
         foreach ($categories as $category) {
             $stmt->execute(['cat' => $category, 'minLat' => $minLat, 'maxLat' => $maxLat, 'minLon' => $minLon, 'maxLon' => $maxLon]);
             // 5 Nachkommastellen ≈ 1 m — genauer zeichnet die Karte ohnehin nicht.
+            // "b": 1 nur bei barrierefreien Standorten (Issue #1, bisher Toiletten) - spart Bytes bei allen anderen.
             $proKategorie[$category] = array_map(fn($p) => [
                 'lat' => round((float) $p['lat'], 5),
                 'lon' => round((float) $p['lon'], 5),
                 'name' => $p['name'],
-            ], $stmt->fetchAll());
+            ] + ($p['barrierefrei'] ? ['b' => 1] : []), $stmt->fetchAll());
         }
 
         // Referenzdaten (Neu-Import höchstens monatlich): der Browser darf die

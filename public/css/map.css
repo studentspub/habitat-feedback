@@ -139,6 +139,10 @@
   }
   .poi-metric-btn.active { color: white; border-color: transparent; }
   .poi-control .hint { font-size: 0.72rem; color: #4B564F; margin-top: 8px; line-height: 1.4; }
+  /* Unterschalter unter dem Kategorie-Raster (Issue #1, „nur barrierefreie Toiletten“). */
+  .poi-unterschalter { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.76rem; font-weight: 600; cursor: pointer; }
+  .poi-unterschalter[hidden] { display: none; }
+  .poi-unterschalter input { margin: 0; }
   /* Dreiecke statt Kreise, bewusst anders als die runden Bewertungs-Pins —
      sobald beide Ebenen gleichzeitig an sind, muss auf einen Blick erkennbar
      sein, was eine Bewertung und was ein OSM-Infrastrukturpunkt ist.
