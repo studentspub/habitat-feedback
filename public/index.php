@@ -1,11 +1,17 @@
 <?php
 
+// Echter Ordner dieser Datei. Auf Strato (#36) ist index.php im Docroot ein Symlink auf
+// releases/<…>/public/index.php; __DIR__ zeigt dann auf den Docroot, nicht auf public/,
+// und app/ läge "daneben" statt eine Ebene über public/. realpath löst den Symlink auf;
+// lokal und im Container ist es derselbe Pfad wie __DIR__.
+define('PUBLIC_DIR', dirname(realpath(__FILE__)));
+
 spl_autoload_register(function (string $class): void {
     if (!str_starts_with($class, 'App\\')) {
         return;
     }
     $relative = substr($class, strlen('App\\'));
-    $path = __DIR__ . '/../app/' . str_replace('\\', '/', $relative) . '.php';
+    $path = PUBLIC_DIR . '/../app/' . str_replace('\\', '/', $relative) . '.php';
     if (is_file($path)) {
         require $path;
     }
@@ -149,7 +155,7 @@ $seiten = [
 if (isset($seiten[$uri])) {
     [$view, $bildQuellen] = $seiten[$uri];
     csp($bildQuellen);
-    require __DIR__ . '/' . $view;
+    require PUBLIC_DIR . '/' . $view;
     return;
 }
 
