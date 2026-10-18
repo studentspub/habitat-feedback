@@ -8,7 +8,9 @@ final class Auth
     public static function checkPiToken(): bool
     {
         $config = require __DIR__ . '/../../config/config.php';
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        // REDIRECT_HTTP_AUTHORIZATION: so kommt der Header an, wenn ihn die .htaccess per Rewrite-Umgebungsvariable
+        // an PHP-FastCGI durchreicht (Strato, Issue #39); direkt gesetzt bei mod_php und php -S.
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
         if (!str_starts_with($header, 'Bearer ')) {
             return false;
         }

@@ -7,11 +7,16 @@
 FallbackResource /index.php
 
 # HTTPS erzwingen (Issue #38) – nur für die Live-Domain, der Test-Container im Heimnetz läuft über http.
+# Außerdem den Authorization-Header (Bearer-Token des Geocode-Workers, /api/pi/…) an PHP-FastCGI durchreichen:
+# Apache verwirft ihn für CGI/FastCGI sonst (Issue #39: 401 auf Strato); Auth.php liest HTTP_AUTHORIZATION
+# oder REDIRECT_HTTP_AUTHORIZATION. (CGIPassAuth wäre sauberer, braucht aber AllowOverride AuthConfig.)
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{HTTPS} !=on
     RewriteCond %{HTTP_HOST} ^(www\.)?habitat-feedback\.de$ [NC]
     RewriteRule ^ https://habitat-feedback.de%{REQUEST_URI} [R=301,L]
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 </IfModule>
 
 # JSON/GeoJSON komprimieren — Debians deflate.conf deckt nur HTML/CSS/JS ab.
