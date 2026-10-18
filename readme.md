@@ -43,6 +43,15 @@ worker/     Geocode-Worker (Python), verarbeitet eingereichte Bewertungen
 4. Referenzdaten nach Bedarf importieren (`php bin/import_*.php`, Quellen und Hinweise in `DATENQUELLEN.md`).
    Ohne Importe läuft die Karte, zeigt aber nur Bewertungen.
 
+## Betrieb auf Webhosting
+
+Die Live-Seite läuft auf einfachem Webhosting (Apache, PHP-FastCGI, MariaDB auf einem Nachbarserver). Deploy per
+`bin/deploy_strato.sh` (rsync über SSH): jedes Release liegt in `releases/<zeit>/`, ein Symlink `current` zeigt
+auf das aktive, die Einstiegspunkte aus `public/` liegen als Symlinks im Docroot, `config/config.php` bleibt auf dem
+Server und wird je Release verlinkt. `--testlauf` zeigt nur, `--los` schaltet live, `--zurueck` geht ein Release
+zurück. Ein Push auf `main` deployt nichts. Referenzdaten kommen als Dump (`bin/dump_fuer_strato.sh`), nicht über
+Importe auf dem Server.
+
 ## Mitmachen
 
 Fehler und Ideen bitte als Issue. Zusammenarbeit mit Claude Code läuft über das Projektboard, Ablauf in
