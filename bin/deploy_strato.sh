@@ -77,7 +77,7 @@ for n in $einstiege; do
 done
 # index.php als echte Datei (siehe Kommentar oben bei EINSTIEGE); nur ersetzen, wenn sie sich unterscheidet
 if [ -L index.php ] || ! cmp -s "releases/$rel/bin/strato_docroot_index.php" index.php; then
-  rm -f index.php && cp "releases/$rel/bin/strato_docroot_index.php" index.php && echo "index.php (Docroot-Einstieg) aktualisiert"
+  cp "releases/$rel/bin/strato_docroot_index.php" index.php.neu && mv -f index.php.neu index.php && echo "index.php (Docroot-Einstieg) aktualisiert"   # mv ersetzt atomar, keine Lücke
 fi
 # alte Releases aufräumen, die letzten $behalten bleiben
 ls -1dt releases/*/ | tail -n +$((behalten + 1)) | while read -r alt; do rm -rf "$alt"; echo "entfernt: $alt"; done
