@@ -1,0 +1,12 @@
+de_grenze.geojson
+-----------------
+Außengrenze Deutschlands (Landflächen) für den Nebel über dem Ausland (public/js/de_maske.js, Issue #12).
+
+Quelle:   Verwaltungsgebiete 1:250 000 (VG250), Gebietsstand 31.12.2023,
+          © GeoBasis-DE / Bundesamt für Kartographie und Geodäsie (BKG) 2023
+Lizenz:   Datenlizenz Deutschland – Namensnennung – Version 2.0 (dl-de/by-2.0),
+          https://www.govdata.de/dl-de/by-2-0
+Erzeugt:  bin/build_de_grenze.php (Vereinigung der Länderflächen, auf 40 m vereinfacht)
+
+Bei Weitergabe oder Anzeige ist der Quellenvermerk „© GeoBasis-DE / BKG (2023), dl-de/by-2.0“ anzugeben;
+die Karte tut das in der Leaflet-Attribution, die Seite /quellen listet es ebenfalls.

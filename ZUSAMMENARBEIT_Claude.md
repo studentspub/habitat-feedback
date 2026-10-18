@@ -63,4 +63,4 @@ So aufbauen, dass ein Chat ohne Vorwissen sie abarbeiten kann. „Zuerst lesen�
 Danach: Label `ForClaude` + Themen-Label, ins Projekt 3, Status `Claude ToDo`, Priority und Size setzen.
 
 Neue Datenquellen: erst in [`DATENQUELLEN.md`](DATENQUELLEN.md) bewerten (Lizenz, Raumebene, Nutzen), dann Issue.
-`Ideas.md` bleibt die Sammelstelle für Ideen; sobald eine Idee ein Issue hat, steht dort der Issue-Link.
+`Ideas.md` (im privaten Repo `studentspub/habitat-feedback-betrieb` (lokal `D:\git\habitat-feedback-betrieb`)) bleibt die Sammelstelle für Ideen; sobald eine Idee ein Issue hat, steht dort der Issue-Link.

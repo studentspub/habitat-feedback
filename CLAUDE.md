@@ -24,9 +24,9 @@ Planungsdokumente (Konzept, Rechtsrahmen, technischer Bauplan): siehe Artifact-L
 
 ## Test-Server im Homelab (seit 11.10.2026)
 
-Die Seite läuft 24/7 im Proxmox-Container **LXC 120 `habitat-feedback`** (Debian 13, Apache + PHP 8.4, MariaDB 11.8) — Testserver im Heimnetz (Abnahme, andere Geräte), nicht die Entwicklungsumgebung. Details und Befehle: [`BETRIEB.md`](BETRIEB.md), Abschnitt „Test-Server im Homelab".
+Die Seite läuft 24/7 im Proxmox-Container **LXC 120 `habitat-feedback`** (Debian 13, Apache + PHP 8.4, MariaDB 11.8) — Testserver im Heimnetz (Abnahme, andere Geräte), nicht die Entwicklungsumgebung. Details und Befehle: `BETRIEB.md` im privaten Repo `studentspub/habitat-feedback-betrieb` (lokal `D:\git\habitat-feedback-betrieb`), Abschnitt „Test-Server im Homelab".
 
-- Aufruf: `http://<interne-adresse>/` (auch `:8842`), im ganzen Heimnetz.
+- Aufruf im Heimnetz: `http://habitat-feedback.fritz.box/` (auch `:8842`); IP und weitere Adressen stehen nur in der privaten Betriebsdoku.
 - Claude-Zugriff: `ssh habitat-feedback-lxc "…"` (Nutzer `dev`, passwortloses sudo).
 - Repo im Container: `/srv/habitat-feedback`, holt sich `main` alle 2 Minuten selbst von GitHub (`habitat-feedback-pull.timer`). Code-Änderungen sind dort also erst **nach Commit + Push** sichtbar, nicht schon beim Speichern wie in WSL.
 - Neue `sql/0xx_*.sql`-Migrationen werden **nicht** automatisch eingespielt: `ssh habitat-feedback-lxc "sudo mysql habitat_feedback_dev < /srv/habitat-feedback/sql/0xx_….sql"`.
@@ -55,5 +55,5 @@ Der Raspberry Pi des Nutzers ist bereits mit anderen Diensten belastet (Genealog
 
 ## Weitere Dokumente
 
-- [`BETRIEB.md`](BETRIEB.md) — gesynct. Gängige manuelle Befehle (WSL starten/stoppen, Dev-Server, MariaDB, Troubleshooting).
+- `BETRIEB.md` (Befehle für WSL, Container, MariaDB, Importe, Troubleshooting) und `Ideas.md` (Ideensammlung) liegen seit 18.10.2026 im privaten Repo `studentspub/habitat-feedback-betrieb` (lokal `D:\git\habitat-feedback-betrieb`), weil sie Heimnetz-Details enthalten; dieses Repo ist öffentlich (Issue #32). Dort nachlesen, hier nicht neu anlegen.
 - `_INFRASTRUKTUR.local.txt` — **NICHT gesynct** (per `.gitignore`). Enthält alle Zugangsdaten/Infrastruktur-Details im Klartext, rein für den Nutzer. Bei jeder neuen Zugangsdaten-relevanten Änderung (neue DB, neuer Service, neuer Token) dort mitpflegen — niemals in eine gesyncte Datei oder in Code schreiben.

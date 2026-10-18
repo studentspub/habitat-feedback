@@ -1,7 +1,7 @@
 # Datenquellen - Bestand und Kandidaten
 
-Stand 14.10.2026. Bewertung neuer Quellen für Habitat Feedback. Die Seite bleibt **lokal** (siehe
-`ZUSAMMENARBEIT_Claude.md`), trotzdem nur Quellen mit freier Lizenz, damit ein späterer Livegang nichts umbauen muss.
+Stand 18.10.2026. Bewertung neuer Quellen für Habitat Feedback. Ziel ist die Veröffentlichung auf Strato (siehe
+`CLAUDE.md`), deshalb nur Quellen mit freier Lizenz und Namensnennung; die Seite `/quellen` (Issue #33) listet sie.
 Umsetzung läuft über Issues im Projekt 3, Label `Datenquelle`.
 
 Anlass: Eine andere Seite mit Kreis-Score nennt als Datenbasis BBSR (dl-de/by-2.0) und DWD (CC BY 4.0). Deren
