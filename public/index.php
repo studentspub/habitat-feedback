@@ -155,12 +155,27 @@ $seiten = [
     '/quellen' => ['quellen.view.php', ''],
     '/projekt' => ['projekt.view.php', ''],
 ];
+// Besuchszähler (habitat-feedback-betrieb#8): erst die Seite ausliefern, dann zählen, damit der Besucher nicht
+// auf die Datenbank wartet. Nur echte GET-Aufrufe, kein HEAD (Monitoring, curl -I).
+function zaehlen(string $pfad): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+        return;
+    }
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+    App\Support\Besuche::zaehlen($pfad);
+}
+
 if (isset($seiten[$uri])) {
     [$view, $bildQuellen] = $seiten[$uri];
     csp($bildQuellen);
     require PUBLIC_DIR . '/' . $view;
+    zaehlen($uri === '/index.php' ? '/' : $uri);
     return;
 }
 
 http_response_code(404);
 echo 'Nicht gefunden.';
+zaehlen('404');

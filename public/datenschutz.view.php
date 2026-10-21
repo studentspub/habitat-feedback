@@ -39,10 +39,13 @@
 <h2>Melde-Funktion</h2>
 <p>Meldungen zu einem Straßenabschnitt (Text + Zeitpunkt) werden gespeichert, um sie zu prüfen. Es wird keine Kontaktmöglichkeit zum Meldenden erfasst, es sei denn, du gibst sie freiwillig im Text an.</p>
 
+<h2>Besuchsstatistik</h2>
+<p>Damit wir sehen, ob die Seite genutzt wird, zählen wir die Aufrufe unserer Seiten selbst: je Tag und Seite eine Summe, dazu grob, woher der Aufruf kam (z.B. „Google“, „direkt“ oder der Name der verweisenden Website, ohne deren genaue Adresse). Automatische Abrufe von Suchmaschinen und anderen Programmen werden anhand der Browser-Kennung erkannt und getrennt gezählt. Dabei wird nichts über dich gespeichert: keine IP-Adresse, keine Browser-Kennung, kein Cookie, keine Kennung, über die sich Aufrufe einer Person verbinden ließen. Es entsteht nur eine Strichliste je Tag. Ein externer Statistikdienst wird nicht eingesetzt.</p>
+
 <h2>Was nicht erfasst wird</h2>
 <ul>
   <li>Keine Nutzerkonten, keine Klarnamen, keine Pflicht-E-Mail-Adresse.</li>
-  <li>Keine Cookies zu Tracking-/Werbezwecken.</li>
+  <li>Keine Cookies, keine Tracking- oder Werbedienste.</li>
   <li>Keine Weitergabe an Dritte außer den technisch notwendigen Diensten zur Kartendarstellung (OpenStreetMap-Kachelserver) und Geokodierung (Nominatim/Overpass, beide Projekte der OpenStreetMap Foundation).</li>
 </ul>
 
