@@ -62,5 +62,9 @@ So aufbauen, dass ein Chat ohne Vorwissen sie abarbeiten kann. „Zuerst lesen�
 
 Danach: Label `ForClaude` + Themen-Label, ins Projekt 3, Status `Claude ToDo`, Priority und Size setzen.
 
+**Welches Repo:** Dieses Repo ist öffentlich, seine Issues auch. Issues zu Strategie, Reichweite, Zahlen oder
+Wettbewerbern (z. B. SEO, Label `SEO`) gehören ins private Repo `studentspub/habitat-feedback-betrieb`, auf dasselbe
+Board (Projekt 3). Commits hier nennen sie als `studentspub/habitat-feedback-betrieb#N`.
+
 Neue Datenquellen: erst in [`DATENQUELLEN.md`](DATENQUELLEN.md) bewerten (Lizenz, Raumebene, Nutzen), dann Issue.
 `Ideas.md` (im privaten Repo `studentspub/habitat-feedback-betrieb` (lokal `D:\git\habitat-feedback-betrieb`)) bleibt die Sammelstelle für Ideen; sobald eine Idee ein Issue hat, steht dort der Issue-Link.
