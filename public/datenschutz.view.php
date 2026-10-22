@@ -42,6 +42,14 @@
 <h2>Besuchsstatistik</h2>
 <p>Damit wir sehen, ob die Seite genutzt wird, zählen wir die Aufrufe unserer Seiten selbst: je Tag und Seite eine Summe, dazu grob, woher der Aufruf kam (z.B. „Google“, „direkt“ oder der Name der verweisenden Website, ohne deren genaue Adresse). Automatische Abrufe von Suchmaschinen und anderen Programmen werden anhand der Browser-Kennung erkannt und getrennt gezählt. Dabei wird nichts über dich gespeichert: keine IP-Adresse, keine Browser-Kennung, kein Cookie, keine Kennung, über die sich Aufrufe einer Person verbinden ließen. Es entsteht nur eine Strichliste je Tag. Ein externer Statistikdienst wird nicht eingesetzt.</p>
 
+<h2>Einstellungen im Browser-Speicher</h2>
+<p>Für zwei Bequemlichkeits-Einstellungen legt die Karte je einen kleinen Eintrag im Speicher deines Browsers ab (<code>localStorage</code>, kein Cookie):</p>
+<ul>
+  <li><code>wl_welcome_dismissed</code>: dass du das Willkommensfenster geschlossen hast, damit es nicht bei jedem Besuch wieder erscheint.</li>
+  <li><code>hf_ebenen_zu</code>: ob du die Bedienfelder der Karte mit dem Knopf „Ebenen“ ausgeblendet hast. Dieser Eintrag entsteht erst, wenn du den Knopf benutzt.</li>
+</ul>
+<p>Die Einträge enthalten nur einen Merkwert (1 oder 0), keine Kennung, und bleiben auf deinem Gerät; an unseren Server oder an Dritte werden sie nicht übertragen. Sie dienen allein dazu, die Seite so anzuzeigen, wie du es selbst eingestellt hast (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst sie jederzeit löschen, indem du in deinem Browser die Websitedaten dieser Seite entfernst; die Karte verhält sich danach wieder wie beim ersten Besuch.</p>
+
 <h2>Was nicht erfasst wird</h2>
 <ul>
   <li>Keine Nutzerkonten, keine Klarnamen, keine Pflicht-E-Mail-Adresse.</li>
@@ -57,7 +65,7 @@
 
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
-<p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">Stand: 18. Oktober 2026.</p>
+<p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">Stand: 22. Oktober 2026.</p>
 
 <footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/projekt" style="color:#31576D;margin-right:12px">Über das Projekt</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
 </body>
