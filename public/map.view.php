@@ -37,7 +37,7 @@
 <div id="legal">
   <a href="/ueber">Über Habitat Feedback</a><a href="/projekt">Über das Projekt</a><a href="/quellen">Quellen &amp; Lizenzen</a><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a>
 </div>
-<!-- Nur auf dem Handy sichtbar (Issue #27): öffnet die Bedienfelder als Schublade von unten. -->
+<!-- Handy (Issue #27): öffnet die Bedienfelder als Schublade von unten. Desktop: blendet sie aus und ein (map.js setzt die Beschriftung). -->
 <button type="button" id="ebenen-btn" aria-controls="ebenen-schublade" aria-expanded="false">☰ Ebenen</button>
 
 <div id="welcome-overlay">

@@ -1160,9 +1160,25 @@
   L.DomEvent.disableClickPropagation(schublade);
   L.DomEvent.disableScrollPropagation(schublade);
 
+  const ebenenBtn = document.getElementById('ebenen-btn');
+
   function schubladeZeigen(offen) {
     document.body.classList.toggle('ebenen-offen', offen);
-    document.getElementById('ebenen-btn').setAttribute('aria-expanded', offen ? 'true' : 'false');
+    ebenenBtn.setAttribute('aria-expanded', offen ? 'true' : 'false');
+  }
+
+  // Desktop und Tablet: derselbe Knopf blendet die Felder unten rechts aus und
+  // wieder ein (body.ebenen-zu, CSS in map.css). Anfangs sichtbar; wer sie
+  // zuklappt, findet sie beim nächsten Besuch wieder zugeklappt (localStorage).
+  // Eingeschaltete Ebenen bleiben dabei auf der Karte, nur die Felder gehen weg.
+  const FELDER_ZU_KEY = 'hf_ebenen_zu';
+  let felderZuGemerkt = false;
+  try { felderZuGemerkt = localStorage.getItem(FELDER_ZU_KEY) === '1'; } catch (e) {}
+
+  function felderZeigen(sichtbar) {
+    document.body.classList.toggle('ebenen-zu', !sichtbar);
+    ebenenBtn.textContent = sichtbar ? '☰ Ebenen ausblenden' : '☰ Ebenen einblenden';
+    ebenenBtn.setAttribute('aria-expanded', sichtbar ? 'true' : 'false');
   }
 
   function handyLayout(aktiv) {
@@ -1173,16 +1189,24 @@
       schublade.appendChild(discover);
       schublade.appendChild(region);
       document.querySelector('.leaflet-bottom.leaflet-left').appendChild(quelle);
+      ebenenBtn.textContent = '☰ Ebenen';
+      schubladeZeigen(false);
     } else {
       document.body.insertBefore(discover, document.getElementById('search-group'));
       document.querySelector('.leaflet-top.leaflet-right').appendChild(region);
       schublade.appendChild(quelle);
       schubladeZeigen(false);
+      felderZeigen(!felderZuGemerkt);
     }
   }
   handyLayout(HANDY.matches);
   HANDY.addEventListener('change', e => handyLayout(e.matches));
-  document.getElementById('ebenen-btn').addEventListener('click', () => schubladeZeigen(true));
+  ebenenBtn.addEventListener('click', () => {
+    if (HANDY.matches) { schubladeZeigen(true); return; }
+    felderZuGemerkt = !felderZuGemerkt;
+    try { localStorage.setItem(FELDER_ZU_KEY, felderZuGemerkt ? '1' : '0'); } catch (e) {}
+    felderZeigen(!felderZuGemerkt);
+  });
   document.getElementById('ebenen-schliessen').addEventListener('click', () => schubladeZeigen(false));
   map.on('click', () => { if (HANDY.matches) schubladeZeigen(false); });
 
@@ -1465,6 +1489,9 @@
   }
 
   function tourStart() {
+    // Desktop: zugeklappte Felder für die Tour zeigen, tourEnd() stellt den
+    // gemerkten Zustand wieder her.
+    if (!HANDY.matches) felderZeigen(true);
     tourClickguard.hidden = false;
     tourSpotlight.hidden = false;
     tourTooltip.hidden = false;
@@ -1476,7 +1503,7 @@
     tourClickguard.hidden = true;
     tourSpotlight.hidden = true;
     tourTooltip.hidden = true;
-    if (HANDY.matches) schubladeZeigen(false);
+    if (HANDY.matches) schubladeZeigen(false); else felderZeigen(!felderZuGemerkt);
   }
 
   function tourNext() {

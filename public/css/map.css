@@ -414,13 +414,33 @@
     text-align: center; line-height: 1.3; text-shadow: 0 0 3px #EBEEE5, 0 0 6px #EBEEE5; }
 
   /* ---- Handy und Tablet (Issue #27) ------------------------------------------
-     Auf dem Desktop ändert sich nichts. Der „Ebenen“-Knopf und der Schubladen-
-     Kopf existieren zwar immer im DOM (map.js), sind aber nur unter 760 px
-     sichtbar. Dort wird der Leaflet-Container unten rechts (alle Bedienfelder
+     Der „Ebenen“-Knopf und der Schubladen-Kopf existieren immer im DOM
+     (map.js); der Kopf ist nur unter 760 px sichtbar, der Knopf blendet auf
+     dem Desktop die Felder ein und aus (siehe unten). Unter 760 px wird der Leaflet-Container unten rechts (alle Bedienfelder
      plus, per JS verschoben, Lebensqualität und die Entdecken-Knöpfe) zur
      Schublade: body.ebenen-offen blendet ihn als scrollbare Fläche von unten ein,
      sonst ist er weg und die Karte frei. */
   #ebenen-btn, .ebenen-kopf { display: none; }
+
+  /* Desktop und Tablet: derselbe Knopf unten rechts blendet die Bedienfelder
+     aus und wieder ein (body.ebenen-zu, Zustand in localStorage, map.js).
+     Die Felder rücken dafür über den Knopf; die Quellenangabe bleibt immer
+     sichtbar, „Lebensqualität“ oben rechts ist davon nicht betroffen. */
+  @media (min-width: 761px) {
+    #ebenen-btn {
+      display: block; position: absolute; bottom: 10px; right: 10px; z-index: 1000;
+      padding: 0.55em 0.9em; border: none; border-radius: 6px; background: #31576D; color: white;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.3); white-space: nowrap;
+    }
+    .leaflet-bottom.leaflet-right { bottom: 50px; max-height: calc(100vh - 160px); }
+    /* Die Quellenangabe läuft nicht mehr als letztes Element im Spaltenumbruch
+       mit (dort landete sie in einer eigenen Spalte, auf dem Tablet halb
+       außerhalb der Karte), sondern sitzt fest links neben dem Knopf. */
+    .leaflet-bottom.leaflet-right .leaflet-control-attribution {
+      position: absolute; bottom: -40px; right: 185px; width: max-content; max-width: calc(100vw - 280px);
+    }
+    body.ebenen-zu .leaflet-bottom.leaflet-right > .leaflet-control:not(.leaflet-control-attribution) { display: none; }
+  }
 
   /* Tablet: Desktop-Aufbau, aber schmalere Felder, und die Entdecken-Knöpfe
      rechts neben der Suche statt mittig (bei 768 px lägen sie sonst darüber). */
@@ -436,6 +456,8 @@
     #discover-group { top: 132px; left: 56px; transform: none; }
     #tutorial-btn, #vision-link, #examples-btn { font-size: 0.78rem; padding: 0.45em 0.9em; flex: none; }
     #rate-cta-heading { display: none; }
+    /* Die Quellenangabe neben dem Ebenen-Knopf bricht hier zweizeilig um. */
+    #legal { bottom: 48px; }
   }
 
   @media (max-width: 760px) {
