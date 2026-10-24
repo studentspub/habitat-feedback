@@ -40,7 +40,7 @@
 <p>Meldungen zu einem Straßenabschnitt (Text + Zeitpunkt) werden gespeichert, um sie zu prüfen. Es wird keine Kontaktmöglichkeit zum Meldenden erfasst, es sei denn, du gibst sie freiwillig im Text an.</p>
 
 <h2>Besuchsstatistik</h2>
-<p>Damit wir sehen, ob die Seite genutzt wird, zählen wir die Aufrufe unserer Seiten selbst: je Tag und Seite eine Summe, dazu grob, woher der Aufruf kam (z.B. „Google“, „direkt“ oder der Name der verweisenden Website, ohne deren genaue Adresse). Automatische Abrufe von Suchmaschinen und anderen Programmen werden anhand der Browser-Kennung erkannt und getrennt gezählt. Dabei wird nichts über dich gespeichert: keine IP-Adresse, keine Browser-Kennung, kein Cookie, keine Kennung, über die sich Aufrufe einer Person verbinden ließen. Es entsteht nur eine Strichliste je Tag. Ein externer Statistikdienst wird nicht eingesetzt.</p>
+<p>Damit wir sehen, ob die Seite genutzt wird, zählen wir die Aufrufe unserer Seiten selbst: je Tag und Seite eine Summe, dazu grob, woher der Aufruf kam (z.B. „Google“, „direkt“ oder der Name der verweisenden Website, ohne deren genaue Adresse). Ruft jemand eine Seite auf, die es nicht gibt, merken wir uns die aufgerufene Adresse ohne angehängte Zusätze (alles ab dem „?“), damit wir fehlerhafte Links finden. Automatische Abrufe von Suchmaschinen und anderen Programmen werden anhand der Browser-Kennung erkannt und getrennt gezählt. Dabei wird nichts über dich gespeichert: keine IP-Adresse, keine Browser-Kennung, kein Cookie, keine Kennung, über die sich Aufrufe einer Person verbinden ließen. Es entsteht nur eine Strichliste je Tag. Ein externer Statistikdienst wird nicht eingesetzt.</p>
 
 <h2>Einstellungen im Browser-Speicher</h2>
 <p>Für zwei Bequemlichkeits-Einstellungen legt die Karte je einen kleinen Eintrag im Speicher deines Browsers ab (<code>localStorage</code>, kein Cookie):</p>
@@ -65,7 +65,7 @@
 
 <h2>Deine Rechte</h2>
 <p>Da Bewertungen ohne Personenbezug zu dir gespeichert werden (kein Konto, kein Klarname), kann eine nachträgliche Zuordnung zu deiner Person in der Regel nicht hergestellt werden. Für Fragen oder ein Löschbegehren bezüglich einer konkreten, von dir abgegebenen Bewertung wende dich über die oben genannte E-Mail-Adresse an uns.</p>
-<p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">Stand: 22. Oktober 2026.</p>
+<p style="margin-top: 2em; font-size: 0.85em; color: #4B564F;">Stand: 24. Oktober 2026.</p>
 
 <footer style="margin-top: 3em; font-size: 0.8em;"><a href="/ueber" style="color:#31576D;margin-right:12px">Über Habitat Feedback</a><a href="/projekt" style="color:#31576D;margin-right:12px">Über das Projekt</a><a href="/quellen" style="color:#31576D;margin-right:12px">Quellen &amp; Lizenzen</a><a href="/impressum" style="color:#31576D;margin-right:12px">Impressum</a></footer>
 </body>

@@ -178,4 +178,6 @@ if (isset($seiten[$uri])) {
 
 http_response_code(404);
 echo 'Nicht gefunden.';
-zaehlen('404');
+// Mit Pfad (ohne Query), damit Scanner und kaputte Links unterscheidbar sind (habitat-feedback-betrieb#9).
+// Nur druckbares ASCII: fremde Bytes würden das INSERT in utf8mb4 scheitern lassen.
+zaehlen('404:' . preg_replace('/[^\x21-\x7E]/', '?', (string) $uri));
